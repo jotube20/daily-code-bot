@@ -12,9 +12,9 @@ ADMIN_DISCORD_ID = 1054749887582969896
 PAYMENT_NUMBER = "01007324726"
 
 PRODUCTS = {
-    'xbox': {'name': 'Xbox Game Pass Premium', 'price': 10, 'file': 'xbox.txt', 'img': 'رابط_صورة_الاكس_بوكس'},
-    'nitro1': {'name': 'Discord Nitro 1 Month', 'price': 5, 'file': 'nitro1.txt', 'img': 'رابط_صورة_نيترو_شهر'},
-    'nitro3': {'name': 'Discord Nitro 3 Months', 'price': 10, 'file': 'nitro3.txt', 'img': 'رابط_صورة_نيترو_3_شهور'}
+    'xbox': {'name': 'Xbox Game Pass Premium', 'price': 10, 'file': 'xbox.txt', 'img': 'https://i.postimg.cc/zD7kMz8R/Screenshot-2026-02-07-152934.png'},
+    'nitro1': {'name': 'Discord Nitro 1 Month', 'price': 5, 'file': 'nitro1.txt', 'img': 'https://i.postimg.cc/jqch9xtC/Screenshot-2026-02-07-152844.png'},
+    'nitro3': {'name': 'Discord Nitro 3 Months', 'price': 10, 'file': 'nitro3.txt', 'img': 'https://i.postimg.cc/xj5P7fnN/Screenshot-2026-02-07-152910.png'}
 }
 
 app = Flask(__name__)

@@ -11,25 +11,25 @@ TOKEN = os.environ.get('DISCORD_BOT_TOKEN')
 ADMIN_DISCORD_ID = 1054749887582969896 
 PAYMENT_NUMBER = "01007324726"
 
-# ملاحظة: قم باستبدال الروابط أدناه بروابط الصور الحقيقية بعد رفعها على موقع مثل imgur أو discord
+# هام جداً: حط هنا روابط الصور المباشرة (Direct Links) بعد ما ترفعها
 PRODUCTS = {
     'xbox': {
         'name': 'Xbox Game Pass Premium', 
         'price': 10, 
         'file': 'xbox.txt', 
-        'img': 'blob:https://gemini.google.com/1906d215-6acd-406c-8b08-8fe738d40119' # ضع رابط صورة Xbox هنا
+        'img': 'https://i.postimg.cc/zD7kMz8R/Screenshot-2026-02-07-152934.png'
     },
     'nitro1': {
         'name': 'Discord Nitro 1 Month', 
         'price': 5, 
         'file': 'nitro1.txt', 
-        'img': 'blob:https://gemini.google.com/8a2b129a-11ba-4634-b575-77aefe313f26' # ضع رابط صورة Nitro 1 Month هنا
+        'img': 'https://i.postimg.cc/jqch9xtC/Screenshot-2026-02-07-152844.png'
     },
     'nitro3': {
         'name': 'Discord Nitro 3 Months', 
         'price': 10, 
         'file': 'nitro3.txt', 
-        'img': 'blob:https://gemini.google.com/073d6d4d-01ea-4c1f-be4a-6a83ca293532' # ضع رابط صورة Nitro 3 Months هنا
+        'img': 'https://i.postimg.cc/xj5P7fnN/Screenshot-2026-02-07-152910.png'
     }
 }
 
@@ -48,7 +48,7 @@ def get_stock(prod_key):
         lines = [l for l in f.readlines() if l.strip()]
     return len(lines)
 
-# --- واجهة المتجر (تصميم الكروت بالصور الشفافة) ---
+# --- واجهة المتجر بالتصميم المطلوب ---
 HTML_STORE = '''
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -57,47 +57,40 @@ HTML_STORE = '''
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jo Store | متجرك المفضل</title>
     <style>
-        :root { --main-color: #5865F2; --bg-gray: #0f0f0f; }
-        body { background: var(--bg-gray); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; text-align: center; }
-        h1 { margin-bottom: 40px; font-size: 32px; color: #fff; }
+        :root { --main-color: #5865F2; --bg-black: #0a0a0a; }
+        body { background: var(--bg-black); color: white; font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 20px; }
+        h1 { text-align: center; margin-bottom: 40px; font-size: 32px; }
         
-        .products-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 25px; max-width: 1200px; margin: auto; }
+        .products-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; max-width: 1200px; margin: auto; }
         
         .product-card { 
-            width: 300px; height: 450px; border-radius: 20px; 
+            width: 320px; height: 480px; border-radius: 25px; 
             position: relative; overflow: hidden; cursor: pointer;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            border: 1px solid rgba(255,255,255,0.05);
-            background-color: #1a1a1a;
+            transition: 0.4s ease; border: 1px solid #222;
         }
-        .product-card:hover { transform: scale(1.03); box-shadow: 0 10px 40px rgba(88, 101, 242, 0.3); }
+        .product-card:hover { transform: translateY(-10px); box-shadow: 0 10px 40px rgba(88, 101, 242, 0.2); border-color: var(--main-color); }
 
-        /* طبقة الصورة الخلفية */
-        .card-bg {
+        .card-image {
             position: absolute; inset: 0;
-            background-size: cover;
-            background-position: center;
-            opacity: 0.8; /* جعل الصورة شفافة قليلاً لتتناغم مع الخلفية */
-            transition: opacity 0.3s ease;
+            background-size: cover; background-position: center;
+            z-index: 1; transition: 0.4s;
         }
-        .product-card:hover .card-bg { opacity: 1; }
-
-        /* تدرج الألوان فوق الصورة لجعل النص واضحاً */
+        
         .card-overlay {
             position: absolute; inset: 0;
-            background: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.5) 40%, rgba(0,0,0,0) 100%);
-            display: flex; flex-direction: column; justify-content: flex-end;
-            padding: 25px;
-            z-index: 2;
+            /* التدرج اللوني: شفاف جداً من فوق وغامق جداً من تحت */
+            background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.6) 30%, rgba(0,0,0,0) 100%);
+            z-index: 2; display: flex; flex-direction: column; justify-content: flex-end;
+            padding: 25px; text-align: center;
         }
 
-        .product-card h3 { font-size: 20px; margin: 5px 0; color: #fff; text-shadow: 2px 2px 4px rgba(0,0,0,0.7); }
-        .price { font-size: 26px; font-weight: bold; color: #43b581; margin: 5px 0; }
-        .stock { font-size: 14px; color: #aaa; margin-bottom: 15px; }
+        .product-card h3 { font-size: 22px; margin-bottom: 10px; }
+        .price { font-size: 24px; font-weight: bold; color: #43b581; margin-bottom: 5px; }
+        .stock { font-size: 14px; color: #888; margin-bottom: 15px; }
 
-        .order-form { display: none; background: rgba(20, 20, 20, 0.95); padding: 15px; border-radius: 15px; border: 1px solid var(--main-color); margin-top: 10px; }
-        input { width: 90%; padding: 10px; margin: 5px 0; border-radius: 8px; border: none; background: #333; color: white; text-align: center; }
-        button { background: var(--main-color); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; }
+        .order-form { display: none; background: rgba(15, 15, 15, 0.98); padding: 15px; border-radius: 15px; border: 1px solid var(--main-color); margin-top: 10px; position: relative; z-index: 10; }
+        input { width: 90%; padding: 10px; margin: 5px 0; border-radius: 8px; border: none; background: #222; color: white; text-align: center; }
+        button { background: var(--main-color); color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; width: 100%; font-weight: bold; }
     </style>
     <script>
         function showForm(id) {
@@ -108,11 +101,11 @@ HTML_STORE = '''
     </script>
 </head>
 <body>
-    <h1>🔒 Jo Store | متجرك المفضل</h1>
+    <h1>Jo Store | متجرك المفضل 🔒</h1>
     <div class="products-container">
         {% for key, info in prods.items() %}
         <div class="product-card" onclick="showForm('{{key}}')">
-            <div class="card-bg" style="background-image: url('{{ info.img }}');"></div>
+            <div class="card-image" style="background-image: url('{{ info.img }}');"></div>
             <div class="card-overlay">
                 <h3>{{ info.name }}</h3>
                 <div class="price">{{ info.price }} جنيه</div>
@@ -121,10 +114,10 @@ HTML_STORE = '''
                 <div class="order-form" id="form-{{key}}" onclick="event.stopPropagation()">
                     <form action="/place_order" method="post">
                         <input type="hidden" name="prod_key" value="{{key}}">
-                        <input type="number" name="quantity" min="1" value="1">
+                        <input type="number" name="quantity" min="1" value="1" placeholder="الكمية">
                         <input type="text" name="discord_id" placeholder="ID الديسكورد" required>
-                        <input type="text" name="cash_number" placeholder="رقم الكاش" required>
-                        <button type="submit">تأكيد الشراء</button>
+                        <input type="text" name="cash_number" placeholder="رقم الكاش المحول منه" required>
+                        <button type="submit">تأكيد الشراء الآن</button>
                     </form>
                 </div>
             </div>
@@ -135,7 +128,8 @@ HTML_STORE = '''
 </html>
 '''
 
-# --- باقي منطق البوت (نفس الكود السابق) ---
+# --- منطق السيرفر والبوت ---
+
 @app.route('/')
 def home():
     stocks = {k: get_stock(k) for k in PRODUCTS}
@@ -148,19 +142,107 @@ def place_order():
         qty = int(request.form.get('quantity', 1))
         d_id = request.form.get('discord_id').strip()
         cash_num = request.form.get('cash_number').strip()
+        
         stock = get_stock(p_key)
-        if qty > stock: return "الكمية غير متاحة"
+        if qty > stock:
+            return "الكمية المطلوبة غير متوفرة"
+
+        current_time = time.time()
+        user_record = db_spam.get(Order.id == d_id)
+        if user_record and current_time - user_record['last_order'] < 30:
+            return "برجاء الانتظار 30 ثانية بين الطلبات"
+
         total = qty * PRODUCTS[p_key]['price']
         db_orders.insert({'discord_id': d_id, 'prod_name': PRODUCTS[p_key]['name'], 'prod_key': p_key, 'quantity': qty, 'cash_number': cash_num, 'total': total, 'status': 'pending'})
+        db_spam.upsert({'id': d_id, 'last_order': current_time}, Order.id == d_id)
+
+        async def notify():
+            try:
+                user = await client.fetch_user(int(d_id))
+                await user.send(f"✅ تم تسجيل طلبك لـ {PRODUCTS[p_key]['name']}. برجاء التحويل.")
+                admin = await client.fetch_user(ADMIN_DISCORD_ID)
+                await admin.send(f"🔔 طلب جديد من {d_id} بقيمة {total} ج.م")
+            except: pass
+        
+        asyncio.run_coroutine_threadsafe(notify(), client.loop)
         return redirect(f'/success_page?total={total}')
     except Exception as e: return str(e)
 
 @app.route('/success_page')
 def success():
     total = request.args.get('total', '0')
-    return f'<body style="background:#0f0f0f;color:white;text-align:center;padding-top:100px;"><h2>✅ تم تسجيل الطلب!</h2><p>حول {total} جنيه للرقم {PAYMENT_NUMBER}</p><a href="/" style="color:#5865F2;">رجوع للمتجر</a></body>'
+    return f'''
+    <body style="background:#0a0a0a;color:white;text-align:center;padding-top:100px;font-family:sans-serif;">
+        <div style="border:1px solid #5865F2; display:inline-block; padding:30px; border-radius:15px;">
+            <h2 style="color:#43b581;">تم تسجيل الطلب!</h2>
+            <p>حول مبلغ <b>{total} جنيه</b> للرقم:</p>
+            <h1 style="background:#222; padding:10px;">{PAYMENT_NUMBER}</h1>
+            <a href="/" style="color:#5865F2;">العودة للمتجر</a>
+        </div>
+    </body>
+    '''
+
+# --- لوحة الأدمن ---
+@app.route('/admin_jo_secret')
+def admin_panel():
+    all_orders = [dict(item, doc_id=item.doc_id) for item in db_orders.all()]
+    return render_template_string('''
+    <body style="background:#0a0a0a; color:white; font-family:sans-serif; text-align:center;">
+        <h2>🛠️ لوحة الإدارة</h2>
+        <table border="1" style="width:90%; margin:auto; background:#111; border-collapse:collapse;">
+            <tr style="background:#5865F2;">
+                <th>ID العميل</th><th>المنتج</th><th>المبلغ</th><th>الحالة</th><th>الإجراء</th>
+            </tr>
+            {% for order in orders %}
+            <tr>
+                <td>{{ order.discord_id }}</td><td>{{ order.prod_name }}</td><td>{{ order.total }}</td><td>{{ order.status }}</td>
+                <td>
+                    {% if order.status == 'pending' %}
+                    <a href="/admin/approve/{{ order.doc_id }}" style="color:green;">[قبول]</a>
+                    <a href="/admin/reject/{{ order.doc_id }}" style="color:red;">[رفض]</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </body>
+    ''', orders=all_orders)
+
+@app.route('/admin/approve/<int:order_id>')
+def approve(order_id):
+    order = db_orders.get(doc_id=order_id)
+    if order:
+        db_orders.update({'status': 'approved'}, doc_ids=[order_id])
+        async def deliver():
+            try:
+                user = await client.fetch_user(int(order['discord_id']))
+                code = get_code_prod(order['prod_key'])
+                if code: await user.send(f"🔥 كودك هو: `{code}`")
+                else: await user.send("❌ المخزون خلص!")
+            except: pass
+        asyncio.run_coroutine_threadsafe(deliver(), client.loop)
+    return redirect('/admin_jo_secret')
+
+@app.route('/admin/reject/<int:order_id>')
+def reject(order_id):
+    db_orders.update({'status': 'rejected'}, doc_ids=[order_id])
+    return redirect('/admin_jo_secret')
+
+def get_code_prod(p_key):
+    filename = PRODUCTS[p_key]['file']
+    if not os.path.exists(filename): return None
+    with open(filename, 'r') as f: lines = f.readlines()
+    if not lines: return None
+    code = lines[0].strip()
+    with open(filename, 'w') as f: f.writelines(lines[1:])
+    return code
 
 def run_flask(): app.run(host='0.0.0.0', port=10000)
+
+@client.event
+async def on_ready():
+    print(f'Bot ready: {client.user}')
+    client.loop = asyncio.get_running_loop()
 
 if __name__ == '__main__':
     threading.Thread(target=run_flask, daemon=True).start()

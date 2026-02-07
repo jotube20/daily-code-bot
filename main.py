@@ -12,9 +12,9 @@ ADMIN_DISCORD_ID = 1054749887582969896
 PAYMENT_NUMBER = "01007324726"
 
 PRODUCTS = {
-    'xbox': {'name': 'Xbox Game Pass Premium', 'price': 10, 'file': 'xbox.txt', 'img': 'https://i.postimg.cc/zD7kMz8R/Screenshot-2026-02-07-152934.png'},
-    'nitro1': {'name': 'Discord Nitro 1 Month', 'price': 5, 'file': 'nitro1.txt', 'img': 'https://i.postimg.cc/jqch9xtC/Screenshot-2026-02-07-152844.png'},
-    'nitro3': {'name': 'Discord Nitro 3 Months', 'price': 10, 'file': 'nitro3.txt', 'img': 'https://i.postimg.cc/xj5P7fnN/Screenshot-2026-02-07-152910.png'}
+    'xbox': {'name': 'Xbox Game Pass Premium', 'price': 10, 'file': 'xbox.txt', 'img': 'رابط_صورة_الاكس_بوكس'},
+    'nitro1': {'name': 'Discord Nitro 1 Month', 'price': 5, 'file': 'nitro1.txt', 'img': 'رابط_صورة_نيترو_شهر'},
+    'nitro3': {'name': 'Discord Nitro 3 Months', 'price': 10, 'file': 'nitro3.txt', 'img': 'رابط_صورة_نيترو_3_شهور'}
 }
 
 app = Flask(__name__)
@@ -117,7 +117,7 @@ HTML_STORE = '''
         function openNav() { document.getElementById("mySidebar").style.width = "250px"; }
         function closeNav() { document.getElementById("mySidebar").style.width = "0"; }
         function showForm(id) { document.querySelectorAll('.order-form').forEach(f => f.style.display = 'none'); document.getElementById('form-' + id).style.display = 'block'; }
-        function checkOrders() { let id = prompt("أدخل ID الديسكورد:"); if(id) window.location.href="/my_orders/"+id; }
+        function checkOrders() { let id = prompt("أدخل ID الديسكورد الخاص بك:"); if(id) window.location.href="/my_orders/"+id; }
     </script>
 </body>
 </html>
@@ -144,12 +144,12 @@ def place_order():
     d_id, cash_num = request.form.get('discord_id').strip(), request.form.get('cash_number').strip()
     total = qty * PRODUCTS[p_key]['price']
     db_orders.insert({'discord_id': d_id, 'prod_name': PRODUCTS[p_key]['name'], 'prod_key': p_key, 'quantity': qty, 'cash_number': cash_num, 'total': total, 'status': 'pending'})
+    
     async def notify():
         try:
             user = await client.fetch_user(int(d_id))
-            # الرسالة كما في صورة image_2b1036.png
             await user.send(f"تم استلام طلبك لـ ({PRODUCTS[p_key]['name']}) بنجاح!\\n⌛ سيتم مراجعة الدفع وإرسال الأكواد لك فوراً.")
-            admin = await client.fetch_user(ADMIN_DISCORD_ID)
+            
             admin = await client.fetch_user(ADMIN_DISCORD_ID)
             msg = (
                 f"🔔 **طلب جديد!**\n"
@@ -158,6 +158,7 @@ def place_order():
                 f"💰 **المبلغ:** {total} ج.م\n"
                 f"📱 **من رقم:** {cash_num}"
             )
+            await admin.send(msg)
         except: pass
     asyncio.run_coroutine_threadsafe(notify(), client.loop)
     return redirect(f'/success_page?total={total}')
@@ -171,15 +172,38 @@ def success_page():
             <h2 style="color:#43b581;">إتم تسجيل الطلب</h2>
             <p>حول مبلغ <b>{{total}} جنيه</b> للرقم:</p>
             <h1 style="background:#222;padding:15px;border-radius:10px; color:#fff;">{{pay_num}}</h1>
-            <div style="background:rgba(88,101,242,0.1);padding:20px;border-radius:15px;border:1px solid #5865F2;margin:20px 0;text-align:right;">
+            <div style="background:rgba(88,101,242,0.1);padding:20px;border-radius:15px;border:1px solid #5865F2;margin:20px 0;text-align:right; line-height: 1.6;">
                 <b style="color:#ffcc00;">⚠️ ملحوظة هامة:</b><br>
-                فتح الخاص https://discord.gg/RYK28PNv يجب دخول سيرفر الديسكورد لاستلام الكود.
+                يجب عليك دخول سيرفر الديسكورد <a href="https://discord.gg/RYK28PNv" style="color: #5865F2; font-weight: bold;">https://discord.gg/RYK28PNv</a> 
+                ليستطيع البوت ان يرسل لك طلبيتك و تاكد ان خاصك مفتوح و الا لم يصلك الكود.
             </div>
             <a href="/" style="color:#5865F2;text-decoration:none; font-weight: bold;">العودة للمتجر</a>
         </div>
     </body>''', total=total, pay_num=PAYMENT_NUMBER)
 
-# --- لوحة التحكم الاحترافية المعدلة ---
+@app.route('/my_orders/<uid>')
+def my_orders(uid):
+    orders = db_orders.search(Order.discord_id == uid)
+    return render_template_string('''
+    <body style="background:#0a0a0a;color:white;text-align:center;padding:20px; font-family: sans-serif;">
+        <h2 style="color:#5865F2;">📋 تتبع طلباتك</h2>
+        <div style="max-width:600px; margin:auto;">
+        {% for o in orders %}
+            <div style="background:#111;padding:15px;margin:10px;border-radius:15px; border: 1px solid #222; text-align:right;">
+                <b>{{o.prod_name}}</b><br>
+                <small>المبلغ: {{o.total}} ج.م</small>
+                <div style="height:12px; background:#333; border-radius:6px; margin:15px 0; overflow:hidden; border: 1px solid #444;">
+                    <div style="width:{% if 'approved' in o.status %}100%{% elif 'rejected' in o.status %}100%{% else %}50%{% endif %}; height:100%; transition: 0.5s; background:{% if 'approved' in o.status %}#2ecc71{% elif 'rejected' in o.status %}#e74c3c{% else %}#f1c40f{% endif %};"></div>
+                </div>
+                الحالة: {{o.status}}
+            </div>
+        {% endfor %}
+        {% if not orders %} <p>لا توجد طلبات لهذا الـ ID</p> {% endif %}
+        </div>
+        <br><a href="/" style="color:#5865F2; font-weight:bold; text-decoration:none;">← العودة للمتجر</a>
+    </body>''', orders=orders)
+
+# --- لوحة التحكم ---
 @app.route('/admin_jo_secret', methods=['GET', 'POST'])
 def admin_panel():
     if request.method == 'POST':
@@ -191,74 +215,26 @@ def admin_panel():
 
     orders = [dict(item, doc_id=item.doc_id) for item in db_orders.all()]
     fbacks = [dict(item, doc_id=item.doc_id) for item in db_feedbacks.all()]
-    
-    return render_template_string('''
-    <body style="background:#0a0a0a; color:white; font-family:sans-serif; padding:20px;">
-        <h2 style="text-align:center; color:#5865F2;">🛠️ لوحة تحكم Jo الشاملة</h2>
-        
+    return render_template_string('''<body style="background:#0a0a0a; color:white; padding:20px;">
+        <h2 style="text-align:center; color:#5865F2;">🛠️ لوحة التحكم</h2>
         <div style="display:flex; gap:20px; flex-wrap:wrap; justify-content:center;">
             <div style="background:#111; padding:20px; border-radius:15px; border:1px solid #333; width:350px;">
-                <h3 style="color:#5865F2;">📦 نظام ريستوك</h3>
-                <form method="post">
-                    <input type="hidden" name="action" value="restock">
-                    <select name="p_key" style="width:100%; padding:10px; background:#222; color:white; border:1px solid #444;">
-                        <option value="xbox">Xbox Game Pass</option>
-                        <option value="nitro1">Nitro 1 Month</option>
-                        <option value="nitro3">Nitro 3 Months</option>
-                    </select><br><br>
-                    <textarea name="codes" placeholder="أدخل الأكواد (كود في كل سطر)" style="height:120px; background:#222; color:white; border:1px solid #444; width:100%;"></textarea><br><br>
-                    <button type="submit" style="background:#5865F2; color:white; width:100%; padding:10px; cursor:pointer;">تأكيد الريستوك</button>
-                </form>
+                <h3>📦 ريستوك</h3>
+                <form method="post"><input type="hidden" name="action" value="restock"><select name="p_key" style="width:100%; padding:10px;"><option value="xbox">Xbox</option><option value="nitro1">Nitro 1</option><option value="nitro3">Nitro 3</option></select><br><br><textarea name="codes" placeholder="أكواد" style="width:100%; height:80px;"></textarea><br><button type="submit">إضافة</button></form>
             </div>
-
             <div style="background:#111; padding:20px; border-radius:15px; border:1px solid #333; width:350px;">
-                <h3 style="color:#e74c3c;">🗑️ مسح سجلات مستخدم</h3>
-                <form method="post">
-                    <input type="hidden" name="action" value="clear_logs">
-                    <input type="text" name="u_id" placeholder="أدخل Discord ID" style="background:#222; color:white; border:1px solid #444; width:100%; padding:10px;"><br><br>
-                    <button type="submit" style="background:#e74c3c; color:white; width:100%; padding:10px; cursor:pointer;">مسح التاريخ بالكامل</button>
-                </form>
+                <h3>🗑️ مسح سجلات</h3>
+                <form method="post"><input type="hidden" name="action" value="clear_logs"><input type="text" name="u_id" style="width:100%; padding:10px;" placeholder="Discord ID"><br><br><button type="submit" style="background:red;">مسح</button></form>
             </div>
         </div>
-
-        <h3 style="margin-top:40px; color:#5865F2;">💬 إدارة الآراء الحقيقية</h3>
-        <div style="background:#111; border-radius:15px; padding:10px; border:1px solid #333;">
-            <table style="width:100%; text-align:right; border-collapse:collapse;">
-                <tr style="border-bottom:1px solid #333; height:40px;"><th>الاسم</th><th>الرأي</th><th>الإجراء</th></tr>
-                {% for f in fbacks %}
-                <tr style="height:50px; border-bottom:1px solid #222;">
-                    <td>{{ f.name }}</td><td>{{ f.comment }}</td>
-                    <td>
-                        <form method="post" style="display:inline;">
-                            <input type="hidden" name="action" value="delete_feedback">
-                            <input type="hidden" name="f_id" value="{{ f.doc_id }}">
-                            <button type="submit" style="background:red; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">حذف 🗑️</button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </table>
-        </div>
-
-        <h3 style="margin-top:40px; color:#5865F2;">📦 إدارة الطلبات المعلقة</h3>
-        <div style="background:#111; border-radius:15px; padding:10px; border:1px solid #333;">
-            <table style="width:100%; text-align:center; border-collapse:collapse;">
-                <tr style="background:#5865F2; height:40px;"><th>العميل</th><th>المنتج</th><th>الكمية</th><th>الحالة</th><th>الإجراء</th></tr>
-                {% for o in orders %}
-                <tr style="height:50px; border-bottom:1px solid #222;">
-                    <td>{{ o.discord_id }}</td><td>{{ o.prod_name }}</td><td>{{ o.quantity }}</td><td>{{ o.status }}</td>
-                    <td>
-                        {% if o.status == 'pending' %}
-                        <a href="/approve/{{o.doc_id}}" style="color:#2ecc71; text-decoration:none; font-weight:bold;">[قبول ✅]</a> 
-                        <a href="/reject/{{o.doc_id}}" style="color:#e74c3c; text-decoration:none; font-weight:bold; margin-right:10px;">[رفض ❌]</a>
-                        {% else %} - {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </table>
-        </div>
-    </body>
-    ''', orders=orders, fbacks=fbacks)
+        <h3>📦 الطلبات</h3>
+        <table border="1" style="width:100%; background:#111; text-align:center;">
+            <tr style="background:#5865F2;"><th>العميل</th><th>المنتج</th><th>الحالة</th><th>الإجراء</th></tr>
+            {% for o in orders %}
+            <tr><td>{{ o.discord_id }}</td><td>{{ o.prod_name }}</td><td>{{ o.status }}</td><td>{% if o.status == 'pending' %}<a href="/approve/{{o.doc_id}}" style="color:green;">[قبول]</a> | <a href="/reject/{{o.doc_id}}" style="color:red;">[رفض]</a>{% else %} - {% endif %}</td></tr>
+            {% endfor %}
+        </table>
+    </body>''', orders=orders, fbacks=fbacks)
 
 @app.route('/approve/<int:order_id>')
 def approve(order_id):
@@ -272,7 +248,6 @@ def approve(order_id):
             async def deliver():
                 try:
                     user = await client.fetch_user(int(order['discord_id']))
-                    # الرسالة كما في صورة image_29375f.png (شكل image_285d25.png)
                     codes_msg = "\\n".join([f"🔹 كود {i+1}: `{c}`" for i, c in enumerate(valid_codes)])
                     await user.send(f"🔥 **مبروك! ({order['prod_name']}) تم تأكيد الدفع لطلبك**\\n{codes_msg}")
                 except: pass
@@ -290,11 +265,6 @@ def reject(order_id):
         except: pass
     asyncio.run_coroutine_threadsafe(notify(), client.loop)
     return redirect('/admin_jo_secret')
-
-@app.route('/my_orders/<uid>')
-def my_orders(uid):
-    orders = db_orders.search(Order.discord_id == uid)
-    return render_template_string('''<body style="background:#0a0a0a;color:white;text-align:center;padding:20px;"><h2>📋 طلباتك</h2>{% for o in orders %}<div style="background:#111;padding:15px;margin:10px;border-radius:15px; border:1px solid #333;">{{o.prod_name}} - {{o.status}}</div>{% endfor %}<br><a href="/" style="color:#5865F2;">رجوع</a></body>''', orders=orders)
 
 def run_flask(): app.run(host='0.0.0.0', port=10000)
 @client.event

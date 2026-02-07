@@ -6,16 +6,18 @@ from datetime import date
 import threading
 import os
 
-# الإعدادات
+# الإعدادات الأساسية
 TOKEN = os.environ.get('DISCORD_BOT_TOKEN')
 app = Flask(__name__)
 db = TinyDB('db.json')
 User = Query()
 
-# إعداد البوت
+# إعداد البوت بصلاحيات كاملة للرسائل
 intents = discord.Intents.default()
+intents.members = True 
 client = discord.Client(intents=intents)
 
+# دالة سحب الأكواد
 def get_and_remove_code():
     try:
         if not os.path.exists('codes.txt'):
@@ -29,9 +31,10 @@ def get_and_remove_code():
             f.writelines(codes[1:])
         return selected_code
     except Exception as e:
-        print(f"Error in codes file: {e}")
+        print(f"File Error: {e}")
         return None
 
+# واجهة الموقع
 HTML_TEMPLATE = '''
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -39,18 +42,21 @@ HTML_TEMPLATE = '''
     <meta charset="UTF-8">
     <title>موقع استلام الأكواد</title>
     <style>
-        body { background-color: #1a1a1a; color: white; font-family: Arial; text-align: center; padding-top: 50px; }
-        .container { background: #2d2d2d; padding: 30px; border-radius: 15px; display: inline-block; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
-        input { padding: 12px; border-radius: 5px; border: none; width: 250px; margin-bottom: 20px; font-size: 16px; }
-        button { background: #5865F2; color: white; border: none; padding: 12px 25px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        body { background-color: #1a1a1a; color: white; font-family: Arial, sans-serif; text-align: center; padding-top: 50px; }
+        .container { background: #2d2d2d; padding: 40px; border-radius: 20px; display: inline-block; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        h2 { color: #5865F2; }
+        input { padding: 15px; border-radius: 8px; border: none; width: 280px; margin-bottom: 20px; font-size: 16px; }
+        button { background: #5865F2; color: white; border: none; padding: 15px 30px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.3s; }
+        button:hover { background: #4752c4; transform: scale(1.05); }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>🎁 استلم كودك اليومي</h2>
+        <h2>🎁 نظام الأكواد اليومي</h2>
+        <p>أدخل الـ ID الخاص بك لاستلام الهدية في الخاص</p>
         <form action="/get_code" method="post">
-            <input type="text" name="discord_id" placeholder="ادخل الـ Discord ID" required><br>
-            <button type="submit">اطلب الكود الآن</button>
+            <input type="text" name="discord_id" placeholder="مثال: 45829304857201243" required><br>
+            <button type="submit">الحصول على الكود</button>
         </form>
     </div>
 </body>
@@ -67,46 +73,54 @@ def get_code():
     today = str(date.today())
     
     if db.search((User.id == user_id) & (User.date == today)):
-        return "<h3>⚠️ لقد حصلت على كودك بالفعل اليوم!</h3>"
+        return "<h3>⚠️ عذراً! لقد حصلت على كودك لليوم بالفعل.</h3>"
 
     code_to_send = get_and_remove_code()
     if not code_to_send:
-        return "<h3>❌ نعتذر، نفدت الأكواد حالياً.</h3>"
+        return "<h3>❌ نعتذر، نفدت الأكواد حالياً. حاول لاحقاً!</h3>"
 
-    # الطريقة الأضمن لإرسال الرسالة من Flask إلى Discord
-    async def send_to_discord():
+    # إرسال الرسالة عبر الـ Loop الخاص بالبوت
+    async def send_dm():
         try:
             user = await client.fetch_user(int(user_id))
-            await user.send(f"✅ كودك الجديد هو: `{code_to_send}`")
+            await user.send(f"✅ **أهلاً بك! كودك اليومي هو:**\n`{code_to_send}`")
             db.insert({'id': user_id, 'date': today, 'code': code_to_send})
             return True
         except Exception as e:
-            print(f"Detailed Error: {e}")
+            print(f"Discord DM Error: {e}")
             return False
 
-    # محاولة الحصول على الـ loop بطريقة آمنة
+    if client.is_closed():
+        return "<h3>❌ البوت غير متصل حالياً، جرب كمان دقيقة.</h3>"
+
+    # تنفيذ الإرسال بشكل آمن
     try:
-        loop = client.loop # سيتم تعريفه في on_ready
-        future = asyncio.run_coroutine_threadsafe(send_to_discord(), loop)
+        future = asyncio.run_coroutine_threadsafe(send_dm(), client.loop)
         if future.result(timeout=15):
-            return "<h3>✅ تم إرسال الكود بنجاح! تفقد الـ DMs.</h3>"
+            return "<h3>✅ تم إرسال الكود بنجاح! تفقد رسائلك الخاصة.</h3>"
         else:
-            return "<h3>❌ فشل الإرسال، تأكد من فتح الـ DMs.</h3>"
+            return "<h3>❌ فشل الإرسال، تأكد من الـ ID وفتح الـ DMs.</h3>"
     except Exception as e:
-        print(f"Loop Error: {e}")
-        return "<h3>❌ السيرفر لسه بيقوم، جرب تاني كمان 10 ثواني.</h3>"
+        return f"<h3>❌ حدث خطأ فني، حاول مرة أخرى.</h3>"
 
-def run_flask():
-    port = int(os.environ.get('PORT', 10000))
-    app.run(host='0.0.0.0', port=port)
-
+# تشغيل البوت
 @client.event
 async def on_ready():
-    print(f'Logged in as {client.user}')
-    # هذه الخطوة هي الأهم: تثبيت الـ loop داخل الكلاينت
-    client.loop = asyncio.get_running_loop()
+    print(f'✅ البوت يعمل الآن باسم: {client.user}')
+
+def run_flask():
+    # Render يحتاج تشغيل الموقع على البورت المخصص له
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host='0.0.0.0', port=port)
 
 if __name__ == '__main__':
-    threading.Thread(target=run_flask, daemon=True).start()
+    # تشغيل الموقع في خلفية الكود
+    t = threading.Thread(target=run_flask)
+    t.daemon = True
+    t.start()
+    
+    # تشغيل البوت (هذا السطر يجب أن يكون الأخير)
     if TOKEN:
         client.run(TOKEN)
+    else:
+        print("❌ خطأ: لم يتم العثور على التوكن!")

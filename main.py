@@ -4,6 +4,7 @@ from flask import Flask, request, render_template_string, redirect
 from tinydb import TinyDB, Query
 import threading
 import os
+import time
 
 # --- الإعدادات ---
 TOKEN = os.environ.get('DISCORD_BOT_TOKEN')
@@ -13,19 +14,19 @@ PRODUCT_PRICE = 5
 
 app = Flask(__name__)
 db_orders = TinyDB('orders.json')
+db_spam = TinyDB('spam_check.json') # لتخزين وقت آخر طلب لكل ID
 Order = Query()
 
 intents = discord.Intents.default()
 client = discord.Client(intents=intents)
 
-# --- دالة فحص الكمية المتاحة ---
 def get_stock_count():
     if not os.path.exists('codes.txt'): return 0
     with open('codes.txt', 'r') as f:
         lines = [l for l in f.readlines() if l.strip()]
     return len(lines)
 
-# --- واجهة المتجر الحديثة (UI) ---
+# --- واجهة المتجر ---
 HTML_STORE = '''
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -35,38 +36,23 @@ HTML_STORE = '''
     <title>Jo's Store | متجر جو</title>
     <style>
         :root { --main-color: #5865F2; --bg-dark: #0f0f0f; --card-bg: #1a1a1a; }
-        body { background: var(--bg-dark); color: white; font-family: 'Segoe UI', Tahoma, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
-        .card { background: var(--card-bg); padding: 40px; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); width: 100%; max-width: 420px; border: 1px solid #333; transition: 0.3s; }
-        h2 { margin-top: 0; color: var(--main-color); font-size: 28px; }
+        body { background: var(--bg-dark); color: white; font-family: sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+        .card { background: var(--card-bg); padding: 40px; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); width: 100%; max-width: 420px; border: 1px solid #333; text-align: center; }
         .stock-badge { background: #232428; padding: 5px 15px; border-radius: 20px; font-size: 14px; color: #43b581; margin-bottom: 20px; display: inline-block; }
-        .input-group { text-align: right; margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-size: 14px; color: #b9bbbe; }
-        input { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid #333; background: #232428; color: white; font-size: 16px; box-sizing: border-box; transition: 0.3s; }
-        input:focus { border-color: var(--main-color); outline: none; }
-        button { background: var(--main-color); color: white; border: none; padding: 16px; width: 100%; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 18px; margin-top: 10px; transition: 0.3s; }
-        button:hover { background: #4752c4; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(88, 101, 242, 0.4); }
-        .price-info { background: rgba(67, 181, 129, 0.1); color: #43b581; padding: 10px; border-radius: 10px; margin-bottom: 20px; font-weight: bold; }
+        input { width: 100%; padding: 14px; margin: 10px 0; border-radius: 12px; border: 1px solid #333; background: #232428; color: white; box-sizing: border-box; }
+        button { background: var(--main-color); color: white; border: none; padding: 16px; width: 100%; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 18px; transition: 0.3s; }
+        button:hover { background: #4752c4; transform: translateY(-2px); }
     </style>
 </head>
 <body>
     <div class="card">
-        <h2>🛍️ متجر Jo</h2>
-        <div class="stock-badge">المتوفر حالياً: {{ stock }} قطعة</div>
-        <div class="price-info">سعر القطعة: ''' + str(PRODUCT_PRICE) + ''' جنيه</div>
+        <h2 style="color:var(--main-color)">🛍️ متجر Jo</h2>
+        <div class="stock-badge">المتوفر: {{ stock }} قطعة</div>
         <form action="/place_order" method="post">
-            <div class="input-group">
-                <label>الكمية المطلوبة</label>
-                <input type="number" name="quantity" min="1" value="1" required>
-            </div>
-            <div class="input-group">
-                <label>Discord ID</label>
-                <input type="text" name="discord_id" placeholder="مثال: 1054749887..." required>
-            </div>
-            <div class="input-group">
-                <label>رقم المحفظة (كاش)</label>
-                <input type="text" name="cash_number" placeholder="الرقم الذي ستحول منه" required>
-            </div>
-            <button type="submit">إتمام الطلب الآن</button>
+            <input type="number" name="quantity" min="1" value="1" placeholder="الكمية">
+            <input type="text" name="discord_id" placeholder="Discord ID" required>
+            <input type="text" name="cash_number" placeholder="رقم الكاش المحول منه" required>
+            <button type="submit">إتمام الطلب</button>
         </form>
     </div>
 </body>
@@ -75,8 +61,7 @@ HTML_STORE = '''
 
 @app.route('/')
 def home():
-    stock = get_stock_count()
-    return render_template_string(HTML_STORE, stock=stock)
+    return render_template_string(HTML_STORE, stock=get_stock_count())
 
 @app.route('/place_order', methods=['POST'])
 def place_order():
@@ -84,65 +69,72 @@ def place_order():
         qty = int(request.form.get('quantity', 1))
         d_id = request.form.get('discord_id').strip()
         cash_num = request.form.get('cash_number').strip()
+        current_time = time.time()
+
+        # --- حماية السبام (30 ثانية) ---
+        user_record = db_spam.get(Order.id == d_id)
+        if user_record:
+            time_passed = current_time - user_record['last_order']
+            if time_passed < 30:
+                wait_time = int(30 - time_passed)
+                return f'<body style="background:#0f0f0f;color:white;text-align:center;padding-top:100px;"><h2>⏳ حماية السبام فعالة!</h2><p>من فضلك انتظر {wait_time} ثانية قبل الطلب مجدداً.</p><a href="/" style="color:#5865F2;">رجوع</a></body>'
+
+        # فحص المخزون
         stock = get_stock_count()
-
-        # --- الطلب الأول: فحص المخزون ---
         if qty > stock:
-            return f'''
-            <body style="background:#0f0f0f; color:white; text-align:center; padding-top:100px; font-family:sans-serif;">
-                <h2 style="color:#f04747;">❌ عذراً! الكمية غير متاحة</h2>
-                <p>أقصى كمية يمكنك طلبها الآن هي: <b>{stock}</b> قطعة فقط.</p>
-                <a href="/" style="color:#5865F2;">العودة للمتجر</a>
-            </body>
-            '''
+            return f'<body style="background:#0f0f0f;color:white;text-align:center;padding-top:100px;"><h2>❌ الكمية غير كافية</h2><p>المتوفر {stock} فقط.</p></body>'
 
-        total = qty * PRODUCT_PRICE
-        db_orders.insert({'discord_id': d_id, 'quantity': qty, 'cash_number': cash_num, 'total': total, 'status': 'pending'})
+        # تسجيل الطلب وتحديث وقت آخر طلب
+        db_orders.insert({'discord_id': d_id, 'quantity': qty, 'cash_number': cash_num, 'total': qty*PRODUCT_PRICE, 'status': 'pending'})
+        db_spam.upsert({'id': d_id, 'last_order': current_time}, Order.id == d_id)
 
-        # --- الطلب الثاني: رسالة تأكيد للعميل + إشعار لك ---
-        async def send_notifications():
+        async def notify():
             try:
                 # رسالة للعميل
                 user = await client.fetch_user(int(d_id))
-                await user.send(f"👋 أهلاً بك! لقد استلمنا طلبك لعدد ({qty}) قطعة.\n⌛ طلبك الآن **تحت المراجعة**، سيتم إرسال الأكواد فور التأكد من التحويل.")
-                
-                # رسالة لك
+                await user.send(f"👋 تم استلام طلبك لعدد ({qty}) قطعة بنجاح وهو **تحت المراجعة** الآن.")
+                # رسالة للمدير
                 admin = await client.fetch_user(ADMIN_DISCORD_ID)
-                await admin.send(f"🔔 **طلب جديد معلق!**\n👤 المشتري: <@{d_id}>\n📦 الكمية: {qty}\n💰 المبلغ: {total} ج.م\n🔗 اللوحة: https://daily-code-bot-1.onrender.com/admin_jo_secret")
-            except Exception as e: print(f"Notify Error: {e}")
+                await admin.send(f"🔔 **طلب جديد!**\nالعميل: <@{d_id}>\nالمبلغ: {qty*PRODUCT_PRICE} ج.م\nاللوحة: https://daily-code-bot-1.onrender.com/admin_jo_secret")
+            except: pass
         
-        asyncio.run_coroutine_threadsafe(send_notifications(), client.loop)
-
-        return f'''
-        <body style="background:#0f0f0f; color:white; text-align:center; padding-top:80px; font-family:sans-serif;">
-            <div style="background:#1a1a1a; padding:40px; border-radius:20px; display:inline-block; border:1px solid #5865F2;">
-                <h2 style="color:#43b581;">📦 طلبك وصل يا بطل!</h2>
-                <p>حول مبلغ <b>{total} جنيه</b> لرقم فودافون كاش:</p>
-                <h1 style="background:#232428; padding:15px; border-radius:12px; letter-spacing:2px;">{PAYMENT_NUMBER}</h1>
-                <p style="color:#b9bbbe;">تفقد رسائل الديسكورد الخاصة بك (DMs)، لقد أرسلنا لك تأكيداً هناك.</p>
-            </div>
-        </body>
-        '''
+        asyncio.run_coroutine_threadsafe(notify(), client.loop)
+        return redirect('/success_page?total=' + str(qty*PRODUCT_PRICE))
     except Exception as e: return f"Error: {e}"
+
+@app.route('/success_page')
+def success():
+    total = request.args.get('total', '5')
+    return f'''
+    <body style="background:#0f0f0f;color:white;text-align:center;font-family:sans-serif;padding-top:80px;">
+        <div style="background:#1a1a1a;padding:40px;border-radius:20px;display:inline-block;border:1px solid #5865F2;">
+            <h2 style="color:#43b581;">✅ تم تسجيل الطلب!</h2>
+            <p>حول مبلغ <b>{total} جنيه</b> لرقم فودافون كاش:</p>
+            <h1 style="background:#232428;padding:15px;border-radius:12px;letter-spacing:2px;">{PAYMENT_NUMBER}</h1>
+            <p style="color:#b9bbbe;">البوت أرسل لك رسالة تأكيد في الخاص الآن.</p>
+        </div>
+    </body>
+    '''
 
 @app.route('/admin_jo_secret')
 def admin_panel():
     all_orders = [dict(item, doc_id=item.doc_id) for item in db_orders.all()]
     return render_template_string('''
     <body style="background:#0f0f0f; color:white; font-family:sans-serif; text-align:center;">
-        <h2>🛠️ إدارة الطلبات</h2>
-        <table border="1" style="width:95%; margin:auto; background:#1a1a1a; border-collapse:collapse;">
-            <tr style="background:#5865F2;">
+        <h2 style="padding:20px;">🛠️ إدارة طلبات متجر جو</h2>
+        <table border="1" style="width:95%; margin:auto; background:#1a1a1a; border-collapse:collapse; border-color:#333;">
+            <tr style="background:#5865F2; height:50px;">
                 <th>العميل</th><th>الكمية</th><th>رقم الكاش</th><th>المبلغ</th><th>الحالة</th><th>الإجراء</th>
             </tr>
             {% for order in orders %}
-            <tr>
+            <tr style="height:40px;">
                 <td>{{ order.discord_id }}</td><td>{{ order.quantity }}</td><td>{{ order.cash_number }}</td>
                 <td>{{ order.total }}</td><td>{{ order.status }}</td>
                 <td>
                     {% if order.status == 'pending' %}
-                    <a href="/admin/approve/{{ order.doc_id }}" style="color:#43b581;">[قبول ✅]</a>
-                    {% else %} {{ order.status }} {% endif %}
+                    <a href="/admin/approve/{{ order.doc_id }}" style="color:#43b581; text-decoration:none; font-weight:bold;">[قبول ✅]</a> | 
+                    <a href="/admin/reject/{{ order.doc_id }}" style="color:#f04747; text-decoration:none; font-weight:bold;">[رفض ❌]</a>
+                    {% else %} - {% endif %}
                 </td>
             </tr>
             {% endfor %}
@@ -153,24 +145,26 @@ def admin_panel():
 @app.route('/admin/approve/<int:order_id>')
 def approve(order_id):
     order = db_orders.get(doc_id=order_id)
-    if order:
+    if order and order['status'] == 'pending':
         db_orders.update({'status': 'approved ✅'}, doc_ids=[order_id])
         async def deliver():
             try:
                 user = await client.fetch_user(int(order['discord_id']))
-                qty = int(order['quantity'])
-                codes = []
-                for _ in range(qty):
-                    c = get_code_from_file()
-                    if c: codes.append(c)
-                
-                if codes:
-                    txt = "\n".join([f"🔹 كود {i+1}: `{c}`" for i, c in enumerate(codes)])
-                    await user.send(f"🔥 **تم قبول طلبك! مبروك عليك:**\n{txt}")
-                else:
-                    await user.send("⚠️ نعتذر، يبدو أن المخزون نفد أثناء المعالجة.")
+                codes = [get_code_from_file() for _ in range(int(order['quantity']))]
+                valid_codes = [c for c in codes if c]
+                if valid_codes:
+                    txt = "\\n".join([f"🔹 كود {i+1}: `{c}`" for i, c in enumerate(valid_codes)])
+                    await user.send(f"🔥 **مبروك! تم قبول طلبك:**\\n{txt}")
+                else: await user.send("⚠️ عذراً، المخزون نفد!")
             except: pass
         asyncio.run_coroutine_threadsafe(deliver(), client.loop)
+    return redirect('/admin_jo_secret')
+
+@app.route('/admin/reject/<int:order_id>')
+def reject(order_id):
+    order = db_orders.get(doc_id=order_id)
+    if order and order['status'] == 'pending':
+        db_orders.update({'status': 'rejected ❌'}, doc_ids=[order_id])
     return redirect('/admin_jo_secret')
 
 def get_code_from_file():
@@ -186,7 +180,7 @@ def run_flask():
 
 @client.event
 async def on_ready():
-    print(f'✅ Ready: {client.user}')
+    print(f'✅ متصل بـ: {client.user}')
     client.loop = asyncio.get_running_loop()
 
 if __name__ == '__main__':

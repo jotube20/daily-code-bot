@@ -11,11 +11,26 @@ TOKEN = os.environ.get('DISCORD_BOT_TOKEN')
 ADMIN_DISCORD_ID = 1054749887582969896 
 PAYMENT_NUMBER = "01007324726"
 
-# تعريف المنتجات وأسعارها وملفاتها
+# ضع روابط الصور الخاصة بك هنا مكان الروابط التجريبية
 PRODUCTS = {
-    'xbox': {'name': 'Xbox Game Pass Premium', 'price': 10, 'file': 'xbox.txt'},
-    'nitro1': {'name': 'Discord Nitro 1 Month', 'price': 5, 'file': 'nitro1.txt'},
-    'nitro3': {'name': 'Discord Nitro 3 Months', 'price': 10, 'file': 'nitro3.txt'}
+    'xbox': {
+        'name': 'Xbox Game Pass Premium', 
+        'price': 10, 
+        'file': 'xbox.txt', 
+        'img': 'رابط_صورة_الاكس_بوكس'
+    },
+    'nitro1': {
+        'name': 'Discord Nitro 1 Month', 
+        'price': 5, 
+        'file': 'nitro1.txt', 
+        'img': 'رابط_صورة_النيترو_شهر'
+    },
+    'nitro3': {
+        'name': 'Discord Nitro 3 Months', 
+        'price': 10, 
+        'file': 'nitro3.txt', 
+        'img': 'رابط_صورة_النيترو_3_شهور'
+    }
 }
 
 app = Flask(__name__)
@@ -33,7 +48,7 @@ def get_stock(prod_key):
         lines = [l for l in f.readlines() if l.strip()]
     return len(lines)
 
-# --- واجهة المتجر الحديثة (التصميم المطلوب) ---
+# --- واجهة المتجر الحديثة ---
 HTML_STORE = '''
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -42,51 +57,63 @@ HTML_STORE = '''
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jo Store | اختر منتجك</title>
     <style>
-        :root { --main-color: #5865F2; --bg-gray: #1e1e1e; --card-bg: #2d2d2d; }
-        body { background: var(--bg-gray); color: white; font-family: sans-serif; margin: 0; padding: 20px; text-align: center; }
+        :root { --main-color: #5865F2; --bg-gray: #121212; }
+        body { background: var(--bg-gray); color: white; font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 20px; text-align: center; }
         h1 { margin-bottom: 40px; font-size: 32px; color: #fff; text-shadow: 2px 2px 10px rgba(0,0,0,0.5); }
         .products-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 25px; max-width: 1200px; margin: auto; }
+        
         .product-card { 
-            background: var(--card-bg); width: 300px; padding: 30px; border-radius: 20px; 
-            border: 2px solid #3d3d3d; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            cursor: pointer; position: relative; overflow: hidden;
+            width: 300px; height: 450px; border-radius: 20px; 
+            position: relative; overflow: hidden; cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.1);
         }
-        .product-card:hover { 
-            transform: scale(1.05) translateY(-10px); border-color: var(--main-color);
-            box-shadow: 0 15px 35px rgba(88, 101, 242, 0.3);
+        .product-card:hover { transform: translateY(-10px); box-shadow: 0 10px 30px rgba(88, 101, 242, 0.4); }
+
+        .card-content {
+            position: absolute; inset: 0;
+            display: flex; flex-direction: column; justify-content: flex-end;
+            padding: 20px;
+            /* التدرج: شفاف من فوق وغامق من تحت للكتابة */
+            background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.4) 40%, rgba(0,0,0,0) 100%);
         }
-        .product-card h3 { color: var(--main-color); font-size: 22px; margin-bottom: 10px; }
-        .price { font-size: 24px; font-weight: bold; color: #43b581; margin: 15px 0; }
-        .stock { font-size: 14px; color: #b9bbbe; }
-        .order-form { display: none; margin-top: 20px; border-top: 1px solid #444; padding-top: 20px; animation: fadeIn 0.5s; }
-        @keyframes fadeIn { from {opacity: 0;} to {opacity: 1;} }
-        input { width: 90%; padding: 12px; margin: 8px 0; border-radius: 10px; border: none; background: #3d3d3d; color: white; text-align: center; }
-        button { background: var(--main-color); color: white; border: none; padding: 12px 25px; border-radius: 10px; cursor: pointer; font-weight: bold; width: 95%; margin-top: 10px; }
+
+        .product-card h3 { font-size: 20px; margin: 5px 0; color: #fff; }
+        .price { font-size: 24px; font-weight: bold; color: #43b581; margin: 5px 0; }
+        .stock { font-size: 14px; color: #b9bbbe; margin-bottom: 10px; }
+
+        .order-form { display: none; background: rgba(30, 30, 30, 0.95); padding: 15px; border-radius: 15px; margin-top: 10px; border: 1px solid var(--main-color); }
+        input { width: 85%; padding: 10px; margin: 5px 0; border-radius: 8px; border: none; background: #333; color: white; text-align: center; }
+        button { background: var(--main-color); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; width: 90%; font-weight: bold; font-size: 16px; }
+        button:hover { background: #4752c4; }
     </style>
     <script>
         function showForm(id) {
+            event.stopPropagation();
             document.querySelectorAll('.order-form').forEach(f => f.style.display = 'none');
             document.getElementById('form-' + id).style.display = 'block';
         }
     </script>
 </head>
 <body>
-    <h1>🔒 اختر منتجك المفضل</h1>
+    <h1>🔒 Jo Store | متجرك المفضل</h1>
     <div class="products-container">
         {% for key, info in prods.items() %}
-        <div class="product-card" onclick="showForm('{{key}}')">
-            <h3>{{ info.name }}</h3>
-            <div class="price">{{ info.price }} جنيه</div>
-            <div class="stock">المتوفر: {{ stocks[key] }} قطعة</div>
-            
-            <div class="order-form" id="form-{{key}}" onclick="event.stopPropagation()">
-                <form action="/place_order" method="post">
-                    <input type="hidden" name="prod_key" value="{{key}}">
-                    <input type="number" name="quantity" min="1" value="1" placeholder="الكمية">
-                    <input type="text" name="discord_id" placeholder="ID الديسكورد" required>
-                    <input type="text" name="cash_number" placeholder="رقم الكاش المحول منه" required>
-                    <button type="submit">تأكيد الطلب</button>
-                </form>
+        <div class="product-card" style="background: url('{{ info.img }}') no-repeat center/cover;" onclick="showForm('{{key}}')">
+            <div class="card-content">
+                <h3>{{ info.name }}</h3>
+                <div class="price">{{ info.price }} جنيه</div>
+                <div class="stock">المتوفر: {{ stocks[key] }} قطعة</div>
+                
+                <div class="order-form" id="form-{{key}}" onclick="event.stopPropagation()">
+                    <form action="/place_order" method="post">
+                        <input type="hidden" name="prod_key" value="{{key}}">
+                        <input type="number" name="quantity" min="1" value="1" placeholder="الكمية">
+                        <input type="text" name="discord_id" placeholder="ID الديسكورد" required>
+                        <input type="text" name="cash_number" placeholder="رقم الكاش المحول منه" required>
+                        <button type="submit">تأكيد الشراء الآن</button>
+                    </form>
+                </div>
             </div>
         </div>
         {% endfor %}
@@ -110,13 +137,12 @@ def place_order():
         
         stock = get_stock(p_key)
         if qty > stock:
-            return f'<body style="background:#1e1e1e;color:white;text-align:center;padding-top:100px;"><h2>❌ الكمية غير متاحة</h2><p>المتوفر من {PRODUCTS[p_key]["name"]} هو {stock} فقط.</p><a href="/" style="color:#5865F2;">رجوع</a></body>'
+            return f'<body style="background:#121212;color:white;text-align:center;padding-top:100px;font-family:sans-serif;"><h2>❌ الكمية غير متاحة</h2><p>المتوفر حالياً: {stock}</p><a href="/" style="color:#5865F2;">رجوع</a></body>'
 
-        # حماية السبام
         current_time = time.time()
         user_record = db_spam.get(Order.id == d_id)
         if user_record and current_time - user_record['last_order'] < 30:
-            return f'<body style="background:#1e1e1e;color:white;text-align:center;padding-top:100px;"><h2>⏳ حماية السبام!</h2><p>انتظر 30 ثانية.</p></body>'
+            return f'<body style="background:#121212;color:white;text-align:center;padding-top:100px;font-family:sans-serif;"><h2>⏳ حماية السبام</h2><p>يرجى الانتظار 30 ثانية قبل الطلب مجدداً.</p></body>'
 
         total = qty * PRODUCTS[p_key]['price']
         db_orders.insert({'discord_id': d_id, 'prod_name': PRODUCTS[p_key]['name'], 'prod_key': p_key, 'quantity': qty, 'cash_number': cash_num, 'total': total, 'status': 'pending'})
@@ -124,12 +150,10 @@ def place_order():
 
         async def notify():
             try:
-                # رسالة العميل
                 user = await client.fetch_user(int(d_id))
-                await user.send(f"👋 **أهلاً بك! لقد استلمنا طلبك لـ ({PRODUCTS[p_key]['name']})**\\n⌛ **طلبك الآن تحت المراجعة**، سيتم الإرسال فور التأكد من التحويل.")
-                # رسالة المدير
+                await user.send(f"👋 **تم استلام طلبك لـ ({PRODUCTS[p_key]['name']}) بنجاح!**\n⌛ سيتم مراجعة الدفع وإرسال الأكواد لك فوراً.")
                 admin = await client.fetch_user(ADMIN_DISCORD_ID)
-                await admin.send(f"🔔 **طلب جديد!**\\n👤 العميل: <@{d_id}>\\n📦 المنتج: {PRODUCTS[p_key]['name']}\\n💰 المبلغ: {total} ج.م\\n🔗 اللوحة: https://daily-code-bot-1.onrender.com/admin_jo_secret")
+                await admin.send(f"🔔 **طلب جديد!**\n👤 العميل: <@{d_id}>\n📦 المنتج: {PRODUCTS[p_key]['name']}\n💰 المبلغ: {total} ج.م\n📱 من رقم: {cash_num}")
             except: pass
         
         asyncio.run_coroutine_threadsafe(notify(), client.loop)
@@ -140,12 +164,13 @@ def place_order():
 def success():
     total = request.args.get('total', '0')
     return f'''
-    <body style="background:#1e1e1e;color:white;text-align:center;padding-top:80px;font-family:sans-serif;">
-        <div style="background:#2d2d2d;padding:40px;border-radius:20px;display:inline-block;border:1px solid #5865F2;">
-            <h2 style="color:#43b581;">✅ تم تسجيل الطلب!</h2>
-            <p>حول مبلغ <b>{total} جنيه</b> لرقم:</p>
-            <h1 style="background:#3d3d3d;padding:15px;border-radius:12px;letter-spacing:2px;">{PAYMENT_NUMBER}</h1>
-            <p style="color:#b9bbbe;">البوت أرسل لك رسالة تأكيد في الخاص.</p>
+    <body style="background:#121212;color:white;text-align:center;padding-top:80px;font-family:sans-serif;">
+        <div style="background:#1e1e1e;padding:40px;border-radius:20px;display:inline-block;border:1px solid #5865F2; max-width: 400px;">
+            <h2 style="color:#43b581;">✅ تم تسجيل طلبك!</h2>
+            <p>يرجى تحويل مبلغ <b>{total} جنيه</b> لرقم فودافون كاش التالي:</p>
+            <h1 style="background:#333;padding:15px;border-radius:12px;letter-spacing:2px; color: #5865F2;">{PAYMENT_NUMBER}</h1>
+            <p style="color:#b9bbbe; font-size: 14px;">تأكد أن خاص الديسكورد مفتوح لاستلام الأكواد.</p>
+            <br><a href="/" style="color: #5865F2; text-decoration: none;">← العودة للمتجر</a>
         </div>
     </body>
     '''
@@ -154,16 +179,16 @@ def success():
 def admin_panel():
     all_orders = [dict(item, doc_id=item.doc_id) for item in db_orders.all()]
     return render_template_string('''
-    <body style="background:#1e1e1e; color:white; font-family:sans-serif; text-align:center;">
+    <body style="background:#121212; color:white; font-family:sans-serif; text-align:center; padding: 20px;">
         <h2>🛠️ لوحة إدارة متجر Jo</h2>
-        <table border="1" style="width:95%; margin:auto; background:#2d2d2d; border-collapse:collapse; border-color:#444;">
+        <table border="1" style="width:95%; margin:auto; background:#1e1e1e; border-collapse:collapse; border-color:#444;">
             <tr style="background:#5865F2; height:50px;">
-                <th>العميل</th><th>المنتج</th><th>الكمية</th><th>المبلغ</th><th>الحالة</th><th>الإجراء</th>
+                <th>العميل</th><th>المنتج</th><th>الكمية</th><th>المبلغ</th><th>الرقم</th><th>الحالة</th><th>الإجراء</th>
             </tr>
             {% for order in orders %}
             <tr style="height:50px;">
-                <td><@{{ order.discord_id }}></td><td>{{ order.prod_name }}</td><td>{{ order.quantity }}</td>
-                <td>{{ order.total }} ج.م</td><td>{{ order.status }}</td>
+                <td>{{ order.discord_id }}</td><td>{{ order.prod_name }}</td><td>{{ order.quantity }}</td>
+                <td>{{ order.total }} ج.م</td><td>{{ order.cash_number }}</td><td>{{ order.status }}</td>
                 <td>
                     {% if order.status == 'pending' %}
                     <a href="/admin/approve/{{ order.doc_id }}" style="color:#43b581;">[قبول ✅]</a> | 
@@ -190,8 +215,8 @@ def approve(order_id):
                 valid = [c for c in codes if c]
                 if valid:
                     txt = "\\n".join([f"🔹 كود {i+1}: `{c}`" for i, c in enumerate(valid)])
-                    await user.send(f"🔥 **مبروك! تم قبول طلبك لـ {order['prod_name']}:**\\n{txt}")
-                else: await user.send("⚠️ نعتذر، المخزون نفد!")
+                    await user.send(f"🔥 **مبروك! تم تأكيد الدفع لطلبك ({order['prod_name']}):**\\n{txt}")
+                else: await user.send("⚠️ نعتذر، نفد المخزون أثناء معالجة طلبك، تواصل مع الإدارة.")
             except: pass
         asyncio.run_coroutine_threadsafe(deliver(), client.loop)
     return redirect('/admin_jo_secret')
@@ -204,7 +229,7 @@ def reject(order_id):
         async def notify():
             try:
                 user = await client.fetch_user(int(order['discord_id']))
-                await user.send("❌ **نعتذر، تم رفض طلبك لعدم استلام مبلغ التحويل.**")
+                await user.send("❌ **نعتذر، تم رفض طلبك لعدم صحة بيانات التحويل.**")
             except: pass
         asyncio.run_coroutine_threadsafe(notify(), client.loop)
     return redirect('/admin_jo_secret')

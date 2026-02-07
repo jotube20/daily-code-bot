@@ -12,9 +12,9 @@ ADMIN_DISCORD_ID = 1054749887582969896
 PAYMENT_NUMBER = "01007324726"
 
 PRODUCTS = {
-    'xbox': {'name': 'Xbox Game Pass Premium', 'price': 10, 'file': 'xbox.txt', 'img': 'ضع_رابط_صورة_اكس_بوكس_هنا'},
-    'nitro1': {'name': 'Discord Nitro 1 Month', 'price': 5, 'file': 'nitro1.txt', 'img': 'ضع_رابط_صورة_نيترو_شهر_هنا'},
-    'nitro3': {'name': 'Discord Nitro 3 Months', 'price': 10, 'file': 'nitro3.txt', 'img': 'ضع_رابط_صورة_نيترو_3_شهور_هنا'}
+    'xbox': {'name': 'Xbox Game Pass Premium', 'price': 10, 'file': 'xbox.txt', 'img': 'https://i.postimg.cc/zD7kMz8R/Screenshot-2026-02-07-152934.png'},
+    'nitro1': {'name': 'Discord Nitro 1 Month', 'price': 5, 'file': 'nitro1.txt', 'img': 'https://i.postimg.cc/jqch9xtC/Screenshot-2026-02-07-152844.png'},
+    'nitro3': {'name': 'Discord Nitro 3 Months', 'price': 10, 'file': 'nitro3.txt', 'img': 'https://i.postimg.cc/xj5P7fnN/Screenshot-2026-02-07-152910.png'}
 }
 
 app = Flask(__name__)
@@ -72,6 +72,8 @@ HTML_STORE = '''
         </div>
         <div class="section-title">الأسئلة الشائعة</div>
         <div style="padding:10px 20px;font-size:12px;color:#aaa;">❓ متى يصل الكود؟ خلال 5-30 دقيقة.</div>
+        <div class="section-title">آراء العملاء</div>
+        <div style="padding:10px 20px;font-size:12px;color:#aaa;">⭐ "أفضل متجر وأسرع تسليم" - Abdo</div>
     </div>
     <button class="menu-btn" onclick="openNav()">&#9776;</button>
     <div id="main-content">
@@ -122,16 +124,15 @@ def place_order():
     qty = int(request.form.get('quantity', 1))
     d_id = request.form.get('discord_id').strip()
     cash_num = request.form.get('cash_number').strip()
-    
     total = qty * PRODUCTS[p_key]['price']
     db_orders.insert({'discord_id': d_id, 'prod_name': PRODUCTS[p_key]['name'], 'prod_key': p_key, 'quantity': qty, 'cash_number': cash_num, 'total': total, 'status': 'pending'})
-    
     async def notify():
         try:
             user = await client.fetch_user(int(d_id))
-            await user.send(f"👋 **بنجاح! تم استلام طلبك لـ ({PRODUCTS[p_key]['name']})**\\n⌛ **سيتم مراجعة الدفع وإرسال الأكواد لك فوراً.**")
+            # استعادة تنسيق الرسالة بالظبط
+            await user.send(f"👋 **بنجاح! ({PRODUCTS[p_key]['name']}) تم استلام طلبك لـ**\n⌛ **سيتم مراجعة الدفع وإرسال الأكواد لك فوراً.**")
             admin = await client.fetch_user(ADMIN_DISCORD_ID)
-            await admin.send(f"🔔 **طلب جديد!**\\n👤 **العميل:** <@{d_id}>\\n📦 **المنتج:** {PRODUCTS[p_key]['name']}\\n💰 **المبلغ:** {total} ج.م")
+            await admin.send(f"🔔 **طلب جديد!**\n👤 **العميل:** <@{d_id}>\n📦 **المنتج:** {PRODUCTS[p_key]['name']}\n💰 **المبلغ:** {total} ج.م\n📱 **من رقم:** {cash_num}")
         except: pass
     asyncio.run_coroutine_threadsafe(notify(), client.loop)
     return redirect(f'/success_page?total={total}')
@@ -153,6 +154,37 @@ def success_page():
         </div>
     </body>
     ''', total=total, pay_num=PAYMENT_NUMBER)
+
+@app.route('/my_orders/<uid>')
+def my_orders(uid):
+    orders = db_orders.search(Order.discord_id == uid)
+    # استعادة شريط الحالة الملون في صفحة طلباتي
+    return render_template_string('''
+    <body style="background:#0a0a0a;color:white;text-align:center;padding:20px;font-family:sans-serif;">
+        <h2 style="color:#5865F2;">📋 تتبع طلباتك</h2>
+        <div style="max-width:600px; margin:auto;">
+            {% for o in orders %}
+            <div style="background:#111; padding:15px; border-radius:15px; margin-bottom:10px; border:1px solid #222; text-align:right;">
+                <b style="font-size:18px;">{{ o.prod_name }}</b><br>
+                <small>القيمة: {{ o.total }} ج.م</small><br>
+                <div style="height:10px; background:#333; border-radius:5px; margin:10px 0; overflow:hidden;">
+                    {% if 'approved' in o.status %}
+                        <div style="width:100%; height:100%; background:#2ecc71;"></div>
+                    {% elif 'rejected' in o.status %}
+                        <div style="width:100%; height:100%; background:#e74c3c;"></div>
+                    {% else %}
+                        <div style="width:50%; height:100%; background:#f1c40f;"></div>
+                    {% endif %}
+                </div>
+                {% if 'approved' in o.status %}<span style="color:#2ecc71;">● تم التسليم</span>
+                {% elif 'rejected' in o.status %}<span style="color:#e74c3c;">● مرفوض</span>
+                {% else %}<span style="color:#f1c40f;">● قيد المراجعة...</span>{% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        <br><a href="/" style="color:#5865F2;text-decoration:none;">← العودة</a>
+    </body>
+    ''', orders=orders)
 
 @app.route('/admin_jo_secret')
 def admin_panel():
@@ -177,7 +209,8 @@ def approve(order_id):
     async def deliver():
         try:
             user = await client.fetch_user(int(order['discord_id']))
-            await user.send(f"🔥 **مبروك! ({order['prod_name']}) تم تأكيد الدفع لطلبك.**")
+            # رسالة تسليم الكود كما في الصورة
+            await user.send(f"🔥 **مبروك! ({order['prod_name']}) تم تأكيد الدفع لطلبك**\n💎 **الكود الخاص بك سيصلك الآن.**")
         except: pass
     asyncio.run_coroutine_threadsafe(deliver(), client.loop)
     return redirect('/admin_jo_secret')
@@ -186,11 +219,6 @@ def approve(order_id):
 def reject(order_id):
     db_orders.update({'status': 'rejected ❌'}, doc_ids=[order_id])
     return redirect('/admin_jo_secret')
-
-@app.route('/my_orders/<uid>')
-def my_orders(uid):
-    orders = db_orders.search(Order.discord_id == uid)
-    return render_template_string('''<body style="background:#0a0a0a;color:white;text-align:center;padding:20px;"><h2>📋 طلباتك</h2>{% for o in orders %}<div style="background:#111;padding:15px;margin:10px;border-radius:10px;">{{o.prod_name}} - {{o.status}}</div>{% endfor %}<br><a href="/" style="color:#5865F2;">رجوع</a></body>''', orders=orders)
 
 def run_flask(): app.run(host='0.0.0.0', port=10000)
 @client.event

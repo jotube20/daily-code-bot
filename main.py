@@ -150,7 +150,14 @@ def place_order():
             # الرسالة كما في صورة image_2b1036.png
             await user.send(f"تم استلام طلبك لـ ({PRODUCTS[p_key]['name']}) بنجاح!\\n⌛ سيتم مراجعة الدفع وإرسال الأكواد لك فوراً.")
             admin = await client.fetch_user(ADMIN_DISCORD_ID)
-            await admin.send(f"🔔 **طلب جديد!**\\n👤 **العميل:** <@{d_id}>\\n📦 **المنتج:** {PRODUCTS[p_key]['name']}\\n💰 **المبلغ:** {total} ج.م\\n📱 **من رقم:** {cash_num}")
+            admin = await client.fetch_user(ADMIN_DISCORD_ID)
+            msg = (
+                f"🔔 **طلب جديد!**\n"
+                f"👤 **العميل:** <@{d_id}>\n"
+                f"📦 **المنتج:** {PRODUCTS[p_key]['name']}\n"
+                f"💰 **المبلغ:** {total} ج.م\n"
+                f"📱 **من رقم:** {cash_num}"
+            )
         except: pass
     asyncio.run_coroutine_threadsafe(notify(), client.loop)
     return redirect(f'/success_page?total={total}')

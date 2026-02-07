@@ -69,7 +69,7 @@ HTML_STORE = '''
         
         .card-image { 
             position: absolute; inset: 0; 
-            background-size: contain; /* لتظهر الصورة كاملة بدون قص */
+            background-size: 100% 100%; /* تملأ الأطراف بالكامل */
             background-repeat: no-repeat; 
             background-position: center; 
             z-index: 1; 
@@ -77,7 +77,8 @@ HTML_STORE = '''
         
         .card-overlay {
             position: absolute; inset: 0;
-            background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.5) 40%, rgba(0,0,0,0) 100%);
+            /* تدرج الشفافية المطلوب: غامق من تحت عشان الكلام، وشفاف من فوق عشان الصورة */
+            background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.4) 45%, rgba(0,0,0,0) 100%);
             z-index: 2; display: flex; flex-direction: column; justify-content: flex-end;
             padding: 25px; text-align: center;
         }
@@ -136,10 +137,10 @@ def place_order():
         d_id = request.form.get('discord_id').strip()
         cash_num = request.form.get('cash_number').strip()
         stock = get_stock(p_key)
-        if qty > stock: return "الكمية المطلوبة غير متوفرة."
+        if qty > stock: return "الكمية غير متاحة"
         current_time = time.time()
         user_record = db_spam.get(Order.id == d_id)
-        if user_record and current_time - user_record['last_order'] < 30: return "انتظر 30 ثانية."
+        if user_record and current_time - user_record['last_order'] < 30: return "انتظر 30 ثانية"
         total = qty * PRODUCTS[p_key]['price']
         db_orders.insert({'discord_id': d_id, 'prod_name': PRODUCTS[p_key]['name'], 'prod_key': p_key, 'quantity': qty, 'cash_number': cash_num, 'total': total, 'status': 'pending'})
         db_spam.upsert({'id': d_id, 'last_order': current_time}, Order.id == d_id)
@@ -173,6 +174,7 @@ def success():
     </body>
     '''
 
+# --- لوحة الأدمن وبقية الكود ---
 @app.route('/admin_jo_secret')
 def admin_panel():
     all_orders = [dict(item, doc_id=item.doc_id) for item in db_orders.all()]

@@ -5,9 +5,9 @@ from tinydb import TinyDB, Query
 import threading
 import os
 
-# --- الإعدادات الصحيحة ---
+# --- الإعدادات ---
 TOKEN = os.environ.get('DISCORD_BOT_TOKEN')
-ADMIN_DISCORD_ID = 1054749887582969896 # تم تحديثه للـ ID الخاص بك
+ADMIN_DISCORD_ID = 1054749887582969896 
 PAYMENT_NUMBER = "01007324726"
 PRODUCT_PRICE = 5
 
@@ -64,7 +64,8 @@ def place_order():
         async def notify():
             try:
                 admin = await client.fetch_user(ADMIN_DISCORD_ID)
-                await admin.send(f"🔔 **طلب جديد!**\nالمبلغ: {total} جنيه\nلوحة التحكم: https://daily-code-bot-1.onrender.com/admin_jo_secret")
+                # تعديل الإشعار ليوضح "مين اللي اشترى"
+                await admin.send(f"🔔 **طلب جديد!**\n👤 العميل (آيدي): <@{d_id}>\n📦 الكمية: {qty}\n💰 المبلغ: {total} جنيه\n📱 رقم كاش العميل: {cash_num}\n🔗 لوحة التحكم: https://daily-code-bot-1.onrender.com/admin_jo_secret")
             except: pass
         
         asyncio.run_coroutine_threadsafe(notify(), client.loop)
@@ -87,17 +88,16 @@ def admin_panel():
     for item in db_orders.all():
         item['doc_id'] = item.doc_id
         all_orders.append(item)
-    
     return render_template_string('''
     <body style="background:#121212; color:white; font-family:sans-serif; text-align:center;">
         <h2>🛠️ لوحة تحكم الطلبات</h2>
         <table border="1" style="width:95%; margin:auto; background:#1e1e1e; border-collapse:collapse;">
             <tr style="background:#5865F2;">
-                <th>الكمية</th><th>رقم الكاش</th><th>المبلغ</th><th>الحالة</th><th>الإجراء</th>
+                <th>آيدي العميل</th><th>الكمية</th><th>رقم الكاش</th><th>المبلغ</th><th>الحالة</th><th>الإجراء</th>
             </tr>
             {% for order in orders %}
             <tr>
-                <td>{{ order.quantity }}</td><td>{{ order.cash_number }}</td>
+                <td>{{ order.discord_id }}</td><td>{{ order.quantity }}</td><td>{{ order.cash_number }}</td>
                 <td>{{ order.total }}</td><td>{{ order.status }}</td>
                 <td>
                     {% if order.status == 'pending' %}
@@ -115,20 +115,32 @@ def admin_panel():
 def approve(order_id):
     order = db_orders.get(doc_id=order_id)
     if order:
-        # التصحيح هنا: استخدام doc_ids=[order_id] بدلاً من doc_id=order_id
         db_orders.update({'status': 'approved ✅'}, doc_ids=[order_id])
         
-        async def send_item():
+        async def send_items():
             try:
                 user = await client.fetch_user(int(order['discord_id']))
-                code = get_code_from_file()
-                if code:
-                    await user.send(f"✅ **تم قبول طلبك!**\nكود المنتج الخاص بك هو: `{code}`")
+                qty = int(order['quantity'])
+                collected_codes = []
+                
+                # تكرار السحب من الملف بناءً على الكمية المطلوبة
+                for i in range(qty):
+                    code = get_code_from_file()
+                    if code:
+                        collected_codes.append(code)
+                
+                if collected_codes:
+                    codes_text = "\n".join([f"الكود {i+1}: `{c}`" for i, c in enumerate(collected_codes)])
+                    await user.send(f"✅ **تم قبول طلبك بنجاح!**\nإليك الأكواد الخاصة بك ({qty} قطع):\n{codes_text}")
+                    
+                    # إشعار لو نفدت الأكواد أثناء السحب
+                    if len(collected_codes) < qty:
+                        await user.send(f"⚠️ نعتذر، تم تسليم {len(collected_codes)} كود فقط لأن المخزون نفد.")
                 else:
-                    await user.send(f"⚠️ تم قبول طلبك ولكن نعتذر، نفدت الأكواد حالياً. تواصل مع الإدارة.")
+                    await user.send(f"⚠️ تم قبول طلبك ولكن نعتذر، الأكواد نفدت من المخزون تماماً.")
             except Exception as e: print(f"DM Error: {e}")
             
-        asyncio.run_coroutine_threadsafe(send_item(), client.loop)
+        asyncio.run_coroutine_threadsafe(send_items(), client.loop)
     return redirect('/admin_jo_secret')
 
 @app.route('/admin/reject/<int:order_id>')
@@ -149,7 +161,7 @@ def run_flask():
 
 @client.event
 async def on_ready():
-    print(f'✅ البوت شغال: {client.user}')
+    print(f'✅ المتجر يعمل: {client.user}')
     client.loop = asyncio.get_running_loop()
 
 if __name__ == '__main__':

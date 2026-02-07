@@ -47,7 +47,7 @@ def get_stock(prod_key):
         lines = [l for l in f.readlines() if l.strip()]
     return len(lines)
 
-# --- واجهة المتجر (التعديل لضمان أعلى جودة وملء الأطراف) ---
+# --- واجهة المتجر ---
 HTML_STORE = '''
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -66,24 +66,17 @@ HTML_STORE = '''
             transition: 0.4s ease; border: 1px solid #222;
         }
         .product-card:hover { transform: translateY(-10px); border-color: var(--main-color); }
-        
         .card-image { 
-            position: absolute; inset: 0; 
-            background-size: cover; /* تملأ الأطراف مع الحفاظ على التناسب */
-            background-repeat: no-repeat; 
-            background-position: center; 
-            image-rendering: -webkit-optimize-contrast; /* لزيادة وضوح وجودة الصورة */
-            z-index: 1; 
+            position: absolute; inset: 0; background-size: cover; background-repeat: no-repeat; background-position: center; 
+            image-rendering: -webkit-optimize-contrast; z-index: 1; 
         }
-        
         .card-overlay {
             position: absolute; inset: 0;
-            /* تدرج شفافية ناعم جداً: يبدأ غامق فقط عند منطقة النص ويختفي تماماً في الأعلى لجمال الصورة */
             background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.3) 35%, rgba(0,0,0,0) 70%);
             z-index: 2; display: flex; flex-direction: column; justify-content: flex-end;
             padding: 25px; text-align: center;
         }
-        .product-card h3 { font-size: 22px; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+        .product-card h3 { font-size: 22px; margin-bottom: 10px; }
         .price { font-size: 24px; font-weight: bold; color: #43b581; margin-bottom: 5px; }
         .stock { font-size: 14px; color: #ccc; margin-bottom: 15px; }
         .order-form { display: none; background: rgba(15, 15, 15, 0.98); padding: 15px; border-radius: 15px; border: 1px solid var(--main-color); margin-top: 10px; position: relative; z-index: 10; }
@@ -125,8 +118,6 @@ HTML_STORE = '''
 </html>
 '''
 
-# --- باقي كود البوت (لا يوجد تغيير في الرسايل أو المنطق) ---
-
 @app.route('/')
 def home():
     stocks = {k: get_stock(k) for k in PRODUCTS}
@@ -147,13 +138,18 @@ def place_order():
         total = qty * PRODUCTS[p_key]['price']
         db_orders.insert({'discord_id': d_id, 'prod_name': PRODUCTS[p_key]['name'], 'prod_key': p_key, 'quantity': qty, 'cash_number': cash_num, 'total': total, 'status': 'pending'})
         db_spam.upsert({'id': d_id, 'last_order': current_time}, Order.id == d_id)
+        
         async def notify():
             try:
                 user = await client.fetch_user(int(d_id))
-                await user.send(f"👋 **بنجاح! تم استلام طلبك لـ ({PRODUCTS[p_key]['name']})**\\n⌛ **سيتم مراجعة الدفع وإرسال الأكواد لك فوراً.**")
+                # رسالة العميل (مطابقة للصورة 100%)
+                await user.send(f"👋 **بنجاح! تم استلام طلبك لـ ({PRODUCTS[p_key]['name']})**\n⌛ **سيتم مراجعة الدفع وإرسال الأكواد لك فوراً.**")
+                
                 admin = await client.fetch_user(ADMIN_DISCORD_ID)
-                await admin.send(f"🔔 **طلب جديد!**\\n👤 **العميل:** <@{d_id}>\\n📦 **المنتج:** {PRODUCTS[p_key]['name']}\\n💰 **المبلغ:** {total} ج.م\\n📱 **من رقم:** {cash_num}")
+                # رسالة الإدارة (مطابقة للصورة 100%)
+                await admin.send(f"🔔 **طلب جديد!**\n👤 **العميل:** <@{d_id}>\n📦 **المنتج:** {PRODUCTS[p_key]['name']}\n💰 **المبلغ:** {total} ج.م\n📱 **من رقم:** {cash_num}")
             except: pass
+        
         asyncio.run_coroutine_threadsafe(notify(), client.loop)
         return redirect(f'/success_page?total={total}')
     except Exception as e: return str(e)
@@ -170,7 +166,8 @@ def success():
             <div style="background: rgba(88, 101, 242, 0.1); padding: 15px; border-radius: 10px; border: 1px solid #5865F2; margin: 20px 0; text-align: right;">
                 <b style="color: #ffcc00;">⚠️ ملحوظة هامة:</b><br>
                 يجب عليك دخول سيرفر الديسكورد <a href="https://discord.gg/RYK28PNv" style="color: #5865F2;">https://discord.gg/RYK28PNv</a> 
-                ليستطيع البوت ان يرسل لك طلبيتك و تأكد ان خاصك مفتوح و الا لم يصلك الكود.
+                ليستطيع البوت ان يرسل لك طلبيتك
+                و تأكد ان خاصك مفتوح و الا لم يصلك الكود.
             </div>
             <a href="/" style="color:#5865F2; text-decoration:none;">← العودة للمتجر</a>
         </div>
@@ -215,6 +212,7 @@ def approve(order_id):
                 valid = [c for c in codes if c]
                 if valid:
                     txt = "\\n".join([f"🔹 كود {i+1}: `{c}`" for i, c in enumerate(valid)])
+                    # رسالة النجاح (مطابقة للصورة 100%)
                     await user.send(f"🔥 **مبروك! ({order['prod_name']}) تم تأكيد الدفع لطلبك:**\\n{txt}")
                 else: await user.send("⚠️ نفد المخزون!")
             except: pass

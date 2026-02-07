@@ -11,25 +11,25 @@ TOKEN = os.environ.get('DISCORD_BOT_TOKEN')
 ADMIN_DISCORD_ID = 1054749887582969896 
 PAYMENT_NUMBER = "01007324726"
 
-# ضع روابط الصور المباشرة هنا لكي تظهر في الموقع
+# ملاحظة: ضع روابط الصور المباشرة هنا لتظهر في خلفية الكروت
 PRODUCTS = {
     'xbox': {
         'name': 'Xbox Game Pass Premium', 
         'price': 10, 
         'file': 'xbox.txt', 
-        'img': 'رابط_صورة_الاكس_بوكس'
+        'img': 'https://i.postimg.cc/zD7kMz8R/Screenshot-2026-02-07-152934.png'
     },
     'nitro1': {
         'name': 'Discord Nitro 1 Month', 
         'price': 5, 
         'file': 'nitro1.txt', 
-        'img': 'رابط_صورة_نيترو_شهر'
+        'img': 'https://i.postimg.cc/jqch9xtC/Screenshot-2026-02-07-152844.png'
     },
     'nitro3': {
         'name': 'Discord Nitro 3 Months', 
         'price': 10, 
         'file': 'nitro3.txt', 
-        'img': 'رابط_صورة_نيترو_3_شهور'
+        'img': 'https://i.postimg.cc/xj5P7fnN/Screenshot-2026-02-07-152910.png'
     }
 }
 
@@ -48,7 +48,7 @@ def get_stock(prod_key):
         lines = [l for l in f.readlines() if l.strip()]
     return len(lines)
 
-# --- واجهة المتجر (التصميم الاحترافي بالصور والشفافية) ---
+# --- واجهة المتجر (تصميم الكروت بالصور والشفافية) ---
 HTML_STORE = '''
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -58,7 +58,7 @@ HTML_STORE = '''
     <title>Jo Store | متجرك المفضل</title>
     <style>
         :root { --main-color: #5865F2; --bg-black: #0a0a0a; }
-        body { background: var(--bg-black); color: white; font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 20px; }
+        body { background: var(--bg-black); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; }
         h1 { text-align: center; margin-bottom: 40px; font-size: 32px; }
         .products-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; max-width: 1200px; margin: auto; }
         .product-card { 
@@ -102,7 +102,7 @@ HTML_STORE = '''
                 <div class="order-form" id="form-{{key}}" onclick="event.stopPropagation()">
                     <form action="/place_order" method="post">
                         <input type="hidden" name="prod_key" value="{{key}}">
-                        <input type="number" name="quantity" min="1" value="1">
+                        <input type="number" name="quantity" min="1" value="1" placeholder="الكمية">
                         <input type="text" name="discord_id" placeholder="ID الديسكورد" required>
                         <input type="text" name="cash_number" placeholder="رقم الكاش المحول منه" required>
                         <button type="submit">تأكيد الشراء الآن</button>
@@ -130,11 +130,11 @@ def place_order():
         cash_num = request.form.get('cash_number').strip()
         
         stock = get_stock(p_key)
-        if qty > stock: return "الكمية غير متوفرة"
+        if qty > stock: return "الكمية المطلوبة غير متوفرة حالياً."
 
         current_time = time.time()
         user_record = db_spam.get(Order.id == d_id)
-        if user_record and current_time - user_record['last_order'] < 30: return "انتظر 30 ثانية"
+        if user_record and current_time - user_record['last_order'] < 30: return "يرجى الانتظار 30 ثانية بين الطلبات."
 
         total = qty * PRODUCTS[p_key]['price']
         db_orders.insert({'discord_id': d_id, 'prod_name': PRODUCTS[p_key]['name'], 'prod_key': p_key, 'quantity': qty, 'cash_number': cash_num, 'total': total, 'status': 'pending'})
@@ -142,30 +142,36 @@ def place_order():
 
         async def notify():
             try:
-                # رسالة العميل (نفس التنسيق المطلوب)
+                # رسالة العميل عند الطلب (زي الصورة)
                 user = await client.fetch_user(int(d_id))
                 await user.send(f"👋 **بنجاح! تم استلام طلبك لـ ({PRODUCTS[p_key]['name']})**\n⌛ **سيتم مراجعة الدفع وإرسال الأكواد لك فوراً.**")
                 
-                # رسالة الإدارة
+                # رسالة الإدارة (زي الصورة)
                 admin = await client.fetch_user(ADMIN_DISCORD_ID)
                 await admin.send(f"🔔 **طلب جديد!**\n👤 **العميل:** <@{d_id}>\n📦 **المنتج:** {PRODUCTS[p_key]['name']}\n💰 **المبلغ:** {total} ج.م\n📱 **من رقم:** {cash_num}")
             except: pass
         
         asyncio.run_coroutine_threadsafe(notify(), client.loop)
         return redirect(f'/success_page?total={total}')
-    except Exception as e: return str(e)
+    except Exception as e: return f"Error: {e}"
 
 @app.route('/success_page')
 def success():
     total = request.args.get('total', '0')
     return f'''
-    <body style="background:#0a0a0a;color:white;text-align:center;padding-top:80px;font-family:sans-serif;">
-        <div style="border:1px solid #5865F2; padding:30px; border-radius:15px; display:inline-block;">
+    <body style="background:#0a0a0a;color:white;text-align:center;padding-top:60px;font-family:sans-serif;">
+        <div style="border:1px solid #5865F2; padding:30px; border-radius:15px; display:inline-block; max-width: 500px;">
             <h2 style="color:#43b581;">✅ تم تسجيل الطلب!</h2>
             <p>حول مبلغ <b>{total} جنيه</b> للرقم:</p>
-            <h1 style="background:#222; padding:15px; border-radius:10px;">{PAYMENT_NUMBER}</h1>
-            <p style="color:#888;">تأكد من فتح خاص الديسكورد.</p>
-            <a href="/" style="color:#5865F2; text-decoration:none;">العودة للمتجر</a>
+            <h1 style="background:#222; padding:15px; border-radius:10px; color: #fff;">{PAYMENT_NUMBER}</h1>
+            
+            <div style="background: rgba(88, 101, 242, 0.1); padding: 15px; border-radius: 10px; border: 1px solid #5865F2; margin: 20px 0; text-align: right; line-height: 1.6;">
+                <b style="color: #ffcc00;">⚠️ ملحوظة هامة:</b><br>
+                يجب عليك دخول سيرفر الديسكورد <a href="https://discord.gg/RYK28PNv" style="color: #5865F2;">https://discord.gg/RYK28PNv</a> 
+                ليستطيع البوت ان يرسل لك طلبيتك و تأكد ان خاصك مفتوح و الا لم يصلك الكود.
+            </div>
+
+            <a href="/" style="color:#5865F2; text-decoration:none; font-weight: bold;">← العودة للمتجر</a>
         </div>
     </body>
     '''
@@ -178,12 +184,12 @@ def admin_panel():
         <h2>🛠️ لوحة إدارة متجر Jo</h2>
         <table border="1" style="width:95%; margin:auto; background:#111; border-collapse:collapse; border-color:#333;">
             <tr style="background:#5865F2; height:50px;">
-                <th>العميل</th><th>المنتج</th><th>المبلغ</th><th>الرقم</th><th>الحالة</th><th>الإجراء</th>
+                <th>العميل</th><th>المنتج</th><th>الكمية</th><th>المبلغ</th><th>الرقم</th><th>الحالة</th><th>الإجراء</th>
             </tr>
             {% for order in orders %}
             <tr style="height:50px;">
-                <td><@{{ order.discord_id }}></td><td>{{ order.prod_name }}</td><td>{{ order.total }} ج.م</td>
-                <td>{{ order.cash_number }}</td><td>{{ order.status }}</td>
+                <td>{{ order.discord_id }}</td><td>{{ order.prod_name }}</td><td>{{ order.quantity }}</td>
+                <td>{{ order.total }} ج.م</td><td>{{ order.cash_number }}</td><td>{{ order.status }}</td>
                 <td>
                     {% if order.status == 'pending' %}
                     <a href="/admin/approve/{{ order.doc_id }}" style="color:#43b581;">[قبول ✅]</a> | 
@@ -209,9 +215,9 @@ def approve(order_id):
                 valid = [c for c in codes if c]
                 if valid:
                     txt = "\\n".join([f"🔹 كود {i+1}: `{c}`" for i, c in enumerate(valid)])
-                    # رسالة النجاح (نفس التنسيق المطلوب)
+                    # رسالة التسليم (زي الصورة)
                     await user.send(f"🔥 **مبروك! ({order['prod_name']}) تم تأكيد الدفع لطلبك:**\\n{txt}")
-                else: await user.send("⚠️ نفد المخزون!")
+                else: await user.send("⚠️ نعتذر، نفد المخزون!")
             except: pass
         asyncio.run_coroutine_threadsafe(deliver(), client.loop)
     return redirect('/admin_jo_secret')

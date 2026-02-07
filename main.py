@@ -16,7 +16,6 @@ User = Query()
 intents = discord.Intents.default()
 client = discord.Client(intents=intents)
 
-# دالة لجلب كود من الملف وحذفه لعدم التكرار
 def get_and_remove_code():
     try:
         if not os.path.exists('codes.txt'):
@@ -44,15 +43,13 @@ HTML_TEMPLATE = '''
         .container { background: #2d2d2d; padding: 30px; border-radius: 15px; display: inline-block; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
         input { padding: 12px; border-radius: 5px; border: none; width: 250px; margin-bottom: 20px; font-size: 16px; }
         button { background: #5865F2; color: white; border: none; padding: 12px 25px; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        button:hover { background: #4752c4; }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>🎁 استلم كودك اليومي</h2>
-        <p>أدخل الـ ID الخاص بك لاستلام كود الهدية</p>
         <form action="/get_code" method="post">
-            <input type="text" name="discord_id" placeholder="مثال: 45829304857201243" required><br>
+            <input type="text" name="discord_id" placeholder="ادخل الـ Discord ID" required><br>
             <button type="submit">اطلب الكود الآن</button>
         </form>
     </div>
@@ -70,50 +67,46 @@ def get_code():
     today = str(date.today())
     
     if db.search((User.id == user_id) & (User.date == today)):
-        return "<h3>⚠️ لقد حصلت على كودك بالفعل اليوم! عد غداً.</h3>"
+        return "<h3>⚠️ لقد حصلت على كودك بالفعل اليوم!</h3>"
 
     code_to_send = get_and_remove_code()
     if not code_to_send:
-        return "<h3>❌ نعتذر، نفدت الأكواد حالياً. حاول لاحقاً!</h3>"
+        return "<h3>❌ نعتذر، نفدت الأكواد حالياً.</h3>"
 
-    # التعديل هنا: استخدام asyncio.run_coroutine_threadsafe بشكل صحيح
+    # الطريقة الأضمن لإرسال الرسالة من Flask إلى Discord
     async def send_to_discord():
         try:
             user = await client.fetch_user(int(user_id))
-            await user.send(f"✅ أهلاً بك! كودك الجديد هو: `{code_to_send}`")
+            await user.send(f"✅ كودك الجديد هو: `{code_to_send}`")
             db.insert({'id': user_id, 'date': today, 'code': code_to_send})
             return True
         except Exception as e:
-            print(f"Error sending DM: {e}")
+            print(f"Detailed Error: {e}")
             return False
 
-    # استخدام الـ loop من الـ client بعد تشغيله
-    coro = send_to_discord()
-    future = asyncio.run_coroutine_threadsafe(coro, client.loop)
-    
+    # محاولة الحصول على الـ loop بطريقة آمنة
     try:
-        if future.result(timeout=10):
-            return "<h3>✅ تم إرسال الكود بنجاح! تفقد رسائلك الخاصة في ديسكورد.</h3>"
+        loop = client.loop # سيتم تعريفه في on_ready
+        future = asyncio.run_coroutine_threadsafe(send_to_discord(), loop)
+        if future.result(timeout=15):
+            return "<h3>✅ تم إرسال الكود بنجاح! تفقد الـ DMs.</h3>"
         else:
-            return "<h3>❌ فشل الإرسال، تأكد من فتح الـ DMs في إعدادات خصوصية السيرفر.</h3>"
+            return "<h3>❌ فشل الإرسال، تأكد من فتح الـ DMs.</h3>"
     except Exception as e:
-        return f"<h3>❌ حدث خطأ أثناء الإرسال. تأكد من صحة الـ ID.</h3>"
+        print(f"Loop Error: {e}")
+        return "<h3>❌ السيرفر لسه بيقوم، جرب تاني كمان 10 ثواني.</h3>"
 
 def run_flask():
-    app.run(host='0.0.0.0', port=os.environ.get('PORT', 10000))
+    port = int(os.environ.get('PORT', 10000))
+    app.run(host='0.0.0.0', port=port)
 
-# تشغيل البوت مع الـ Flask
 @client.event
 async def on_ready():
     print(f'Logged in as {client.user}')
-    # حفظ الـ loop في الـ client لاستخدامه لاحقاً
+    # هذه الخطوة هي الأهم: تثبيت الـ loop داخل الكلاينت
     client.loop = asyncio.get_running_loop()
 
 if __name__ == '__main__':
-    # تشغيل Flask في Thread منفصل
     threading.Thread(target=run_flask, daemon=True).start()
-    
     if TOKEN:
         client.run(TOKEN)
-    else:
-        print("Error: No DISCORD_BOT_TOKEN found!")

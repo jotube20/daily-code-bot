@@ -47,7 +47,7 @@ def get_stock(prod_key):
         lines = [l for l in f.readlines() if l.strip()]
     return len(lines)
 
-# --- واجهة المتجر ---
+# --- واجهة المتجر (التعديل لضمان أعلى جودة وملء الأطراف) ---
 HTML_STORE = '''
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -69,22 +69,23 @@ HTML_STORE = '''
         
         .card-image { 
             position: absolute; inset: 0; 
-            background-size: 100% 100%; /* تملأ الأطراف بالكامل */
+            background-size: cover; /* تملأ الأطراف مع الحفاظ على التناسب */
             background-repeat: no-repeat; 
             background-position: center; 
+            image-rendering: -webkit-optimize-contrast; /* لزيادة وضوح وجودة الصورة */
             z-index: 1; 
         }
         
         .card-overlay {
             position: absolute; inset: 0;
-            /* تدرج الشفافية المطلوب: غامق من تحت عشان الكلام، وشفاف من فوق عشان الصورة */
-            background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.4) 45%, rgba(0,0,0,0) 100%);
+            /* تدرج شفافية ناعم جداً: يبدأ غامق فقط عند منطقة النص ويختفي تماماً في الأعلى لجمال الصورة */
+            background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.3) 35%, rgba(0,0,0,0) 70%);
             z-index: 2; display: flex; flex-direction: column; justify-content: flex-end;
             padding: 25px; text-align: center;
         }
-        .product-card h3 { font-size: 22px; margin-bottom: 10px; }
+        .product-card h3 { font-size: 22px; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
         .price { font-size: 24px; font-weight: bold; color: #43b581; margin-bottom: 5px; }
-        .stock { font-size: 14px; color: #888; margin-bottom: 15px; }
+        .stock { font-size: 14px; color: #ccc; margin-bottom: 15px; }
         .order-form { display: none; background: rgba(15, 15, 15, 0.98); padding: 15px; border-radius: 15px; border: 1px solid var(--main-color); margin-top: 10px; position: relative; z-index: 10; }
         input { width: 90%; padding: 10px; margin: 5px 0; border-radius: 8px; border: none; background: #222; color: white; text-align: center; }
         button { background: var(--main-color); color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; width: 100%; font-weight: bold; }
@@ -123,6 +124,8 @@ HTML_STORE = '''
 </body>
 </html>
 '''
+
+# --- باقي كود البوت (لا يوجد تغيير في الرسايل أو المنطق) ---
 
 @app.route('/')
 def home():
@@ -174,7 +177,6 @@ def success():
     </body>
     '''
 
-# --- لوحة الأدمن وبقية الكود ---
 @app.route('/admin_jo_secret')
 def admin_panel():
     all_orders = [dict(item, doc_id=item.doc_id) for item in db_orders.all()]

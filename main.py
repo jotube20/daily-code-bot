@@ -27,6 +27,7 @@ Feedback = Query()
 intents = discord.Intents.all()
 client = discord.Client(intents=intents)
 
+# --- الدوال البرمجية ---
 def get_stock(prod_key):
     filename = PRODUCTS[prod_key]['file']
     if not os.path.exists(filename): return 0
@@ -41,8 +42,7 @@ def get_code_prod(p_key):
         lines = [l for l in f.readlines() if l.strip()]
     if not lines: return None
     code = lines[0].strip()
-    with open(filename, 'w') as f: 
-        f.writelines(lines[1:])
+    with open(filename, 'w') as f: f.writelines(lines[1:])
     return code
 
 # --- واجهة المتجر الرئيسية ---
@@ -69,7 +69,7 @@ HTML_STORE = '''
         .order-form { display: none; background: rgba(15, 15, 15, 0.98); padding: 15px; border-radius: 15px; border: 1px solid var(--main-color); margin-top: 10px; position: relative; z-index: 10; }
         input, textarea { width: 90%; padding: 10px; margin: 5px 0; border-radius: 8px; border: none; background: #222; color: white; text-align: center; }
         button { background: var(--main-color); color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; width: 100%; font-weight: bold; }
-        .feedback-item { background: #1a1a1a; margin: 10px 20px; padding: 10px; border-radius: 10px; font-size: 12px; border-right: 3px solid var(--main-color); }
+        .feedback-item { background: #1a1a1a; margin: 10px 20px; padding: 10px; border-radius: 10px; font-size: 12px; border-right: 3px solid var(--main-color); text-align: right; }
     </style>
 </head>
 <body>
@@ -80,13 +80,15 @@ HTML_STORE = '''
         <div class="section-title">أضف رأيك</div>
         <form action="/add_feedback" method="post" style="padding: 10px 20px;">
             <input type="text" name="user_name" placeholder="اسمك" required>
-            <textarea name="comment" placeholder="رأيك" required></textarea>
+            <textarea name="comment" placeholder="رأيك في المتجر" required></textarea>
             <button type="submit" style="font-size: 12px; padding: 5px;">إرسال</button>
         </form>
-        <div class="section-title">آراء العملاء</div>
+        <div class="section-title">آراء العملاء الحقيقية</div>
         {% for f in feedbacks %}<div class="feedback-item"><b>{{ f.name }}:</b> {{ f.comment }}</div>{% endfor %}
     </div>
+
     <button class="menu-btn" onclick="openNav()">&#9776;</button>
+
     <div id="main-content">
         <h1>Jo Store | متجرك المفضل 🔒</h1>
         <div class="products-container">
@@ -121,6 +123,8 @@ HTML_STORE = '''
 </html>
 '''
 
+# --- الروابط (Routes) ---
+
 @app.route('/')
 def home():
     stocks = {k: get_stock(k) for k in PRODUCTS}
@@ -129,9 +133,9 @@ def home():
 
 @app.route('/add_feedback', methods=['POST'])
 def add_feedback():
-    name, comment, ip = request.form.get('user_name'), request.form.get('comment'), request.remote_addr
-    if db_feedbacks.count(Feedback.ip == ip) >= 2: return "الحد الأقصى للتعليقات هو 2."
-    db_feedbacks.insert({'name': name, 'comment': comment, 'ip': ip})
+    ip = request.remote_addr
+    if db_feedbacks.count(Feedback.ip == ip) >= 2: return "لقد كتبت رأيين بالفعل."
+    db_feedbacks.insert({'name': request.form.get('user_name'), 'comment': request.form.get('comment'), 'ip': ip})
     return redirect('/')
 
 @app.route('/place_order', methods=['POST'])
@@ -143,10 +147,10 @@ def place_order():
     async def notify():
         try:
             user = await client.fetch_user(int(d_id))
-            # الرسالة بالظبط زي الصورة
-            await user.send(f"تم استلام طلبك لـ ({PRODUCTS[p_key]['name']}) بنجاح!\n⌛ سيتم مراجعة الدفع وإرسال الأكواد لك فوراً.")
+            # الرسالة كما في صورة image_2b1036.png
+            await user.send(f"تم استلام طلبك لـ ({PRODUCTS[p_key]['name']}) بنجاح!\\n⌛ سيتم مراجعة الدفع وإرسال الأكواد لك فوراً.")
             admin = await client.fetch_user(ADMIN_DISCORD_ID)
-            await admin.send(f"🔔 **طلب جديد!**\n👤 **العميل:** <@{d_id}>\n📦 **المنتج:** {PRODUCTS[p_key]['name']}\n💰 **المبلغ:** {total} ج.م\n📱 **من رقم:** {cash_num}")
+            await admin.send(f"🔔 **طلب جديد!**\\n👤 **العميل:** <@{d_id}>\\n📦 **المنتج:** {PRODUCTS[p_key]['name']}\\n💰 **المبلغ:** {total} ج.م\\n📱 **من رقم:** {cash_num}")
         except: pass
     asyncio.run_coroutine_threadsafe(notify(), client.loop)
     return redirect(f'/success_page?total={total}')
@@ -162,49 +166,108 @@ def success_page():
             <h1 style="background:#222;padding:15px;border-radius:10px; color:#fff;">{{pay_num}}</h1>
             <div style="background:rgba(88,101,242,0.1);padding:20px;border-radius:15px;border:1px solid #5865F2;margin:20px 0;text-align:right;">
                 <b style="color:#ffcc00;">⚠️ ملحوظة هامة:</b><br>
-                يجب دخول سيرفر الديسكورد https://discord.gg/RYK28PNv وفتح الخاص لاستلام الكود.
+                فتح الخاص https://discord.gg/RYK28PNv يجب دخول سيرفر الديسكورد لاستلام الكود.
             </div>
-            <a href="/" style="color:#5865F2;text-decoration:none;">العودة للمتجر</a>
+            <a href="/" style="color:#5865F2;text-decoration:none; font-weight: bold;">العودة للمتجر</a>
         </div>
     </body>''', total=total, pay_num=PAYMENT_NUMBER)
 
+# --- لوحة التحكم الاحترافية المعدلة ---
 @app.route('/admin_jo_secret', methods=['GET', 'POST'])
 def admin_panel():
     if request.method == 'POST':
         action = request.form.get('action')
         if action == 'restock':
-            with open(PRODUCTS[request.form.get('p_key')]['file'], 'a') as f: f.write("\n" + request.form.get('codes'))
+            with open(PRODUCTS[request.form.get('p_key')]['file'], 'a') as f: f.write("\\n" + request.form.get('codes'))
         elif action == 'delete_feedback': db_feedbacks.remove(doc_ids=[int(request.form.get('f_id'))])
         elif action == 'clear_logs': db_orders.remove(Order.discord_id == request.form.get('u_id'))
+
     orders = [dict(item, doc_id=item.doc_id) for item in db_orders.all()]
     fbacks = [dict(item, doc_id=item.doc_id) for item in db_feedbacks.all()]
-    return render_template_string('''<body style="background:#0a0a0a; color:white; padding:20px;">
-        <h2>🛠️ لوحة التحكم</h2>
-        <form method="post"><input type="hidden" name="action" value="restock"><select name="p_key"><option value="xbox">Xbox</option><option value="nitro1">Nitro 1</option><option value="nitro3">Nitro 3</option></select><textarea name="codes" placeholder="أكواد"></textarea><button type="submit">ريستوك</button></form>
-        <form method="post"><input type="hidden" name="action" value="clear_logs"><input type="text" name="u_id" placeholder="Discord ID"><button type="submit">مسح سجلات</button></form>
-        <h3>الآراء</h3>{% for f in fbacks %}<div>{{f.name}}: {{f.comment}} <form method="post" style="display:inline;"><input type="hidden" name="action" value="delete_feedback"><input type="hidden" name="f_id" value="{{f.doc_id}}"><button type="submit">حذف</button></form></div>{% endfor %}
-        <h3>الطلبات</h3>{% for o in orders %}<div>{{o.discord_id}} - {{o.prod_name}} - {{o.status}} <a href="/approve/{{o.doc_id}}">قبول</a> | <a href="/reject/{{o.doc_id}}">رفض</a></div>{% endfor %}
-    </body>''', orders=orders, fbacks=fbacks)
+    
+    return render_template_string('''
+    <body style="background:#0a0a0a; color:white; font-family:sans-serif; padding:20px;">
+        <h2 style="text-align:center; color:#5865F2;">🛠️ لوحة تحكم Jo الشاملة</h2>
+        
+        <div style="display:flex; gap:20px; flex-wrap:wrap; justify-content:center;">
+            <div style="background:#111; padding:20px; border-radius:15px; border:1px solid #333; width:350px;">
+                <h3 style="color:#5865F2;">📦 نظام ريستوك</h3>
+                <form method="post">
+                    <input type="hidden" name="action" value="restock">
+                    <select name="p_key" style="width:100%; padding:10px; background:#222; color:white; border:1px solid #444;">
+                        <option value="xbox">Xbox Game Pass</option>
+                        <option value="nitro1">Nitro 1 Month</option>
+                        <option value="nitro3">Nitro 3 Months</option>
+                    </select><br><br>
+                    <textarea name="codes" placeholder="أدخل الأكواد (كود في كل سطر)" style="height:120px; background:#222; color:white; border:1px solid #444; width:100%;"></textarea><br><br>
+                    <button type="submit" style="background:#5865F2; color:white; width:100%; padding:10px; cursor:pointer;">تأكيد الريستوك</button>
+                </form>
+            </div>
+
+            <div style="background:#111; padding:20px; border-radius:15px; border:1px solid #333; width:350px;">
+                <h3 style="color:#e74c3c;">🗑️ مسح سجلات مستخدم</h3>
+                <form method="post">
+                    <input type="hidden" name="action" value="clear_logs">
+                    <input type="text" name="u_id" placeholder="أدخل Discord ID" style="background:#222; color:white; border:1px solid #444; width:100%; padding:10px;"><br><br>
+                    <button type="submit" style="background:#e74c3c; color:white; width:100%; padding:10px; cursor:pointer;">مسح التاريخ بالكامل</button>
+                </form>
+            </div>
+        </div>
+
+        <h3 style="margin-top:40px; color:#5865F2;">💬 إدارة الآراء الحقيقية</h3>
+        <div style="background:#111; border-radius:15px; padding:10px; border:1px solid #333;">
+            <table style="width:100%; text-align:right; border-collapse:collapse;">
+                <tr style="border-bottom:1px solid #333; height:40px;"><th>الاسم</th><th>الرأي</th><th>الإجراء</th></tr>
+                {% for f in fbacks %}
+                <tr style="height:50px; border-bottom:1px solid #222;">
+                    <td>{{ f.name }}</td><td>{{ f.comment }}</td>
+                    <td>
+                        <form method="post" style="display:inline;">
+                            <input type="hidden" name="action" value="delete_feedback">
+                            <input type="hidden" name="f_id" value="{{ f.doc_id }}">
+                            <button type="submit" style="background:red; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">حذف 🗑️</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+
+        <h3 style="margin-top:40px; color:#5865F2;">📦 إدارة الطلبات المعلقة</h3>
+        <div style="background:#111; border-radius:15px; padding:10px; border:1px solid #333;">
+            <table style="width:100%; text-align:center; border-collapse:collapse;">
+                <tr style="background:#5865F2; height:40px;"><th>العميل</th><th>المنتج</th><th>الكمية</th><th>الحالة</th><th>الإجراء</th></tr>
+                {% for o in orders %}
+                <tr style="height:50px; border-bottom:1px solid #222;">
+                    <td>{{ o.discord_id }}</td><td>{{ o.prod_name }}</td><td>{{ o.quantity }}</td><td>{{ o.status }}</td>
+                    <td>
+                        {% if o.status == 'pending' %}
+                        <a href="/approve/{{o.doc_id}}" style="color:#2ecc71; text-decoration:none; font-weight:bold;">[قبول ✅]</a> 
+                        <a href="/reject/{{o.doc_id}}" style="color:#e74c3c; text-decoration:none; font-weight:bold; margin-right:10px;">[رفض ❌]</a>
+                        {% else %} - {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </body>
+    ''', orders=orders, fbacks=fbacks)
 
 @app.route('/approve/<int:order_id>')
 def approve(order_id):
     order = db_orders.get(doc_id=order_id)
     if order and order['status'] == 'pending':
         qty = int(order.get('quantity', 1))
-        # جلب عدد الأكواد المطلوب بالظبط
-        codes = []
-        for _ in range(qty):
-            c = get_code_prod(order['prod_key'])
-            if c: codes.append(c)
-        
-        if len(codes) > 0:
+        codes = [get_code_prod(order['prod_key']) for _ in range(qty)]
+        valid_codes = [c for c in codes if c]
+        if valid_codes:
             db_orders.update({'status': 'approved ✅'}, doc_ids=[order_id])
             async def deliver():
                 try:
                     user = await client.fetch_user(int(order['discord_id']))
-                    # الرسالة بالظبط زي الصورة لكل كود
-                    codes_msg = "\n".join([f"🔹 كود {i+1}: `{c}`" for i, c in enumerate(codes)])
-                    await user.send(f"🔥 **مبروك! ({order['prod_name']}) تم تأكيد الدفع لطلبك**\n{codes_msg}")
+                    # الرسالة كما في صورة image_29375f.png (شكل image_285d25.png)
+                    codes_msg = "\\n".join([f"🔹 كود {i+1}: `{c}`" for i, c in enumerate(valid_codes)])
+                    await user.send(f"🔥 **مبروك! ({order['prod_name']}) تم تأكيد الدفع لطلبك**\\n{codes_msg}")
                 except: pass
             asyncio.run_coroutine_threadsafe(deliver(), client.loop)
     return redirect('/admin_jo_secret')
@@ -216,7 +279,7 @@ def reject(order_id):
     async def notify():
         try:
             user = await client.fetch_user(int(order['discord_id']))
-            await user.send("❌ نعتذر، تم رفض طلبك.")
+            await user.send("❌ **نعتذر، تم رفض طلبك لعدم استلام مبلغ التحويل.**")
         except: pass
     asyncio.run_coroutine_threadsafe(notify(), client.loop)
     return redirect('/admin_jo_secret')
@@ -224,7 +287,7 @@ def reject(order_id):
 @app.route('/my_orders/<uid>')
 def my_orders(uid):
     orders = db_orders.search(Order.discord_id == uid)
-    return render_template_string('''<body style="background:#0a0a0a;color:white;text-align:center;padding:20px;"><h2>📋 طلباتك</h2>{% for o in orders %}<div style="background:#111;padding:15px;margin:10px;border-radius:15px;">{{o.prod_name}} - {{o.status}}</div>{% endfor %}<br><a href="/" style="color:#5865F2;">رجوع</a></body>''', orders=orders)
+    return render_template_string('''<body style="background:#0a0a0a;color:white;text-align:center;padding:20px;"><h2>📋 طلباتك</h2>{% for o in orders %}<div style="background:#111;padding:15px;margin:10px;border-radius:15px; border:1px solid #333;">{{o.prod_name}} - {{o.status}}</div>{% endfor %}<br><a href="/" style="color:#5865F2;">رجوع</a></body>''', orders=orders)
 
 def run_flask(): app.run(host='0.0.0.0', port=10000)
 @client.event

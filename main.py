@@ -18,28 +18,55 @@ Order = Query()
 intents = discord.Intents.default()
 client = discord.Client(intents=intents)
 
-# --- الواجهة الرئيسية ---
-HTML_STORE = f'''
+# --- دالة فحص الكمية المتاحة ---
+def get_stock_count():
+    if not os.path.exists('codes.txt'): return 0
+    with open('codes.txt', 'r') as f:
+        lines = [l for l in f.readlines() if l.strip()]
+    return len(lines)
+
+# --- واجهة المتجر الحديثة (UI) ---
+HTML_STORE = '''
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8"><title>متجر جو الرقمي</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jo's Store | متجر جو</title>
     <style>
-        body {{ background: #121212; color: white; font-family: sans-serif; text-align: center; padding: 20px; }}
-        .card {{ background: #1e1e1e; padding: 30px; border-radius: 20px; display: inline-block; width: 90%; max-width: 400px; border: 1px solid #333; }}
-        input {{ width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; background: #2c2f33; color: white; box-sizing: border-box; }}
-        button {{ background: #5865F2; color: white; border: none; padding: 15px; width: 100%; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; }}
+        :root { --main-color: #5865F2; --bg-dark: #0f0f0f; --card-bg: #1a1a1a; }
+        body { background: var(--bg-dark); color: white; font-family: 'Segoe UI', Tahoma, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+        .card { background: var(--card-bg); padding: 40px; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); width: 100%; max-width: 420px; border: 1px solid #333; transition: 0.3s; }
+        h2 { margin-top: 0; color: var(--main-color); font-size: 28px; }
+        .stock-badge { background: #232428; padding: 5px 15px; border-radius: 20px; font-size: 14px; color: #43b581; margin-bottom: 20px; display: inline-block; }
+        .input-group { text-align: right; margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-size: 14px; color: #b9bbbe; }
+        input { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid #333; background: #232428; color: white; font-size: 16px; box-sizing: border-box; transition: 0.3s; }
+        input:focus { border-color: var(--main-color); outline: none; }
+        button { background: var(--main-color); color: white; border: none; padding: 16px; width: 100%; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 18px; margin-top: 10px; transition: 0.3s; }
+        button:hover { background: #4752c4; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(88, 101, 242, 0.4); }
+        .price-info { background: rgba(67, 181, 129, 0.1); color: #43b581; padding: 10px; border-radius: 10px; margin-bottom: 20px; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="card">
-        <h2 style="color:#5865F2;">🛍️ متجر Jo الرقمي</h2>
-        <p style="color:#43b581;">السعر الحالي: {PRODUCT_PRICE} جنيه</p>
+        <h2>🛍️ متجر Jo</h2>
+        <div class="stock-badge">المتوفر حالياً: {{ stock }} قطعة</div>
+        <div class="price-info">سعر القطعة: ''' + str(PRODUCT_PRICE) + ''' جنيه</div>
         <form action="/place_order" method="post">
-            <input type="number" name="quantity" placeholder="الكمية" min="1" value="1">
-            <input type="text" name="discord_id" placeholder="الـ Discord ID الخاص بك" required>
-            <input type="text" name="cash_number" placeholder="رقم الكاش المحول منه" required>
-            <button type="submit">إتمام الطلب</button>
+            <div class="input-group">
+                <label>الكمية المطلوبة</label>
+                <input type="number" name="quantity" min="1" value="1" required>
+            </div>
+            <div class="input-group">
+                <label>Discord ID</label>
+                <input type="text" name="discord_id" placeholder="مثال: 1054749887..." required>
+            </div>
+            <div class="input-group">
+                <label>رقم المحفظة (كاش)</label>
+                <input type="text" name="cash_number" placeholder="الرقم الذي ستحول منه" required>
+            </div>
+            <button type="submit">إتمام الطلب الآن</button>
         </form>
     </div>
 </body>
@@ -48,7 +75,8 @@ HTML_STORE = f'''
 
 @app.route('/')
 def home():
-    return render_template_string(HTML_STORE)
+    stock = get_stock_count()
+    return render_template_string(HTML_STORE, stock=stock)
 
 @app.route('/place_order', methods=['POST'])
 def place_order():
@@ -56,27 +84,42 @@ def place_order():
         qty = int(request.form.get('quantity', 1))
         d_id = request.form.get('discord_id').strip()
         cash_num = request.form.get('cash_number').strip()
+        stock = get_stock_count()
+
+        # --- الطلب الأول: فحص المخزون ---
+        if qty > stock:
+            return f'''
+            <body style="background:#0f0f0f; color:white; text-align:center; padding-top:100px; font-family:sans-serif;">
+                <h2 style="color:#f04747;">❌ عذراً! الكمية غير متاحة</h2>
+                <p>أقصى كمية يمكنك طلبها الآن هي: <b>{stock}</b> قطعة فقط.</p>
+                <a href="/" style="color:#5865F2;">العودة للمتجر</a>
+            </body>
+            '''
+
         total = qty * PRODUCT_PRICE
-        
-        # حفظ الطلب
         db_orders.insert({'discord_id': d_id, 'quantity': qty, 'cash_number': cash_num, 'total': total, 'status': 'pending'})
 
-        async def notify():
+        # --- الطلب الثاني: رسالة تأكيد للعميل + إشعار لك ---
+        async def send_notifications():
             try:
+                # رسالة للعميل
+                user = await client.fetch_user(int(d_id))
+                await user.send(f"👋 أهلاً بك! لقد استلمنا طلبك لعدد ({qty}) قطعة.\n⌛ طلبك الآن **تحت المراجعة**، سيتم إرسال الأكواد فور التأكد من التحويل.")
+                
+                # رسالة لك
                 admin = await client.fetch_user(ADMIN_DISCORD_ID)
-                # تعديل الإشعار ليوضح "مين اللي اشترى"
-                await admin.send(f"🔔 **طلب جديد!**\n👤 العميل (آيدي): <@{d_id}>\n📦 الكمية: {qty}\n💰 المبلغ: {total} جنيه\n📱 رقم كاش العميل: {cash_num}\n🔗 لوحة التحكم: https://daily-code-bot-1.onrender.com/admin_jo_secret")
-            except: pass
+                await admin.send(f"🔔 **طلب جديد معلق!**\n👤 المشتري: <@{d_id}>\n📦 الكمية: {qty}\n💰 المبلغ: {total} ج.م\n🔗 اللوحة: https://daily-code-bot-1.onrender.com/admin_jo_secret")
+            except Exception as e: print(f"Notify Error: {e}")
         
-        asyncio.run_coroutine_threadsafe(notify(), client.loop)
+        asyncio.run_coroutine_threadsafe(send_notifications(), client.loop)
 
         return f'''
-        <body style="background:#121212; color:white; text-align:center; padding-top:50px; font-family:sans-serif;">
-            <div style="background:#1e1e1e; padding:30px; border-radius:15px; display:inline-block; border:2px solid #5865F2;">
-                <h2 style="color:#43b581;">✅ تم تسجيل طلبك!</h2>
-                <p>حول مبلغ <b>{total} جنيه</b> لرقم:</p>
-                <h1 style="background:#2c2f33; padding:10px;">{PAYMENT_NUMBER}</h1>
-                <p>سيتم إرسال السلعة لك فور قبول الطلب.</p>
+        <body style="background:#0f0f0f; color:white; text-align:center; padding-top:80px; font-family:sans-serif;">
+            <div style="background:#1a1a1a; padding:40px; border-radius:20px; display:inline-block; border:1px solid #5865F2;">
+                <h2 style="color:#43b581;">📦 طلبك وصل يا بطل!</h2>
+                <p>حول مبلغ <b>{total} جنيه</b> لرقم فودافون كاش:</p>
+                <h1 style="background:#232428; padding:15px; border-radius:12px; letter-spacing:2px;">{PAYMENT_NUMBER}</h1>
+                <p style="color:#b9bbbe;">تفقد رسائل الديسكورد الخاصة بك (DMs)، لقد أرسلنا لك تأكيداً هناك.</p>
             </div>
         </body>
         '''
@@ -84,16 +127,13 @@ def place_order():
 
 @app.route('/admin_jo_secret')
 def admin_panel():
-    all_orders = []
-    for item in db_orders.all():
-        item['doc_id'] = item.doc_id
-        all_orders.append(item)
+    all_orders = [dict(item, doc_id=item.doc_id) for item in db_orders.all()]
     return render_template_string('''
-    <body style="background:#121212; color:white; font-family:sans-serif; text-align:center;">
-        <h2>🛠️ لوحة تحكم الطلبات</h2>
-        <table border="1" style="width:95%; margin:auto; background:#1e1e1e; border-collapse:collapse;">
+    <body style="background:#0f0f0f; color:white; font-family:sans-serif; text-align:center;">
+        <h2>🛠️ إدارة الطلبات</h2>
+        <table border="1" style="width:95%; margin:auto; background:#1a1a1a; border-collapse:collapse;">
             <tr style="background:#5865F2;">
-                <th>آيدي العميل</th><th>الكمية</th><th>رقم الكاش</th><th>المبلغ</th><th>الحالة</th><th>الإجراء</th>
+                <th>العميل</th><th>الكمية</th><th>رقم الكاش</th><th>المبلغ</th><th>الحالة</th><th>الإجراء</th>
             </tr>
             {% for order in orders %}
             <tr>
@@ -101,8 +141,7 @@ def admin_panel():
                 <td>{{ order.total }}</td><td>{{ order.status }}</td>
                 <td>
                     {% if order.status == 'pending' %}
-                    <a href="/admin/approve/{{ order.doc_id }}" style="color:#43b581; text-decoration:none;">[قبول ✅]</a> | 
-                    <a href="/admin/reject/{{ order.doc_id }}" style="color:#f04747; text-decoration:none;">[رفض ❌]</a>
+                    <a href="/admin/approve/{{ order.doc_id }}" style="color:#43b581;">[قبول ✅]</a>
                     {% else %} {{ order.status }} {% endif %}
                 </td>
             </tr>
@@ -116,41 +155,27 @@ def approve(order_id):
     order = db_orders.get(doc_id=order_id)
     if order:
         db_orders.update({'status': 'approved ✅'}, doc_ids=[order_id])
-        
-        async def send_items():
+        async def deliver():
             try:
                 user = await client.fetch_user(int(order['discord_id']))
                 qty = int(order['quantity'])
-                collected_codes = []
+                codes = []
+                for _ in range(qty):
+                    c = get_code_from_file()
+                    if c: codes.append(c)
                 
-                # تكرار السحب من الملف بناءً على الكمية المطلوبة
-                for i in range(qty):
-                    code = get_code_from_file()
-                    if code:
-                        collected_codes.append(code)
-                
-                if collected_codes:
-                    codes_text = "\n".join([f"الكود {i+1}: `{c}`" for i, c in enumerate(collected_codes)])
-                    await user.send(f"✅ **تم قبول طلبك بنجاح!**\nإليك الأكواد الخاصة بك ({qty} قطع):\n{codes_text}")
-                    
-                    # إشعار لو نفدت الأكواد أثناء السحب
-                    if len(collected_codes) < qty:
-                        await user.send(f"⚠️ نعتذر، تم تسليم {len(collected_codes)} كود فقط لأن المخزون نفد.")
+                if codes:
+                    txt = "\n".join([f"🔹 كود {i+1}: `{c}`" for i, c in enumerate(codes)])
+                    await user.send(f"🔥 **تم قبول طلبك! مبروك عليك:**\n{txt}")
                 else:
-                    await user.send(f"⚠️ تم قبول طلبك ولكن نعتذر، الأكواد نفدت من المخزون تماماً.")
-            except Exception as e: print(f"DM Error: {e}")
-            
-        asyncio.run_coroutine_threadsafe(send_items(), client.loop)
-    return redirect('/admin_jo_secret')
-
-@app.route('/admin/reject/<int:order_id>')
-def reject(order_id):
-    db_orders.update({'status': 'rejected ❌'}, doc_ids=[order_id])
+                    await user.send("⚠️ نعتذر، يبدو أن المخزون نفد أثناء المعالجة.")
+            except: pass
+        asyncio.run_coroutine_threadsafe(deliver(), client.loop)
     return redirect('/admin_jo_secret')
 
 def get_code_from_file():
     if not os.path.exists('codes.txt'): return None
-    with open('codes.txt', 'r') as f: lines = f.readlines()
+    with open('codes.txt', 'r') as f: lines = [l for l in f.readlines() if l.strip()]
     if not lines: return None
     code = lines[0].strip()
     with open('codes.txt', 'w') as f: f.writelines(lines[1:])
@@ -161,7 +186,7 @@ def run_flask():
 
 @client.event
 async def on_ready():
-    print(f'✅ المتجر يعمل: {client.user}')
+    print(f'✅ Ready: {client.user}')
     client.loop = asyncio.get_running_loop()
 
 if __name__ == '__main__':

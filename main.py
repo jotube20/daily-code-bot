@@ -5,9 +5,9 @@ from tinydb import TinyDB, Query
 import threading
 import os
 
-# --- الإعدادات ---
+# --- الإعدادات الصحيحة ---
 TOKEN = os.environ.get('DISCORD_BOT_TOKEN')
-ADMIN_DISCORD_ID = 1054749887582969896 
+ADMIN_DISCORD_ID = 1054749887582969896 # تم تحديثه للـ ID الخاص بك
 PAYMENT_NUMBER = "01007324726"
 PRODUCT_PRICE = 5
 
@@ -33,7 +33,7 @@ HTML_STORE = f'''
 </head>
 <body>
     <div class="card">
-        <h2 style="color:#5865F2;">🛍️ Xbox Codes Shop</h2>
+        <h2 style="color:#5865F2;">🛍️ متجر Jo الرقمي</h2>
         <p style="color:#43b581;">السعر الحالي: {PRODUCT_PRICE} جنيه</p>
         <form action="/place_order" method="post">
             <input type="number" name="quantity" placeholder="الكمية" min="1" value="1">
@@ -59,7 +59,7 @@ def place_order():
         total = qty * PRODUCT_PRICE
         
         # حفظ الطلب
-        doc_id = db_orders.insert({'discord_id': d_id, 'quantity': qty, 'cash_number': cash_num, 'total': total, 'status': 'pending'})
+        db_orders.insert({'discord_id': d_id, 'quantity': qty, 'cash_number': cash_num, 'total': total, 'status': 'pending'})
 
         async def notify():
             try:
@@ -81,7 +81,6 @@ def place_order():
         '''
     except Exception as e: return f"Error: {e}"
 
-# --- لوحة التحكم ---
 @app.route('/admin_jo_secret')
 def admin_panel():
     all_orders = []
@@ -109,7 +108,6 @@ def admin_panel():
             </tr>
             {% endfor %}
         </table>
-        <br><a href="/" style="color:#5865F2;">العودة للمتجر</a>
     </body>
     ''', orders=all_orders)
 
@@ -117,14 +115,17 @@ def admin_panel():
 def approve(order_id):
     order = db_orders.get(doc_id=order_id)
     if order:
-        db_orders.update({'status': 'approved ✅'}, doc_id=order_id)
+        # التصحيح هنا: استخدام doc_ids=[order_id] بدلاً من doc_id=order_id
+        db_orders.update({'status': 'approved ✅'}, doc_ids=[order_id])
         
         async def send_item():
             try:
                 user = await client.fetch_user(int(order['discord_id']))
-                # هنا بنسحب أول كود من الملف عشان نبعته
-                item_to_send = "شكراً لشرائك! إليك الكود الخاص بك: " + (get_code_from_file() or "عذراً، نفدت الأكواد!")
-                await user.send(f"✅ **تم قبول طلبك بنجاح!**\n{item_to_send}")
+                code = get_code_from_file()
+                if code:
+                    await user.send(f"✅ **تم قبول طلبك!**\nكود المنتج الخاص بك هو: `{code}`")
+                else:
+                    await user.send(f"⚠️ تم قبول طلبك ولكن نعتذر، نفدت الأكواد حالياً. تواصل مع الإدارة.")
             except Exception as e: print(f"DM Error: {e}")
             
         asyncio.run_coroutine_threadsafe(send_item(), client.loop)
@@ -132,7 +133,7 @@ def approve(order_id):
 
 @app.route('/admin/reject/<int:order_id>')
 def reject(order_id):
-    db_orders.update({'status': 'rejected ❌'}, doc_id=order_id)
+    db_orders.update({'status': 'rejected ❌'}, doc_ids=[order_id])
     return redirect('/admin_jo_secret')
 
 def get_code_from_file():
@@ -148,7 +149,7 @@ def run_flask():
 
 @client.event
 async def on_ready():
-    print(f'✅ المتجر يعمل: {client.user}')
+    print(f'✅ البوت شغال: {client.user}')
     client.loop = asyncio.get_running_loop()
 
 if __name__ == '__main__':

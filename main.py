@@ -1,6 +1,6 @@
 import discord
 import asyncio
-from flask import Flask, request, render_template_string, redirect
+from flask import Flask, request, render_template_string, redirect, url_for
 from tinydb import TinyDB, Query
 import threading
 import os
@@ -32,7 +32,7 @@ def get_stock(prod_key):
         lines = [l for l in f.readlines() if l.strip()]
     return len(lines)
 
-# --- واجهة المتجر مع اللائحة ---
+# --- واجهة المتجر ---
 HTML_STORE = '''
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -44,6 +44,7 @@ HTML_STORE = '''
         :root { --main-color: #5865F2; --bg-black: #0a0a0a; }
         body { background: var(--bg-black); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; overflow-x: hidden; transition: 0.5s; }
         
+        /* الزرار في أقصى الشمال فوق */
         .menu-btn { position: fixed; top: 20px; left: 20px; font-size: 30px; cursor: pointer; z-index: 1001; color: white; background: none; border: none; }
 
         .sidebar {
@@ -57,7 +58,6 @@ HTML_STORE = '''
 
         #main-content { transition: margin-left .5s; padding: 20px; text-align: center; }
         .products-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; max-width: 1200px; margin: auto; transition: 0.5s; }
-        
         .side-open .product-card { width: 280px; height: 420px; }
 
         .product-card { 
@@ -80,9 +80,8 @@ HTML_STORE = '''
 <body>
     <div id="mySidebar" class="sidebar">
         <span class="close-btn" onclick="closeNav()">&times;</span>
-        <a href="#">🏠 الرئيسية</a>
-        <a href="#">📋 طلباتي</a>
-        <a href="#">📞 الدعم الفني</a>
+        <a href="/">🏠 الرئيسية</a>
+        <a href="#" onclick="checkMyOrders()">📋 طلباتي</a>
         <a href="https://discord.gg/RYK28PNv" target="_blank">💬 سيرفرنا</a>
     </div>
 
@@ -90,7 +89,7 @@ HTML_STORE = '''
 
     <div id="main-content">
         <h1>Jo Store | متجرك المفضل 🔒</h1>
-        <div class="products-container" id="prod-container">
+        <div class="products-container">
             {% for key, info in prods.items() %}
             <div class="product-card" onclick="showForm('{{key}}')">
                 <div class="card-image" style="background-image: url('{{ info.img }}');"></div>
@@ -114,27 +113,41 @@ HTML_STORE = '''
     </div>
 
     <script>
-        function openNav() {
-            document.getElementById("mySidebar").style.width = "250px";
-            document.getElementById("main-content").style.marginLeft = "250px";
-            document.body.classList.add("side-open");
-        }
-        function closeNav() {
-            document.getElementById("mySidebar").style.width = "0";
-            document.getElementById("main-content").style.marginLeft = "0";
-            document.body.classList.remove("side-open");
-        }
-        function showForm(id) {
-            event.stopPropagation();
-            document.querySelectorAll('.order-form').forEach(f => f.style.display = 'none');
-            document.getElementById('form-' + id).style.display = 'block';
+        function openNav() { document.getElementById("mySidebar").style.width = "250px"; document.getElementById("main-content").style.marginLeft = "250px"; document.body.classList.add("side-open"); }
+        function closeNav() { document.getElementById("mySidebar").style.width = "0"; document.getElementById("main-content").style.marginLeft = "0"; document.body.classList.remove("side-open"); }
+        function showForm(id) { event.stopPropagation(); document.querySelectorAll('.order-form').forEach(f => f.style.display = 'none'); document.getElementById('form-' + id).style.display = 'block'; }
+        
+        function checkMyOrders() {
+            let id = prompt("أدخل ID الديسكورد الخاص بك لمشاهدة طلباتك:");
+            if (id) { window.location.href = "/my_orders/" + id; }
         }
     </script>
 </body>
 </html>
 '''
 
-# --- منطق البوت والسيرفر ---
+# --- صفحة طلبات العميل ---
+@app.route('/my_orders/<user_id>')
+def my_orders(user_id):
+    user_orders = db_orders.search(Order.discord_id == user_id)
+    return render_template_string('''
+    <body style="background:#0a0a0a; color:white; font-family:sans-serif; text-align:center; padding:20px;">
+        <h2>📋 طلباتك (ID: {{ uid }})</h2>
+        <table border="1" style="width:90%; margin:auto; background:#111; border-collapse:collapse; border-color:#333;">
+            <tr style="background:#5865F2; height:40px;">
+                <th>المنتج</th><th>المبلغ</th><th>الحالة</th>
+            </tr>
+            {% for o in orders %}
+            <tr style="height:40px;">
+                <td>{{ o.prod_name }}</td><td>{{ o.total }} ج.م</td><td>{{ o.status }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        <br><a href="/" style="color:#5865F2; text-decoration:none;">← العودة للمتجر</a>
+    </body>
+    ''', orders=user_orders, uid=user_id)
+
+# --- منطق البوت والطلبات (كما هو) ---
 
 @app.route('/')
 def home():
@@ -164,7 +177,7 @@ def place_order():
                 await admin.send(f"🔔 **طلب جديد!**\\n👤 **العميل:** <@{d_id}>\\n📦 **المنتج:** {PRODUCTS[p_key]['name']}\\n💰 **المبلغ:** {total} ج.م\\n📱 **من رقم:** {cash_num}")
             except: pass
         asyncio.run_coroutine_threadsafe(notify(), client.loop)
-        return redirect(f'/success_page?total={total}')
+        return redirect(url_for('success', total=total))
     except Exception as e: return str(e)
 
 @app.route('/success_page')

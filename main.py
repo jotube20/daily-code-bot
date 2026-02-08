@@ -86,9 +86,7 @@ HTML_STORE = '''
         <div class="section-title">آراء العملاء الحقيقية</div>
         {% for f in feedbacks %}<div class="feedback-item"><b>{{ f.name }}:</b> {{ f.comment }}</div>{% endfor %}
     </div>
-
     <button class="menu-btn" onclick="openNav()">&#9776;</button>
-
     <div id="main-content">
         <h1>Jo Store | متجرك المفضل 🔒</h1>
         <div class="products-container">
@@ -147,20 +145,18 @@ def place_order():
     
     async def notify():
         try:
+            # تصحيح: منع الموقع من الانهيار إذا كان البوت أوفلاين
+            if not client.is_ready(): return
             user = await client.fetch_user(int(d_id))
             await user.send(f"تم استلام طلبك لـ ({PRODUCTS[p_key]['name']}) بنجاح!\\n⌛ سيتم مراجعة الدفع وإرسال الأكواد لك فوراً.")
-            
             admin = await client.fetch_user(ADMIN_DISCORD_ID)
-            msg = (
-                f"🔔 **طلب جديد!**\n"
-                f"👤 **العميل:** <@{d_id}>\n"
-                f"📦 **المنتج:** {PRODUCTS[p_key]['name']}\n"
-                f"💰 **المبلغ:** {total} ج.م\n"
-                f"📱 **من رقم:** {cash_num}"
-            )
+            msg = (f"🔔 **طلب جديد!**\n👤 **العميل:** <@{d_id}>\n📦 **المنتج:** {PRODUCTS[p_key]['name']}\n💰 **المبلغ:** {total} ج.م\n📱 **من رقم:** {cash_num}")
             await admin.send(msg)
         except: pass
-    asyncio.run_coroutine_threadsafe(notify(), client.loop)
+
+    if client.loop and client.loop.is_running():
+        asyncio.run_coroutine_threadsafe(notify(), client.loop)
+        
     return redirect(f'/success_page?total={total}')
 
 @app.route('/success_page')
@@ -203,7 +199,6 @@ def my_orders(uid):
         <br><a href="/" style="color:#5865F2; font-weight:bold; text-decoration:none;">← العودة للمتجر</a>
     </body>''', orders=orders)
 
-# --- لوحة التحكم ---
 @app.route('/admin_jo_secret', methods=['GET', 'POST'])
 def admin_panel():
     if request.method == 'POST':
@@ -214,7 +209,6 @@ def admin_panel():
         elif action == 'clear_logs': db_orders.remove(Order.discord_id == request.form.get('u_id'))
 
     orders = [dict(item, doc_id=item.doc_id) for item in db_orders.all()]
-    fbacks = [dict(item, doc_id=item.doc_id) for item in db_feedbacks.all()]
     return render_template_string('''<body style="background:#0a0a0a; color:white; padding:20px;">
         <h2 style="text-align:center; color:#5865F2;">🛠️ لوحة التحكم</h2>
         <div style="display:flex; gap:20px; flex-wrap:wrap; justify-content:center;">
@@ -234,7 +228,7 @@ def admin_panel():
             <tr><td>{{ o.discord_id }}</td><td>{{ o.prod_name }}</td><td>{{ o.status }}</td><td>{% if o.status == 'pending' %}<a href="/approve/{{o.doc_id}}" style="color:green;">[قبول]</a> | <a href="/reject/{{o.doc_id}}" style="color:red;">[رفض]</a>{% else %} - {% endif %}</td></tr>
             {% endfor %}
         </table>
-    </body>''', orders=orders, fbacks=fbacks)
+    </body>''', orders=orders)
 
 @app.route('/approve/<int:order_id>')
 def approve(order_id):
@@ -251,7 +245,8 @@ def approve(order_id):
                     codes_msg = "\\n".join([f"🔹 كود {i+1}: `{c}`" for i, c in enumerate(valid_codes)])
                     await user.send(f"🔥 **مبروك! ({order['prod_name']}) تم تأكيد الدفع لطلبك**\\n{codes_msg}")
                 except: pass
-            asyncio.run_coroutine_threadsafe(deliver(), client.loop)
+            if client.loop and client.loop.is_running():
+                asyncio.run_coroutine_threadsafe(deliver(), client.loop)
     return redirect('/admin_jo_secret')
 
 @app.route('/reject/<int:order_id>')
@@ -263,7 +258,8 @@ def reject(order_id):
             user = await client.fetch_user(int(order['discord_id']))
             await user.send("❌ **نعتذر، تم رفض طلبك لعدم استلام مبلغ التحويل.**")
         except: pass
-    asyncio.run_coroutine_threadsafe(notify(), client.loop)
+    if client.loop and client.loop.is_running():
+        asyncio.run_coroutine_threadsafe(notify(), client.loop)
     return redirect('/admin_jo_secret')
 
 def run_flask():
@@ -272,6 +268,7 @@ def run_flask():
 @client.event
 async def on_ready():
     client.loop = asyncio.get_running_loop()
+    print(f"✅ Bot is ready as {client.user}")
 
 if __name__ == '__main__':
     t = threading.Thread(target=run_flask, daemon=True)
@@ -280,6 +277,7 @@ if __name__ == '__main__':
         try:
             client.run(TOKEN)
         except Exception as e:
-            print(f"❌ Error: {e}")
+            print(f"❌ Connection Error: {e}")
             while True:
                 time.sleep(1000)
+

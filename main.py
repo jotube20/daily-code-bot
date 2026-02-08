@@ -269,17 +269,17 @@ def reject(order_id):
 def run_flask():
     app.run(host='0.0.0.0', port=10000)
 
+@client.event
+async def on_ready():
+    client.loop = asyncio.get_running_loop()
+
 if __name__ == '__main__':
-    # تشغيل السيرفر في خلفية منفصلة
     t = threading.Thread(target=run_flask, daemon=True)
     t.start()
-    
-    # تشغيل البوت مع معالجة بسيطة للأخطاء
-        if TOKEN:
+    if TOKEN:
         try:
             client.run(TOKEN)
         except Exception as e:
-            print(f"❌ Error starting bot: {e}")
-            # السطرين دول هما "الأمان" عشان السيرفر ميفصلش
+            print(f"❌ Error: {e}")
             while True:
                 time.sleep(1000)

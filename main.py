@@ -266,9 +266,17 @@ def reject(order_id):
     asyncio.run_coroutine_threadsafe(notify(), client.loop)
     return redirect('/admin_jo_secret')
 
-def run_flask(): app.run(host='0.0.0.0', port=10000)
-@client.event
-async def on_ready(): client.loop = asyncio.get_running_loop()
+def run_flask():
+    app.run(host='0.0.0.0', port=10000)
+
 if __name__ == '__main__':
-    threading.Thread(target=run_flask, daemon=True).start()
-    if TOKEN: client.run(TOKEN)
+    # تشغيل السيرفر في خلفية منفصلة
+    t = threading.Thread(target=run_flask, daemon=True)
+    t.start()
+    
+    # تشغيل البوت مع معالجة بسيطة للأخطاء
+    if TOKEN:
+        try:
+            client.run(TOKEN)
+        except Exception as e:
+            print(f"❌ Error starting bot: {e}")

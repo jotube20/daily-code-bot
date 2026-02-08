@@ -35,20 +35,27 @@ def get_stock(prod_key):
     return len(lines)
 
 def pull_codes(p_key, qty):
+    """يسحب الأكواد من الملف فوراً لحجزها في الطلب"""
     filename = PRODUCTS[p_key]['file']
     if not os.path.exists(filename): return []
     with open(filename, 'r') as f: 
         lines = [l for l in f.readlines() if l.strip()]
+    
     if len(lines) < qty: return []
+    
     pulled = lines[:qty]
     remaining = lines[qty:]
-    with open(filename, 'w') as f: f.writelines(remaining)
+    
+    with open(filename, 'w') as f: 
+        f.writelines(remaining)
     return [c.strip() for c in pulled]
 
 def return_codes(p_key, codes):
+    """يعيد الأكواد للمخزون في حالة الرفض"""
     filename = PRODUCTS[p_key]['file']
     with open(filename, 'a') as f:
-        for c in codes: f.write(c + "\n")
+        for c in codes:
+            f.write(c + "\n")
 
 # --- واجهة المتجر الرئيسية ---
 HTML_STORE = '''
@@ -141,7 +148,7 @@ def place_order():
     p_key, qty = request.form.get('prod_key'), int(request.form.get('quantity', 1))
     d_id, cash_num = request.form.get('discord_id').strip(), request.form.get('cash_number').strip()
     
-    # حجز الأكواد فوراً
+    # حجز الأكواد فوراً من الكمية
     reserved = pull_codes(p_key, qty)
     if not reserved: return "عذراً، المخزون غير كافٍ حالياً."
     
@@ -158,13 +165,11 @@ def place_order():
         try:
             if not client.is_ready(): return
             user = await client.fetch_user(int(d_id))
-            # تم إصلاح الرسالة لأسطر حقيقية
             await user.send(
                 f"تم استلام طلبك لـ ({PRODUCTS[p_key]['name']}) بنجاح!\n"
                 f"⌛ سيتم مراجعة الدفع وإرسال الأكواد لك فوراً."
             )
             admin = await client.fetch_user(ADMIN_DISCORD_ID)
-            # تم إصلاح رسالة الإدارة لأسطر حقيقية
             await admin.send(
                 f"🔔 **طلب جديد!**\n"
                 f"👤 **العميل:** <@{d_id}>\n"
@@ -214,6 +219,7 @@ def approve(order_id):
 def reject(order_id):
     order = db_orders.get(doc_id=order_id)
     if order and order['status'] == 'pending':
+        # إرجاع الأكواد للكمية فقط عند الرفض
         return_codes(order['prod_key'], order['codes'])
         db_orders.update({'status': 'rejected ❌'}, doc_ids=[order_id])
         async def notify():
@@ -295,3 +301,4 @@ if __name__ == '__main__':
         try: client.run(TOKEN)
         except:
             while True: time.sleep(1000)
+

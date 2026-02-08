@@ -1,6 +1,6 @@
 import discord
 import asyncio
-from flask import Flask, request, render_template_string, redirect, url_for
+from flask import Flask, request, render_template_string, redirect, url_for, session
 from tinydb import TinyDB, Query
 import threading
 import os
@@ -11,6 +11,7 @@ from datetime import datetime
 TOKEN = os.environ.get('DISCORD_BOT_TOKEN')
 ADMIN_DISCORD_ID = 1054749887582969896 
 PAYMENT_NUMBER = "01007324726"
+ADMIN_PASSWORD = "201184"  # كلمة سر لوحة التحكم
 
 PRODUCTS = {
     'xbox': {'name': 'Xbox Game Pass Premium', 'price': 10, 'file': 'xbox.txt', 'img': 'رابط_صورة_الاكس_بوكس'},
@@ -19,11 +20,13 @@ PRODUCTS = {
 }
 
 app = Flask(__name__)
+app.secret_key = 'jo_store_secret_key_change_this'  # مفتاح لتشغيل الـ session
+
 db_orders = TinyDB('orders.json')
-db_spam = TinyDB('spam_check.json')
 db_feedbacks = TinyDB('feedbacks.json')
+db_config = TinyDB('config.json')  # لحفظ إعدادات الصيانة وكوبونات الخصم
 Order = Query()
-Feedback = Query()
+Config = Query()
 
 intents = discord.Intents.all()
 client = discord.Client(intents=intents)
@@ -59,6 +62,22 @@ def return_codes(p_key, codes):
         for c in codes:
             f.write(c + "\n")
 
+# --- دوال مساعدة للإضافات الجديدة ---
+def is_maintenance_mode():
+    res = db_config.get(Config.type == 'maintenance')
+    return res['status'] if res else False
+
+def get_discount(code):
+    res = db_config.get((Config.type == 'coupon') & (Config.code == code))
+    if res and res['uses'] > 0:
+        return res
+    return None
+
+def use_coupon(code):
+    res = db_config.get((Config.type == 'coupon') & (Config.code == code))
+    if res and res['uses'] > 0:
+        db_config.update({'uses': res['uses'] - 1}, doc_ids=[res.doc_id])
+
 # --- واجهة المتجر الرئيسية ---
 HTML_STORE = '''
 <!DOCTYPE html>
@@ -68,31 +87,36 @@ HTML_STORE = '''
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jo Store | متجرك المفضل</title>
     <style>
-        :root { --main-color: #5865F2; --bg-black: #0a0a0a; }
-        body { background: var(--bg-black); color: white; font-family: sans-serif; margin: 0; overflow-x: hidden; transition: 0.5s; }
+        :root { --main-color: #5865F2; --bg-color: #0a0a0a; --text-color: white; --card-bg: #111; --sidebar-bg: #111; }
+        body.light-mode { --bg-color: #f0f0f0; --text-color: #333; --card-bg: #fff; --sidebar-bg: #fff; }
+        
+        body { background: var(--bg-color); color: var(--text-color); font-family: sans-serif; margin: 0; overflow-x: hidden; transition: 0.5s; }
         
         /* تعديل زرار القائمة لليسار */
-        .menu-btn { position: fixed; top: 20px; left: 20px; font-size: 30px; cursor: pointer; z-index: 1001; color: white; background: none; border: none; transition: 0.3s; }
+        .menu-btn { position: fixed; top: 20px; left: 20px; font-size: 30px; cursor: pointer; z-index: 1001; color: var(--text-color); background: none; border: none; transition: 0.3s; }
         .menu-btn:hover { color: var(--main-color); }
         
-        .sidebar { height: 100%; width: 0; position: fixed; z-index: 1000; top: 0; left: 0; background-color: #111; overflow-y: auto; transition: 0.5s; padding-top: 60px; border-right: 1px solid #222; }
+        /* زر الوضع الليلي/النهاري */
+        .theme-btn { position: fixed; top: 20px; left: 70px; font-size: 25px; cursor: pointer; z-index: 1001; color: var(--text-color); background: none; border: none; transition: 0.3s; }
+        
+        .sidebar { height: 100%; width: 0; position: fixed; z-index: 1000; top: 0; left: 0; background-color: var(--sidebar-bg); overflow-y: auto; transition: 0.5s; padding-top: 60px; border-right: 1px solid #222; }
         .sidebar a { padding: 10px 20px; text-decoration: none; display: block; text-align: right; color: #818181; font-size: 18px; }
-        .sidebar a:hover { color: white; background: rgba(88,101,242,0.1); }
+        .sidebar a:hover { color: var(--text-color); background: rgba(88,101,242,0.1); }
         
         .section-title { padding: 10px 20px; color: var(--main-color); font-weight: bold; font-size: 14px; border-bottom: 1px solid #222; margin-top: 15px; }
         #main-content { padding: 20px; text-align: center; }
         .products-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; margin-top: 50px; }
-        .product-card { width: 320px; height: 480px; border-radius: 25px; position: relative; overflow: hidden; cursor: pointer; transition: 0.4s; border: 1px solid #222; }
+        .product-card { width: 320px; height: 480px; border-radius: 25px; position: relative; overflow: hidden; cursor: pointer; transition: 0.4s; border: 1px solid #222; background: var(--card-bg); }
         .card-image { position: absolute; inset: 0; background-size: cover; background-position: center; z-index: 1; }
         .card-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.3) 35%, rgba(0,0,0,0) 70%); z-index: 2; display: flex; flex-direction: column; justify-content: flex-end; padding: 25px; }
         .order-form { display: none; background: rgba(15, 15, 15, 0.98); padding: 15px; border-radius: 15px; border: 1px solid var(--main-color); margin-top: 10px; position: relative; z-index: 10; }
         input, textarea { width: 90%; padding: 10px; margin: 5px 0; border-radius: 8px; border: none; background: #222; color: white; text-align: center; }
         button { background: var(--main-color); color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; width: 100%; font-weight: bold; }
-        .feedback-item { background: #1a1a1a; margin: 10px 20px; padding: 10px; border-radius: 10px; font-size: 12px; border-right: 3px solid var(--main-color); text-align: right; }
+        .feedback-item { background: var(--card-bg); margin: 10px 20px; padding: 10px; border-radius: 10px; font-size: 12px; border-right: 3px solid var(--main-color); text-align: right; border: 1px solid #333; }
         .warning-text { color: #f1c40f; font-size: 11px; margin-bottom: 8px; font-weight: bold; line-height: 1.4; }
     </style>
 </head>
-<body>
+<body id="body">
     <div id="mySidebar" class="sidebar">
         <a href="/">🏠 الرئيسية</a>
         <a href="#" onclick="checkOrders()">📋 طلباتي</a>
@@ -107,6 +131,7 @@ HTML_STORE = '''
     </div>
 
     <button class="menu-btn" onclick="toggleNav()">&#9776;</button>
+    <button class="theme-btn" onclick="toggleTheme()">🌓</button>
 
     <div id="main-content">
         <h1>Jo Store | متجرك المفضل 🔒</h1>
@@ -125,6 +150,7 @@ HTML_STORE = '''
                             <input type="number" name="quantity" min="1" value="1">
                             <input type="text" name="discord_id" placeholder="ID الديسكورد" required>
                             <input type="text" name="cash_number" placeholder="رقم الكاش" required>
+                            <input type="text" name="coupon" placeholder="كود الخصم (Optional)" style="border: 1px dashed #43b581;">
                             <button type="submit">تأكيد الشراء الآن</button>
                         </form>
                     </div>
@@ -139,6 +165,9 @@ HTML_STORE = '''
             if (side.style.width === "250px") { side.style.width = "0"; } 
             else { side.style.width = "250px"; }
         }
+        function toggleTheme() {
+            document.body.classList.toggle("light-mode");
+        }
         function showForm(id) { document.querySelectorAll('.order-form').forEach(f => f.style.display = 'none'); document.getElementById('form-' + id).style.display = 'block'; }
         function checkOrders() { let id = prompt("أدخل ID الديسكورد الخاص بك:"); if(id) window.location.href="/my_orders/"+id; }
     </script>
@@ -146,10 +175,35 @@ HTML_STORE = '''
 </html>
 '''
 
+# --- صفحة الصيانة ---
+MAINTENANCE_HTML = '''
+<body style="background:#0a0a0a;color:white;text-align:center;padding-top:100px;font-family:sans-serif;">
+    <h1 style="font-size:50px;">🚧 الموقع في وضع الصيانة</h1>
+    <p>نحن نعمل على تحسين المتجر، يرجى العودة لاحقاً.</p>
+</body>
+'''
+
+# --- صفحة تسجيل دخول الأدمن ---
+LOGIN_HTML = '''
+<body style="background:#0a0a0a;color:white;text-align:center;padding-top:100px;font-family:sans-serif;">
+    <h2>🔐 تسجيل دخول الأدمن</h2>
+    <form method="post">
+        <input type="password" name="password" placeholder="كلمة المرور" style="padding:10px;border-radius:5px;border:none;">
+        <br><br>
+        <button type="submit" style="padding:10px 20px;background:#5865F2;color:white;border:none;border-radius:5px;cursor:pointer;">دخول</button>
+    </form>
+</body>
+'''
+
 # --- الروابط (Routes) ---
 
 @app.route('/')
 def home():
+    if is_maintenance_mode():
+        # إذا كان في وضع الصيانة، فقط الأدمن المسجل يمكنه الدخول
+        if not session.get('logged_in'):
+            return MAINTENANCE_HTML
+            
     stocks = {k: get_stock(k) for k in PRODUCTS}
     feedbacks = db_feedbacks.all()[-5:]
     return render_template_string(HTML_STORE, prods=PRODUCTS, stocks=stocks, feedbacks=feedbacks)
@@ -163,14 +217,31 @@ def add_feedback():
 
 @app.route('/place_order', methods=['POST'])
 def place_order():
-    p_key, qty = request.form.get('prod_key'), int(request.form.get('quantity', 1))
-    d_id, cash_num = request.form.get('discord_id').strip(), request.form.get('cash_number').strip()
-    
+    if is_maintenance_mode() and not session.get('logged_in'): return "الموقع في الصيانة"
+
+    p_key = request.form.get('prod_key')
+    qty = int(request.form.get('quantity', 1))
+    d_id = request.form.get('discord_id').strip()
+    cash_num = request.form.get('cash_number').strip()
+    coupon_code = request.form.get('coupon').strip()
+
     # حجز الأكواد فوراً من الكمية
     reserved = pull_codes(p_key, qty)
     if not reserved: return "عذراً، المخزون غير كافٍ حالياً."
     
-    total = qty * PRODUCTS[p_key]['price']
+    # حساب السعر والخصم
+    unit_price = PRODUCTS[p_key]['price']
+    total = qty * unit_price
+    
+    discount_info = ""
+    if coupon_code:
+        coupon = get_discount(coupon_code)
+        if coupon:
+            discount_amount = total * (coupon['discount'] / 100)
+            total -= discount_amount
+            use_coupon(coupon_code)
+            discount_info = f"\n🎟️ **تم تطبيق خصم {coupon['discount']}%**"
+
     buy_time = datetime.now().strftime("%I:%M %p")
     
     db_orders.insert({
@@ -182,7 +253,7 @@ def place_order():
         'total': total, 
         'status': 'pending',
         'time': buy_time,
-        'codes': reserved # حفظ الأكواد المحجوزة في الطلب
+        'codes': reserved
     })
     
     async def notify():
@@ -200,7 +271,7 @@ def place_order():
                 f"🔔 **طلب جديد!**\n"
                 f"👤 **العميل:** <@{d_id}>\n"
                 f"📦 **المنتج:** {PRODUCTS[p_key]['name']}\n"
-                f"💰 **المبلغ:** {total} ج.م\n"
+                f"💰 **المبلغ:** {total} ج.م {discount_info}\n"
                 f"📱 **من رقم:** {cash_num}"
             )
             await admin.send(admin_msg)
@@ -257,11 +328,26 @@ def my_orders(uid):
         <br><a href="/" style="color:#5865F2; font-weight:bold; text-decoration:none;">← العودة للمتجر</a>
     </body>''', orders=orders)
 
+# --- لوحة التحكم ---
+@app.route('/admin_login', methods=['GET', 'POST'])
+def admin_login():
+    if request.method == 'POST':
+        if request.form.get('password') == ADMIN_PASSWORD:
+            session['logged_in'] = True
+            return redirect('/admin_jo_secret')
+        else:
+            return "كلمة المرور خاطئة!"
+    return LOGIN_HTML
+
 @app.route('/admin_jo_secret', methods=['GET', 'POST'])
 def admin_panel():
+    if not session.get('logged_in'):
+        return redirect('/admin_login')
+
     if request.method == 'POST':
         action = request.form.get('action')
         p_key = request.form.get('p_key')
+        
         if action == 'restock':
             new_codes = request.form.get('codes').strip()
             if new_codes:
@@ -271,7 +357,34 @@ def admin_panel():
             content = request.form.get('full_content').strip()
             with open(PRODUCTS[p_key]['file'], 'w') as f:
                 f.write(content + "\n" if content else "")
-        elif action == 'clear_logs': db_orders.remove(Order.discord_id == request.form.get('u_id'))
+        elif action == 'clear_logs':
+            db_orders.remove(Order.discord_id == request.form.get('u_id'))
+        elif action == 'toggle_maintenance':
+            current = is_maintenance_mode()
+            if current:
+                db_config.remove(Config.type == 'maintenance')
+            else:
+                db_config.insert({'type': 'maintenance', 'status': True})
+        elif action == 'add_coupon':
+            code = request.form.get('c_code')
+            discount = int(request.form.get('c_discount'))
+            uses = int(request.form.get('c_uses'))
+            db_config.insert({'type': 'coupon', 'code': code, 'discount': discount, 'uses': uses})
+        elif action == 'send_gift':
+            g_id = request.form.get('g_id')
+            g_prod = request.form.get('g_prod')
+            g_qty = int(request.form.get('g_qty'))
+            
+            codes = pull_codes(g_prod, g_qty)
+            if codes:
+                async def deliver_gift():
+                    try:
+                        user = await client.fetch_user(int(g_id))
+                        codes_msg = "\n".join([f"🔗 {c}" for c in codes])
+                        await user.send(f"🎁 **لقد استلمت هدية من المتجر! ({PRODUCTS[g_prod]['name']})**\n\n**الأكواد:**\n{codes_msg}")
+                    except: pass
+                if client.loop and client.loop.is_running():
+                    asyncio.run_coroutine_threadsafe(deliver_gift(), client.loop)
 
     orders = [dict(item, doc_id=item.doc_id) for item in db_orders.all()]
     stock_contents = {}
@@ -279,6 +392,8 @@ def admin_panel():
         if os.path.exists(v['file']):
             with open(v['file'], 'r') as f: stock_contents[k] = f.read().strip()
         else: stock_contents[k] = ""
+    
+    maint_status = "مفعل 🔴" if is_maintenance_mode() else "معطل 🟢"
 
     return render_template_string('''<!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -303,11 +418,50 @@ def admin_panel():
         .approved { background: rgba(67, 181, 129, 0.1); color: var(--success); border: 1px solid var(--success); }
         .rejected { background: rgba(240, 71, 71, 0.1); color: var(--danger); border: 1px solid var(--danger); }
         .btn-act { padding: 8px 15px; text-decoration: none; border-radius: 5px; font-size: 13px; font-weight: bold; }
+        .header-btn { text-decoration: none; color: white; background: #333; padding: 10px 20px; border-radius: 5px; font-size: 14px; position: absolute; top: 20px; left: 20px; }
     </style>
 </head>
 <body>
+    <a href="/" class="header-btn">🏠 العودة للمتجر</a>
     <h2>🛠️ لوحة تحكم Jo Store</h2>
     
+    <div class="grid">
+        <div class="card" style="width: 300px;">
+            <h3>🛡️ وضع الصيانة</h3>
+            <p style="text-align:center;">الحالة: <b>{{ maint_status }}</b></p>
+            <form method="post">
+                <input type="hidden" name="action" value="toggle_maintenance">
+                <button type="submit" style="background: #f39c12; color: white; width: 100%; padding: 12px; border-radius: 8px;">تبديل الحالة</button>
+            </form>
+        </div>
+
+        <div class="card" style="width: 300px;">
+            <h3>🎁 إرسال هدية</h3>
+            <form method="post">
+                <input type="hidden" name="action" value="send_gift">
+                <input type="text" name="g_id" placeholder="Discord ID">
+                <select name="g_prod">
+                    <option value="xbox">Xbox</option>
+                    <option value="nitro1">Nitro 1</option>
+                    <option value="nitro3">Nitro 3</option>
+                </select>
+                <input type="number" name="g_qty" placeholder="الكمية" value="1">
+                <button type="submit" style="background: #9b59b6; color: white; width: 100%; padding: 12px; border-radius: 8px;">إرسال</button>
+            </form>
+        </div>
+
+        <div class="card" style="width: 300px;">
+            <h3>🎫 إضافة كود خصم</h3>
+            <form method="post">
+                <input type="hidden" name="action" value="add_coupon">
+                <input type="text" name="c_code" placeholder="الكود (مثلاً JO2024)">
+                <input type="number" name="c_discount" placeholder="نسبة الخصم %">
+                <input type="number" name="c_uses" placeholder="عدد مرات الاستخدام">
+                <button type="submit" style="background: #27ae60; color: white; width: 100%; padding: 12px; border-radius: 8px;">إضافة الكوبون</button>
+            </form>
+        </div>
+    </div>
+
     <div class="grid">
         <div class="card" style="width: 350px;">
             <h3>📦 إضافة مخزون سريع</h3>
@@ -385,10 +539,11 @@ def admin_panel():
         </table>
     </div>
 </body>
-</html>''', orders=orders, stock_contents=stock_contents, prods=PRODUCTS)
+</html>''', orders=orders, stock_contents=stock_contents, prods=PRODUCTS, maint_status=maint_status)
 
 @app.route('/approve/<int:order_id>')
 def approve(order_id):
+    if not session.get('logged_in'): return redirect('/admin_login')
     order = db_orders.get(doc_id=order_id)
     if order and order['status'] == 'pending':
         # الأكواد أصبحت محجوزة مسبقاً في الطلب
@@ -407,6 +562,7 @@ def approve(order_id):
 
 @app.route('/reject/<int:order_id>')
 def reject(order_id):
+    if not session.get('logged_in'): return redirect('/admin_login')
     order = db_orders.get(doc_id=order_id)
     if order and order['status'] == 'pending':
         # إرجاع الأكواد للمخزون فقط عند الرفض
@@ -439,3 +595,4 @@ if __name__ == '__main__':
             print(f"❌ Connection Error: {e}")
             while True:
                 time.sleep(1000)
+

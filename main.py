@@ -5,7 +5,7 @@ from tinydb import TinyDB, Query
 import threading
 import os
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # --- الإعدادات الأساسية ---
 TOKEN = os.environ.get('DISCORD_BOT_TOKEN')
@@ -35,7 +35,7 @@ PRODUCTS = {
 }
 
 app = Flask(__name__)
-app.secret_key = 'jo_store_secret_key_pro_mode_final'  # مفتاح الجلسة
+app.secret_key = 'jo_store_secret_key_pro_mode_final_v2'  # مفتاح الجلسة
 
 db_orders = TinyDB('orders.json')
 db_feedbacks = TinyDB('feedbacks.json')
@@ -85,9 +85,20 @@ def is_maintenance_mode():
     res = db_config.get(Config.type == 'maintenance')
     return res['status'] if res else False
 
-def get_discount(code):
+def get_discount(code, prod_key):
+    """التحقق من الكود: الصلاحية، الموقت، والمنتج المحدد"""
     res = db_config.get((Config.type == 'coupon') & (Config.code == code))
-    if res and res['uses'] > 0:
+    if res:
+        # التحقق من المنتج المحدد
+        if res['prod_key'] != 'all' and res['prod_key'] != prod_key:
+            return None
+        # التحقق من عدد الاستخدامات
+        if res['uses'] <= 0:
+            return None
+        # التحقق من تاريخ الانتهاء
+        expire_time = datetime.fromisoformat(res['expires_at'])
+        if datetime.now() > expire_time:
+            return None
         return res
     return None
 
@@ -406,7 +417,8 @@ def place_order():
     discount_msg = ""
     
     if coupon_code:
-        cp = get_discount(coupon_code)
+        # التحقق من كود الخصم (الوقت + المنتج)
+        cp = get_discount(coupon_code, p_key)
         if cp:
             total -= total * (cp['discount'] / 100)
             use_coupon(coupon_code)
@@ -476,6 +488,7 @@ def admin_panel():
     if request.method == 'POST':
         action = request.form.get('action')
         p_key = request.form.get('p_key')
+        
         if action == 'restock':
             new_codes = request.form.get('codes', '').strip()
             if new_codes:
@@ -491,11 +504,16 @@ def admin_panel():
             curr = is_maintenance_mode()
             db_config.upsert({'type': 'maintenance', 'status': not curr}, Config.type == 'maintenance')
         elif action == 'add_coupon':
+            # تحديد وقت انتهاء الكود بالدقائق
+            minutes = int(request.form.get('c_minutes', 60))
+            expire_at = (datetime.now() + timedelta(minutes=minutes)).isoformat()
             db_config.insert({
                 'type': 'coupon', 
                 'code': request.form.get('c_code'), 
                 'discount': int(request.form.get('c_disc')), 
-                'uses': int(request.form.get('c_uses'))
+                'uses': int(request.form.get('c_uses')),
+                'prod_key': request.form.get('c_prod'), # المنتج المحدد
+                'expires_at': expire_at
             })
         elif action == 'gift':
             g_id = request.form.get('g_id')
@@ -565,13 +583,20 @@ def admin_panel():
             </div>
             
             <div class="card" style="width:300px;">
-                <h3>🎫 كود خصم</h3>
+                <h3>🎫 كود خصم ذكي</h3>
                 <form method="post">
                     <input type="hidden" name="action" value="add_coupon">
-                    <input type="text" name="c_code" placeholder="الكود">
-                    <input type="number" name="c_disc" placeholder="الخصم %">
-                    <input type="number" name="c_uses" placeholder="عدد المرات">
-                    <button style="background:#27ae60;">تفعيل</button>
+                    <input type="text" name="c_code" placeholder="الكود" required>
+                    <input type="number" name="c_disc" placeholder="الخصم %" required>
+                    <input type="number" name="c_uses" placeholder="عدد المرات" required>
+                    <input type="number" name="c_minutes" placeholder="الصلاحية (بالدقائق)" required>
+                    <select name="c_prod">
+                        <option value="all">كل المنتجات</option>
+                        {% for k,v in prods.items() %}
+                        <option value="{{k}}">{{v.name}}</option>
+                        {% endfor %}
+                    </select>
+                    <button style="background:#27ae60;">تفعيل الكود</button>
                 </form>
             </div>
         </div>
@@ -601,6 +626,7 @@ def admin_panel():
                         <th>العميل</th>
                         <th>الوقت</th>
                         <th>المنتج</th>
+                        <th>المبلغ</th>
                         <th>الإجراء</th>
                     </tr>
                 </thead>
@@ -610,10 +636,11 @@ def admin_panel():
                         <td>@{{o.discord_id}}</td>
                         <td>{{o.time}}</td>
                         <td>{{o.prod_name}}</td>
+                        <td>{{o.total}} ج.م</td>
                         <td>
                             {% if o.status == 'pending' %}
-                            <a href="/approve/{{o.doc_id}}" style="color:green;text-decoration:none;">Approve</a> | 
-                            <a href="/reject/{{o.doc_id}}" style="color:red;text-decoration:none;">Decline</a>
+                            <a href="/approve/{{o.doc_id}}" style="color:green;text-decoration:none;font-weight:bold;">Approve</a> | 
+                            <a href="/reject/{{o.doc_id}}" style="color:red;text-decoration:none;font-weight:bold;">Decline</a>
                             {% else %}
                             {{o.status}}
                             {% endif %}
@@ -635,7 +662,6 @@ def approve(order_id):
         async def deliver():
             try:
                 user = await client.fetch_user(int(order['discord_id']))
-                # رسالة التسليم منظمة
                 codes_msg = "\n".join([f"🔗 {c}" for c in order['codes']])
                 await user.send(
                     f"🔥 **مبروك! تم تأكيد طلبك لـ ({order['prod_name']})**\n\n"
@@ -651,7 +677,6 @@ def reject(order_id):
     if not session.get('logged_in'): return redirect('/admin_login')
     order = db_orders.get(doc_id=order_id)
     if order and order['status'] == 'pending':
-        # إرجاع الأكواد للمخزون فقط عند الرفض
         return_codes(order['prod_key'], order.get('codes', []))
         db_orders.update({'status': 'rejected ❌'}, doc_ids=[order_id])
         async def notify():
@@ -667,15 +692,22 @@ def success_page():
     total = request.args.get('total')
     return render_template_string('''
     <body style="background:#0a0a0a;color:white;text-align:center;padding-top:60px;font-family:sans-serif;">
-        <div style="border:1px solid #5865F2;padding:30px;border-radius:15px;display:inline-block;max-width:550px;">
-            <h2>تم تسجيل الطلب بنجاح</h2>
+        <div style="border:1px solid #5865F2;padding:30px;border-radius:15px;display:inline-block;max-width:500px;">
+            <h2 style="color:#43b581;">تم تسجيل الطلب بنجاح</h2>
             <p>حول مبلغ <b>{{total}} جنيه</b> للرقم:</p>
-            <h1>{{pay_num}}</h1>
-            <div style="background:rgba(88,101,242,0.1);padding:15px;border-radius:10px;border:1px solid #5865F2;margin:20px 0;text-align:center;font-size:14px;">
-                🔍 يمكنك تتبع حالة طلبك من <b>(صفحة الطلبات)</b>.<br>
-                ✍️ يسعدنا كتابة رأيك في الخدمة.
+            <h1 style="background:#222;padding:15px;border-radius:10px; color:#fff;">{{pay_num}}</h1>
+            
+            <div style="background:rgba(88,101,242,0.1);padding:15px;border-radius:10px;border:1px solid #5865F2;margin:20px 0;text-align:center; font-size:14px; line-height:1.6;">
+                🔍 يمكنك تتبع حالة طلبك من <b>(صفحة الطلبات)</b> في القائمة.<br>
+                ✍️ يسعدنا كتابة رأيك في الخدمة من <b>(مكان الآراء في الـ Options)</b>.
             </div>
-            <a href="/" style="color:#5865F2;text-decoration:none;font-weight:bold;">العودة للمتجر</a>
+
+            <div style="background:rgba(255,204,0,0.1);padding:15px;border-radius:10px;border:1px solid #ffcc00;margin:20px 0;text-align:right; font-size:13px;">
+                <b style="color:#ffcc00;">⚠️ ملحوظة هامة:</b><br>
+                يجب عليك دخول سيرفر الديسكورد <a href="https://discord.gg/RYK28PNv" style="color: #5865F2; font-weight: bold;">هنا</a> 
+                ليستطيع البوت إرسال الكود لك وتأكد أن خاصك مفتوح وإلا لن يصلك الكود.
+            </div>
+            <a href="/" style="color:#5865F2;text-decoration:none; font-weight: bold;">العودة للمتجر</a>
         </div>
     </body>''', total=total, pay_num=PAYMENT_NUMBER)
 
@@ -683,18 +715,22 @@ def success_page():
 def my_orders(uid):
     orders = db_orders.search(Order.discord_id == uid)
     return render_template_string('''
-    <body style="background:#0a0a0a;color:white;text-align:center;padding:20px;font-family:sans-serif;">
-        <h2>📋 طلباتك</h2>
+    <body style="background:#0a0a0a;color:white;text-align:center;padding:20px; font-family: sans-serif;">
+        <h2 style="color:#5865F2;">📋 تتبع طلباتك</h2>
+        <div style="max-width:600px; margin:auto;">
         {% for o in orders %}
-        <div style="background:#111;padding:15px;margin:10px;border-radius:15px;text-align:right;">
-            <b>{{o.prod_name}}</b><br>
-            <div style="height:12px;background:#333;border-radius:6px;margin:15px 0;overflow:hidden;">
-                <div style="width:{{ "100%" if o.status != "pending" else "50%" }};height:100%;transition:0.5s;background:{{ "#2ecc71" if "approved" in o.status else "#e74c3c" if "rejected" in o.status else "#f1c40f" }};"></div>
+            <div style="background:#111;padding:15px;margin:10px;border-radius:15px; border: 1px solid #222; text-align:right;">
+                <b>{{o.prod_name}}</b><br>
+                <small>المبلغ: {{o.total}} ج.م</small>
+                <div style="height:12px; background:#333; border-radius:6px; margin:15px 0; overflow:hidden; border: 1px solid #444;">
+                    <div style="width:{% if 'approved' in o.status %}100%{% elif 'rejected' in o.status %}100%{% else %}50%{% endif %}; height:100%; transition: 0.5s; background:{% if 'approved' in o.status %}#2ecc71{% elif 'rejected' in o.status %}#e74c3c{% else %}#f1c40f{% endif %};"></div>
+                </div>
+                الحالة: {{o.status}}
             </div>
-            الحالة: {{o.status}}
-        </div>
         {% endfor %}
-        <br><a href="/" style="color:#5865F2;text-decoration:none;">العودة للمتجر</a>
+        {% if not orders %} <p>لا توجد طلبات لهذا الـ ID</p> {% endif %}
+        </div>
+        <br><a href="/" style="color:#5865F2; font-weight:bold; text-decoration:none;">← العودة للمتجر</a>
     </body>''', orders=orders)
 
 @app.route('/add_feedback', methods=['POST'])
@@ -703,9 +739,7 @@ def add_feedback():
     db_feedbacks.insert({'name': request.form.get('user_name'), 'comment': request.form.get('comment'), 'ip': ip})
     return redirect('/')
 
-def run_flask(): 
-    app.run(host='0.0.0.0', port=10000)
-
+def run_flask(): app.run(host='0.0.0.0', port=10000)
 @client.event
 async def on_ready():
     client.loop = asyncio.get_running_loop()
@@ -715,9 +749,7 @@ if __name__ == '__main__':
     t = threading.Thread(target=run_flask, daemon=True)
     t.start()
     if TOKEN:
-        try: 
-            client.run(TOKEN)
+        try: client.run(TOKEN)
         except Exception as e:
-            print(f"❌ Error: {e}")
-            while True: 
-                time.sleep(1000)
+            while True: time.sleep(1000)
+

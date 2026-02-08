@@ -275,8 +275,11 @@ if __name__ == '__main__':
     t.start()
     
     # تشغيل البوت مع معالجة بسيطة للأخطاء
-    if TOKEN:
+        if TOKEN:
         try:
             client.run(TOKEN)
         except Exception as e:
             print(f"❌ Error starting bot: {e}")
+            # السطرين دول هما "الأمان" عشان السيرفر ميفصلش
+            while True:
+                time.sleep(1000)

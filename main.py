@@ -140,312 +140,133 @@ HTML_STORE = '''
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jo Store | متجرك المفضل</title>
     <style>
-        :root {
-            --main-color: #5865F2;
-            --bg-color: #0a0a0a;
-            --text-color: white;
-            --card-bg: #111;
-            --sidebar-bg: #111;
-        }
+        :root { --main: #5865F2; --bg: #0a0a0a; --card: #111; --text: white; }
+        body.light-mode { --bg: #f4f4f4; --card: #fff; --text: #333; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; transition: 0.3s; overflow-x: hidden; }
         
-        body.light-mode {
-            --bg-color: #f4f4f4;
-            --text-color: #333;
-            --card-bg: #ffffff;
-            --sidebar-bg: #ffffff;
-        }
-        
-        body {
-            background: var(--bg-color);
-            color: var(--text-color);
-            font-family: sans-serif;
-            margin: 0;
-            padding: 0;
-            overflow-x: hidden;
-            transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        /* كبسولة التحكم الاحترافية */
-        .glass-nav {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 1001;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            background: rgba(128, 128, 128, 0.15);
-            backdrop-filter: blur(15px);
-            padding: 12px 25px;
-            border-radius: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-        }
+        /* Navbar */
+        .glass-nav { position: fixed; top: 20px; left: 20px; z-index: 1000; display: flex; align-items: center; gap: 15px; background: rgba(128,128,128,0.15); backdrop-filter: blur(10px); padding: 10px 25px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .nav-btn { background: none; border: none; color: var(--text); font-size: 24px; cursor: pointer; transition: 0.3s; }
+        .nav-btn:hover { color: var(--main); transform: scale(1.1); }
+        .divider { width: 1px; height: 25px; background: rgba(255,255,255,0.2); }
 
-        .nav-btn {
-            background: none;
-            border: none;
-            color: var(--text-color);
-            font-size: 28px;
-            cursor: pointer;
-            transition: 0.4s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+        /* Sidebar */
+        .sidebar { height: 100%; width: 0; position: fixed; z-index: 999; top: 0; left: 0; background-color: var(--card); overflow-y: auto; transition: 0.4s; padding-top: 80px; box-shadow: 5px 0 15px rgba(0,0,0,0.5); border-left: 1px solid rgba(255,255,255,0.05); }
+        .sidebar a { padding: 15px 25px; text-decoration: none; display: block; text-align: right; color: #888; font-size: 18px; transition: 0.3s; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .sidebar a:hover { color: var(--main); background: rgba(88,101,242,0.1); padding-right: 35px; }
         
-        .nav-btn:hover {
-            color: var(--main-color);
-            transform: scale(1.15);
-        }
+        /* Content */
+        #main-content { padding: 100px 20px 50px; text-align: center; }
+        .products-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; margin-top: 40px; }
         
-        .nav-divider {
-            width: 1px;
-            height: 30px;
-            background: rgba(255, 255, 255, 0.1);
-            margin: 0 5px;
-        }
+        /* Cards */
+        .product-card { width: 300px; height: 480px; border-radius: 30px; position: relative; overflow: hidden; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); background: var(--card); transition: 0.4s; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        .product-card:hover { transform: translateY(-10px); border-color: var(--main); box-shadow: 0 15px 40px rgba(88,101,242,0.2); }
+        .card-image { position: absolute; inset: 0; background-size: cover; background-position: center; transition: 0.5s; }
+        .product-card:hover .card-image { transform: scale(1.1); }
+        .card-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.95), transparent); display: flex; flex-direction: column; justify-content: flex-end; padding: 25px; }
         
-        .sidebar {
-            height: 100%;
-            width: 0;
-            position: fixed;
-            z-index: 1000;
-            top: 0;
-            left: 0;
-            background-color: var(--sidebar-bg);
-            overflow-y: auto;
-            transition: 0.5s ease;
-            padding-top: 80px;
-            border-right: 1px solid rgba(128, 128, 128, 0.1);
-            box-shadow: 5px 0 25px rgba(0,0,0,0.6);
-        }
+        /* Forms */
+        .order-form { display: none; background: rgba(20,20,20,0.95); padding: 20px; border-radius: 20px; border: 1px solid var(--main); margin-top: 15px; animation: popUp 0.3s ease; }
+        @keyframes popUp { from{transform:scale(0.8);opacity:0} to{transform:scale(1);opacity:1} }
+        input, textarea { width: 90%; padding: 12px; margin: 6px 0; border-radius: 10px; border: 1px solid #333; background: #222; color: white; text-align: center; font-family: inherit; }
+        input:focus { border-color: var(--main); outline: none; }
+        .btn-buy { background: var(--main); color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 10px; transition: 0.3s; }
+        .btn-buy:hover { background: #4752c4; }
+
+        /* --- MODERN TUTORIAL SYSTEM --- */
+        .tut-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; display: none; opacity: 0; transition: opacity 0.5s; }
+        .tut-active { display: block; opacity: 1; }
         
-        .sidebar a {
-            padding: 18px 25px;
-            text-decoration: none;
-            display: block;
-            text-align: right;
-            color: #888;
-            font-size: 18px;
-            transition: 0.3s;
-            border-bottom: 1px solid rgba(128, 128, 128, 0.05);
-        }
+        /* Spotlight Effect */
+        .tut-spotlight { position: absolute; border: 3px solid #f1c40f; border-radius: 15px; box-shadow: 0 0 0 9999px rgba(0,0,0,0.85), 0 0 30px rgba(241,196,15,0.5); pointer-events: none; transition: all 0.5s ease; z-index: 10000; }
         
-        .sidebar a:hover {
-            color: var(--main-color);
-            background: rgba(88, 101, 242, 0.1);
-            padding-right: 40px;
-        }
+        /* Tooltip Card */
+        .tut-card { position: absolute; width: 300px; background: #fff; color: #000; padding: 25px; border-radius: 20px; z-index: 10001; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.5); transition: all 0.5s ease; }
+        .tut-card h3 { color: var(--main); margin-top: 0; }
+        .tut-card p { color: #555; font-size: 14px; line-height: 1.5; }
+        .tut-btn { background: var(--main); color: white; border: none; padding: 8px 25px; border-radius: 20px; cursor: pointer; font-weight: bold; margin-top: 15px; }
         
-        .section-title {
-            padding: 25px 25px 10px 25px;
-            color: var(--main-color);
-            font-weight: bold;
-            font-size: 15px;
-            text-transform: uppercase;
-        }
+        /* Welcome Modal */
+        .welcome-modal { display: none; position: fixed; inset: 0; z-index: 11000; background: rgba(0,0,0,0.9); align-items: center; justify-content: center; }
+        .welcome-box { background: #111; padding: 40px; border-radius: 30px; text-align: center; border: 2px solid var(--main); max-width: 400px; animation: zoomIn 0.4s; }
         
-        #main-content {
-            padding: 40px 20px;
-            text-align: center;
-            padding-top: 100px;
-        }
-        
-        .products-container {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 45px;
-            margin-top: 60px;
-            animation: fadeInUp 0.8s ease-out;
-        }
-        
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(40px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .product-card {
-            width: 320px;
-            height: 520px;
-            border-radius: 40px;
-            position: relative;
-            overflow: hidden;
-            cursor: pointer;
-            transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid rgba(128, 128, 128, 0.1);
-            background: var(--card-bg);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
-        }
-        
-        .product-card:hover {
-            transform: translateY(-15px);
-            border-color: var(--main-color);
-            box-shadow: 0 20px 60px rgba(88, 101, 242, 0.25);
-        }
-        
-        .card-image {
-            position: absolute;
-            inset: 0;
-            background-size: cover;
-            background-position: center;
-            z-index: 1;
-            transition: 1s;
-        }
-        
-        .product-card:hover .card-image {
-            transform: scale(1.15);
-        }
-        
-        .card-overlay {
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.5) 45%, transparent 85%);
-            z-index: 2;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            padding: 35px;
-        }
-        
-        .order-form {
-            display: none;
-            background: rgba(12, 12, 12, 0.98);
-            padding: 20px;
-            border-radius: 25px;
-            border: 1px solid var(--main-color);
-            margin-top: 15px;
-            position: relative;
-            z-index: 10;
-            animation: zoomIn 0.3s ease;
-        }
-        
-        @keyframes zoomIn {
-            from { transform: scale(0.9); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-        }
-        
-        input {
-            width: 90%;
-            padding: 14px;
-            margin: 8px 0;
-            border-radius: 12px;
-            border: 1px solid #333;
-            background: #1a1a1a;
-            color: white;
-            text-align: center;
-            font-size: 15px;
-            transition: 0.3s;
-        }
-        
-        input:focus {
-            outline: none;
-            border-color: var(--main-color);
-            box-shadow: 0 0 15px rgba(88, 101, 242, 0.2);
-        }
-        
-        .btn-purchase {
-            background: var(--main-color);
-            color: white;
-            border: none;
-            padding: 16px;
-            border-radius: 15px;
-            cursor: pointer;
-            width: 100%;
-            font-weight: bold;
-            font-size: 16px;
-            margin-top: 10px;
-            transition: 0.3s;
-        }
-        
-        .btn-purchase:hover {
-            background: #4752c4;
-            transform: scale(1.02);
-        }
-        
-        .feedback-item {
-            background: var(--card-bg);
-            margin: 15px 20px;
-            padding: 20px;
-            border-radius: 20px;
-            font-size: 13px;
-            border-right: 5px solid var(--main-color);
-            text-align: right;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
-        }
-        
-        .warning-text {
-            color: #f1c40f;
-            font-size: 11px;
-            margin-bottom: 12px;
-            font-weight: bold;
-            line-height: 1.6;
-        }
-        
-        .price-text {
-            color: #43b581;
-            font-weight: bold;
-            font-size: 30px;
-            margin: 5px 0;
-        }
-        
-        .stock-info {
-            color: #888;
-            font-size: 14px;
-            margin-bottom: 15px;
-        }
+        /* Spam Timer */
+        .timer-modal { display: none; position: fixed; inset: 0; z-index: 12000; background: rgba(0,0,0,0.95); align-items: center; justify-content: center; color: white; flex-direction: column; }
+        .timer-circle { width: 100px; height: 100px; border: 5px solid var(--main); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 35px; margin-bottom: 20px; }
     </style>
 </head>
-<body id="body">
-    <div class="glass-nav">
-        <button class="nav-btn" onclick="toggleNav()" title="قائمة الخيارات">&#9776;</button>
-        <div class="nav-divider"></div>
-        <button class="nav-btn" onclick="toggleTheme()" title="تغيير المظهر">🌓</button>
+<body>
+
+    <div id="waitModal" class="timer-modal">
+        <div class="timer-circle" id="timerCount">60</div>
+        <h2>⏳ يرجى الانتظار</h2>
+        <p>لمنع السبام، يجب الانتظار دقيقة بين الطلبات.</p>
+        <button onclick="document.getElementById('waitModal').style.display='none'" class="btn-buy" style="width: auto; padding: 10px 40px; display: none;" id="waitClose">حسناً</button>
+    </div>
+
+    <div id="welcomeModal" class="welcome-modal">
+        <div class="welcome-box">
+            <h2 style="color:var(--main)">مرحباً بك في Jo Store! 👋</h2>
+            <p style="color:#ccc; margin: 20px 0;">هل أنت جديد هنا؟ دعنا نأخذك في جولة سريعة لنشرح لك كيفية الطلب والتتبع.</p>
+            <button onclick="startTour()" class="btn-buy">نعم، ابدأ الجولة</button>
+            <button onclick="skipTour()" class="btn-buy" style="background:#333; margin-top:10px">تخطى</button>
+        </div>
+    </div>
+
+    <div id="tutOverlay" class="tut-overlay">
+        <div id="spotlight" class="tut-spotlight"></div>
+        <div id="tutCard" class="tut-card">
+            <h3 id="tutTitle">العنوان</h3>
+            <p id="tutDesc">الوصف</p>
+            <button onclick="nextStep()" class="tut-btn">التالي</button>
+        </div>
+    </div>
+
+    <div class="glass-nav" id="navBar">
+        <button class="nav-btn" onclick="toggleNav()">&#9776;</button>
+        <div class="divider"></div>
+        <button class="nav-btn" onclick="toggleTheme()">🌓</button>
     </div>
 
     <div id="mySidebar" class="sidebar">
         <a href="/">🏠 الرئيسية</a>
-        <a href="#" onclick="checkOrders()">📋 تتبع طلباتي</a>
-        
-        <div class="section-title">أضف تقييمك</div>
-        <form action="/add_feedback" method="post" style="padding: 0 20px;">
-            <input type="text" name="user_name" placeholder="اسمك" required>
-            <textarea name="comment" placeholder="اكتب تقييمك هنا..." required style="width: 90%; background: #1a1a1a; color: white; border: 1px solid #333; padding: 12px; border-radius: 15px; height: 100px; margin-top: 10px; resize: none;"></textarea>
-            <button type="submit" class="btn-purchase" style="padding: 10px;">إرسال</button>
+        <a href="#" onclick="trackOrderPrompt()">📋 تتبع طلباتي</a>
+        <div style="padding:20px; color:var(--main); font-weight:bold;">أضف تقييمك</div>
+        <form action="/add_feedback" method="post" style="padding:0 20px">
+            <input name="user_name" placeholder="الاسم" required>
+            <textarea name="comment" placeholder="رأيك..." required></textarea>
+            <button class="btn-buy">إرسال</button>
         </form>
-        
-        <div class="section-title">آراء الزبائن</div>
+        <div style="padding:20px; font-weight:bold;">آراء العملاء</div>
         {% for f in feedbacks %}
-        <div class="feedback-item">
-            <b style="color:var(--main-color);">{{ f.name }}:</b><br>
-            <span style="color:#aaa;">{{ f.comment }}</span>
+        <div style="padding:15px; border-bottom:1px solid #333; font-size:13px; text-align:right;">
+            <b style="color:var(--main)">{{f.name}}:</b> {{f.comment}}
         </div>
         {% endfor %}
     </div>
 
     <div id="main-content">
-        <h1 style="font-size: 45px; margin-bottom: 5px;">Jo Store | متجرك المفضل 🔒</h1>
-        <p style="color:#777; font-size: 20px;">أفضل المنتجات الرقمية بضمان كامل وأسرع تسليم</p>
+        <h1>Jo Store | متجرك المفضل 🔒</h1>
+        <p style="color:#888">أفضل المنتجات الرقمية بضمان كامل</p>
         
-        <div class="products-container">
-            {% for key, info in prods.items() %}
+        <div class="products-container" id="productsArea">
+            {% for key, val in prods.items() %}
             <div class="product-card" onclick="showForm('{{key}}')">
-                <div class="card-image" style="background-image: url('{{ info.img }}');"></div>
+                <div class="card-image" style="background-image: url('{{val.img}}')"></div>
                 <div class="card-overlay">
-                    <h3>{{ info.name }}</h3>
-                    <div class="price-text">{{ info.price }} ج.م</div>
-                    <div class="stock-info">المتوفر حالياً: {{ stocks[key] }} قطعة</div>
+                    <h3>{{val.name}}</h3>
+                    <h2 style="color:#43b581; margin:5px 0">{{val.price}} ج.م</h2>
+                    <small style="color:#ccc">المتوفر: {{stocks[key]}}</small>
                     
-                    <div class="order-form" id="form-{{key}}" onclick="event.stopPropagation()">
-                        <div class="warning-text">⚠️ يرجى التأكد من كتابة ID الديسكورد بشكل صحيح لضمان وصول طلبك.</div>
-                        <form action="/place_order" method="post">
+                    <div id="form-{{key}}" class="order-form" onclick="event.stopPropagation()">
+                        <form action="/place_order" method="post" onsubmit="return checkSpam()">
                             <input type="hidden" name="prod_key" value="{{key}}">
-                            <input type="number" name="quantity" min="1" value="1" placeholder="الكمية">
+                            <input type="number" name="quantity" value="1" min="1">
                             <input type="text" name="discord_id" placeholder="ID الديسكورد" required>
-                            <input type="text" name="cash_number" placeholder="رقم الكاش المحول منه" required>
-                            <input type="text" name="coupon" placeholder="كود الخصم (إن وجد)" style="border: 1px dashed #43b581;">
-                            <button type="submit" class="btn-purchase">تأكيد عملية الشراء</button>
+                            <input type="text" name="cash_number" placeholder="رقم الكاش" required>
+                            <input type="text" name="coupon" placeholder="كود الخصم (اختياري)">
+                            <button class="btn-buy">تأكيد الشراء</button>
                         </form>
                     </div>
                 </div>
@@ -455,26 +276,117 @@ HTML_STORE = '''
     </div>
 
     <script>
+        // --- UI Functions ---
         function toggleNav() {
-            var side = document.getElementById("mySidebar");
-            if (side.style.width === "300px") { side.style.width = "0"; } 
-            else { side.style.width = "300px"; }
+            let s = document.getElementById("mySidebar");
+            s.style.width = s.style.width === "300px" ? "0" : "300px";
         }
-        
-        function toggleTheme() {
-            document.body.classList.toggle("light-mode");
-            localStorage.setItem('jo_v11_theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
+        function toggleTheme() { document.body.classList.toggle("light-mode"); }
+        function showForm(id) {
+            document.querySelectorAll('.order-form').forEach(f => f.style.display='none');
+            document.getElementById('form-'+id).style.display='block';
         }
-        if (localStorage.getItem('jo_v11_theme') === 'light') { document.body.classList.add('light-mode'); }
-
-        function showForm(id) { 
-            document.querySelectorAll('.order-form').forEach(f => f.style.display = 'none'); 
-            document.getElementById('form-' + id).style.display = 'block'; 
+        function trackOrderPrompt() {
+            let id = prompt("أدخل معرف الديسكورد (ID) الخاص بك:");
+            if(id) window.location.href = "/my_orders/"+id;
         }
 
-        function checkOrders() { 
-            let id = prompt("يرجى إدخال معرف (ID) الديسكورد الخاص بك:"); 
-            if(id) window.location.href="/my_orders/"+id; 
+        // --- Spam Protection ---
+        function checkSpam() {
+            let last = localStorage.getItem('last_buy_time');
+            let now = Date.now();
+            if(last && (now - last < 60000)) {
+                let modal = document.getElementById('waitModal');
+                let timer = document.getElementById('timerCount');
+                let btn = document.getElementById('waitClose');
+                modal.style.display = 'flex';
+                let rem = 60 - Math.floor((now - last)/1000);
+                let interval = setInterval(() => {
+                    rem--; timer.innerText = rem;
+                    if(rem <= 0) { clearInterval(interval); btn.style.display='block'; }
+                }, 1000);
+                return false;
+            }
+            localStorage.setItem('last_buy_time', now);
+            return true;
+        }
+
+        // --- Modern Tutorial System ---
+        let currentStep = 0;
+        const steps = [
+            {
+                el: 'productsArea',
+                title: '🛒 اختر منتجك',
+                desc: 'هنا تجد جميع المنتجات. اضغط على أي كارت لفتح استمارة الشراء وكتابة بياناتك.'
+            },
+            {
+                el: 'navBar',
+                title: '📋 القائمة الجانبية',
+                desc: 'اضغط هنا لفتح القائمة. منها يمكنك (تتبع طلباتك) ومعرفة الأكواد، أو إضافة تقييمك.'
+            },
+            {
+                el: null, // No spotlight, center modal
+                title: '⚠️ هام جداً',
+                desc: 'بعد الشراء، تأكد من الانضمام لسيرفر الديسكورد وفتح الخاص لاستلام الكود فوراً!'
+            }
+        ];
+
+        window.onload = function() {
+            if(!localStorage.getItem('tut_done_v2')) {
+                document.getElementById('welcomeModal').style.display = 'flex';
+            }
+        }
+
+        function skipTour() {
+            document.getElementById('welcomeModal').style.display = 'none';
+            localStorage.setItem('tut_done_v2', 'true');
+        }
+
+        function startTour() {
+            document.getElementById('welcomeModal').style.display = 'none';
+            document.getElementById('tutOverlay').classList.add('tut-active');
+            renderStep();
+        }
+
+        function renderStep() {
+            if (currentStep >= steps.length) {
+                document.getElementById('tutOverlay').classList.remove('tut-active');
+                localStorage.setItem('tut_done_v2', 'true');
+                return;
+            }
+
+            let s = steps[currentStep];
+            let spot = document.getElementById('spotlight');
+            let card = document.getElementById('tutCard');
+            
+            document.getElementById('tutTitle').innerText = s.title;
+            document.getElementById('tutDesc').innerText = s.desc;
+
+            if (s.el) {
+                let target = document.getElementById(s.el);
+                let rect = target.getBoundingClientRect();
+                spot.style.width = (rect.width + 20) + 'px';
+                spot.style.height = (rect.height + 20) + 'px';
+                spot.style.top = (rect.top - 10) + 'px';
+                spot.style.left = (rect.left - 10) + 'px';
+                spot.style.display = 'block';
+                
+                // Position card below or above
+                let cardTop = rect.bottom + 20;
+                if (cardTop + 200 > window.innerHeight) cardTop = rect.top - 200;
+                card.style.top = cardTop + 'px';
+                card.style.left = (window.innerWidth/2 - 150) + 'px'; // Center horizontally
+            } else {
+                // Center Screen
+                spot.style.display = 'none';
+                card.style.top = '40%';
+                card.style.left = (window.innerWidth/2 - 150) + 'px';
+            }
+        }
+
+        function nextStep() {
+            currentStep++;
+            renderStep();
         }
     </script>
 </body>

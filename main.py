@@ -12,8 +12,8 @@ import pytz
 TOKEN = os.environ.get('DISCORD_BOT_TOKEN')
 ADMIN_DISCORD_ID = 1054749887582969896 
 PAYMENT_NUMBER = "01007324726"
-ADMIN_PASSWORD = "201184"
-# ⚠️ ضع هنا الآيدي الرقمي لسيرفرك
+ADMIN_PASSWORD = "201184" 
+# ⚠️ هام: ضع هنا الآيدي الرقمي لسيرفرك
 SERVER_ID = 1272670682324533333 
 
 # توقيت القاهرة
@@ -42,7 +42,7 @@ PRODUCTS = {
 }
 
 app = Flask(__name__)
-app.secret_key = 'jo_store_v32_final_fix'
+app.secret_key = 'jo_store_v33_classic_full'
 
 # قواعد البيانات
 db_orders = TinyDB('orders.json')
@@ -290,7 +290,7 @@ HTML_STORE = '''
             if(id) window.location.href="/my_orders/"+id; 
         }
 
-        // --- Spam Logic (Fixed Button) ---
+        // --- Spam Logic ---
         function checkWait() {
             let last = localStorage.getItem('last_buy');
             let now = Date.now();
@@ -307,9 +307,7 @@ HTML_STORE = '''
             return true;
         }
 
-        // --- Tutorial Logic (Specific Scenario) ---
-        
-        // التحقق من الزيارة الأولى
+        // --- Tutorial Logic ---
         window.onload = function() {
             if(localStorage.getItem('tut_completed_v30')) {
                 document.getElementById('start-modal').style.display = 'none';
@@ -330,7 +328,6 @@ HTML_STORE = '''
         function finishTutorial() {
             document.getElementById('end-modal').style.display = 'none';
             localStorage.setItem('tut_completed_v30', 'true');
-            // إعادة الصفحة لوضعها الطبيعي
             document.getElementById('mySidebar').style.width = '0';
             document.querySelectorAll('.order-form').forEach(f => f.style.display = 'none');
         }
@@ -344,10 +341,9 @@ HTML_STORE = '''
             const txt = document.getElementById('tut-text');
             const sidebar = document.getElementById('mySidebar');
 
-            card.style.display = 'block'; // إظهار الشرح
+            card.style.display = 'block'; 
 
             if(step === 1) {
-                // 1. زر القائمة
                 let el = document.getElementById('menu-btn');
                 let rect = el.getBoundingClientRect();
                 spot.style.top = (rect.top-5)+'px'; spot.style.left = (rect.left-5)+'px';
@@ -361,8 +357,7 @@ HTML_STORE = '''
                 card.style.top = (rect.bottom + 80) + 'px'; card.style.left = "20px"; card.style.transform = "none";
             
             } else if(step === 2) {
-                // 2. فتح القائمة + زر التتبع
-                sidebar.style.width = "300px"; // فتح القائمة
+                sidebar.style.width = "300px"; 
                 setTimeout(() => {
                     let el = document.getElementById('track-btn');
                     let rect = el.getBoundingClientRect();
@@ -373,12 +368,11 @@ HTML_STORE = '''
                     arrow.innerText = "⬅️";
                     arrow.style.top = (rect.top) + 'px'; arrow.style.left = (rect.left - 50) + 'px';
 
-                    txt.innerText = "يمكنك تتبع حالة طلبك ومعرفة الأكواد من هنا.";
+                    txt.innerText = "يمكنك تتبع طلبك من هنا.";
                     card.style.top = (rect.bottom + 20) + 'px'; card.style.left = "20px";
                 }, 300);
 
             } else if(step === 3) {
-                // 3. الفيدباك
                 let el = document.getElementById('feedback-area');
                 let rect = el.getBoundingClientRect();
                 spot.style.top = (rect.top)+'px'; spot.style.left = (rect.left)+'px';
@@ -390,13 +384,11 @@ HTML_STORE = '''
                 txt.innerText = "يمكنك إبداء رأيك عن الخدمة من هنا.";
             
             } else if(step === 4) {
-                // 4. قفل القائمة + فتح منتج
-                sidebar.style.width = "0"; // قفل القائمة
+                sidebar.style.width = "0"; 
                 setTimeout(() => {
                     let cardEl = document.querySelector('.product-card'); 
                     if(cardEl) {
                         let rect = cardEl.getBoundingClientRect();
-                        // فتح الفورم برمجياً
                         cardEl.click(); 
                         
                         spot.style.top = (rect.top-10)+'px'; spot.style.left = (rect.left-10)+'px';
@@ -406,13 +398,12 @@ HTML_STORE = '''
                         arrow.innerText = "⬇️";
                         arrow.style.top = (rect.top - 60) + 'px'; arrow.style.left = (rect.left + rect.width/2) + 'px';
 
-                        txt.innerHTML = "هنا المنتجات..<br>للشراء قم بكتابة <b>الكمية</b> و <b>ID الديسكورد</b> و <b>رقم الكاش</b>.<br><small>⚠️ تأكد أنك داخل سيرفر الديسكورد الخاص بنا لتستلم الطلب.</small>";
+                        txt.innerHTML = "هنا المنتجات..<br>للشراء قم بكتابة <b>الكمية</b> و <b>ID الديسكورد</b> و <b>رقم الكاش</b>.<br><small>⚠️ تأكد أنك داخل سيرفر الديسكورد الخاص بنا.</small>";
                         card.style.top = (window.innerHeight - 200) + 'px'; card.style.left = "50%"; card.style.transform = "translateX(-50%)";
                     }
                 }, 400);
 
             } else {
-                // النهاية
                 document.getElementById('tut-overlay').style.display = 'none';
                 document.getElementById('end-modal').style.display = 'flex';
             }
@@ -502,7 +493,7 @@ def my_orders(uid):
         {% if 'approved' in o.status %}<button onclick="alert('{{o.reserved_codes|join('\\n')}}')" style="background:#43b581; padding:5px 15px; border:none; color:white; cursor:pointer;">عرض الكود</button>{% endif %}</div>{% endfor %}
         <a href="/" style="color:#5865F2;">رجوع</a></body>''', orders=orders)
 
-# --- لوحة التحكم ---
+# --- لوحة التحكم (Classic UI) ---
 
 @app.route('/admin_login', methods=['GET', 'POST'])
 def admin_login():
@@ -514,67 +505,174 @@ def admin_login():
 @app.route('/admin_jo_secret', methods=['GET', 'POST'])
 def admin_panel():
     if not session.get('logged_in'): return redirect('/admin_login')
+    
+    # --- معالجة الطلبات (Logic) ---
     if request.method == 'POST':
         action = request.form.get('action')
+        
         if action == 'gift':
             g_id = request.form.get('gid')
-            codes = pull_codes(request.form.get('gp'), int(request.form.get('gq')))
-            if codes:
-                async def send_gift():
-                    try:
-                        u = await client.fetch_user(int(g_id))
-                        await u.send(f"🎁 هدية! ({PRODUCTS[request.form.get('gp')]['name']})\\n" + "\\n".join(codes))
-                    except: pass
-                asyncio.run_coroutine_threadsafe(send_gift(), client.loop)
-                flash("تم الإرسال ✅", "success")
+            # التأكد من صحة الأرقام قبل السحب
+            try:
+                g_qty = int(request.form.get('gq', 1))
+                codes = pull_codes(request.form.get('gp'), g_qty)
+                if codes:
+                    async def send_gift():
+                        try:
+                            u = await client.fetch_user(int(g_id))
+                            await u.send(f"🎁 **هدية من الإدارة!** ({PRODUCTS[request.form.get('gp')]['name']})\n" + "\n".join(codes))
+                        except: pass
+                    asyncio.run_coroutine_threadsafe(send_gift(), client.loop)
+                    flash("تم إرسال الهدية بنجاح ✅", "success")
+                else:
+                    flash("الكمية غير متوفرة في المخزن! ❌", "error")
+            except: flash("تأكد من إدخال البيانات بشكل صحيح ❌", "error")
+
         elif action == 'add_coupon':
-            db_config.insert({'type':'coupon', 'code':request.form.get('c'), 'discount':int(request.form.get('d')), 'uses':int(request.form.get('u')), 'prod_key':request.form.get('p')})
-            flash("تمت الإضافة ✅", "success")
+            # إضافة كوبون (الشكل الكلاسيك: كود، خصم، عدد، منتج)
+            try:
+                db_config.insert({
+                    'type': 'coupon', 
+                    'code': request.form.get('c'), 
+                    'discount': int(request.form.get('d')), 
+                    'uses': int(request.form.get('u')), 
+                    'prod_key': request.form.get('p')
+                })
+                flash("تم إضافة الكوبون ✅", "success")
+            except: flash("خطأ في البيانات المدخلة ❌", "error")
+
         elif action == 'edit_stock':
-            with open(PRODUCTS[request.form.get('pk')]['file'], 'w') as f: f.write(request.form.get('cont').strip() + "\n")
-            flash("تم التحديث ✅", "success")
-        elif action == 'toggle_maintenance':
+            try:
+                with open(PRODUCTS[request.form.get('pk')]['file'], 'w') as f: 
+                    f.write(request.form.get('cont').strip() + "\n")
+                flash("تم تحديث المخزن ✅", "success")
+            except: flash("حدث خطأ أثناء الحفظ ❌", "error")
+
+        elif action == 'toggle_m':
             curr = is_maintenance_mode()
             db_config.upsert({'type': 'maintenance', 'status': not curr}, Config.type == 'maintenance')
-            flash("تم تغيير الحالة ✅", "success")
+            flash("تم تغيير الحالة ⚙️", "success")
     
+    # --- تجهيز البيانات للعرض ---
     coupons = db_config.search(Config.type=='coupon')
     stocks = {k: open(v['file']).read() if os.path.exists(v['file']) else "" for k,v in PRODUCTS.items()}
-    is_maint = is_maintenance_mode()
     
-    return render_template_string('''<body style="background:#0a0a0a; color:white; padding:20px; font-family:sans-serif;">
+    # --- واجهة الأدمن (Classic UI) ---
+    return render_template_string('''
+    <body style="background:#0a0a0a; color:white; font-family:sans-serif; padding:30px;">
+        
         {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}<div style="position:fixed; top:20px; right:20px;">{% for c, m in messages %}<div style="background:#43b581; padding:15px; margin-bottom:5px; border-radius:10px;">{{m}}</div>{% endfor %}</div>{% endif %}
+          {% if messages %}
+            <div style="position:fixed; top:20px; right:20px; z-index:999;">
+              {% for category, message in messages %}
+                <div style="background:{{ '#e74c3c' if category == 'error' else '#43b581' }}; padding:15px 25px; margin-bottom:10px; border-radius:10px; box-shadow:0 5px 15px rgba(0,0,0,0.5); color:white; font-weight:bold;">
+                    {{ message }}
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
         {% endwith %}
 
-        <h1 style="text-align:center;">🛠️ لوحة التحكم V32</h1>
+        <h1 style="text-align:center; color:#5865F2; margin-bottom:40px;">🛠️ لوحة التحكم (Classic)</h1>
         
-        <div style="text-align:center; margin-bottom:20px;">
-            <form method="post" style="display:inline;"><input type="hidden" name="action" value="toggle_maintenance"><button style="padding:10px; background:{{ '#e74c3c' if maint else '#f39c12' }}; color:white; border:none; border-radius:10px;">{{ '🔴 إيقاف الصيانة' if maint else '🟢 تفعيل الصيانة' }}</button></form>
+        <div style="display:flex; gap:30px; justify-content:center; flex-wrap:wrap;">
+            
+            <div style="background:#111; padding:25px; border-radius:20px; width:320px; border:1px solid #333;">
+                <h3 style="margin-top:0; color:#8e44ad;">🎁 إرسال هدية</h3>
+                <form method="post">
+                    <input type="hidden" name="action" value="gift">
+                    <input name="gid" placeholder="ID العميل (Discord ID)" style="width:90%; padding:12px; margin:5px 0; background:#000; border:1px solid #333; color:white; border-radius:8px;">
+                    <select name="gp" style="width:98%; padding:12px; margin:5px 0; background:#000; border:1px solid #333; color:white; border-radius:8px;">
+                        {% for k,v in prods.items() %}<option value="{{k}}">{{v.name}}</option>{% endfor %}
+                    </select>
+                    <input name="gq" type="number" value="1" placeholder="الكمية" style="width:90%; padding:12px; margin:5px 0; background:#000; border:1px solid #333; color:white; border-radius:8px;">
+                    <button style="width:100%; padding:12px; background:#8e44ad; color:white; border:none; border-radius:8px; margin-top:10px; cursor:pointer; font-weight:bold;">إرسال الآن</button>
+                </form>
+            </div>
+            
+            <div style="background:#111; padding:25px; border-radius:20px; width:320px; border:1px solid #333;">
+                <h3 style="margin-top:0; color:#2ecc71;">🎫 إدارة الكوبونات</h3>
+                
+                <div style="height:120px; overflow-y:auto; margin-bottom:15px; border:1px solid #222; padding:5px; border-radius:8px;">
+                    {% for c in coupons %}
+                    <div style="background:#000; padding:8px; margin-bottom:5px; display:flex; justify-content:space-between; align-items:center; border-radius:5px;">
+                        <span><b>{{c.code}}</b> <small style="color:#2ecc71;">({{c.discount}}%)</small></span>
+                        <a href="/del_c/{{c.doc_id}}" style="color:#e74c3c; text-decoration:none; font-weight:bold;">[حذف]</a>
+                    </div>
+                    {% else %}
+                    <div style="text-align:center; color:#555; padding:10px;">لا توجد كوبونات</div>
+                    {% endfor %}
+                </div>
+
+                <form method="post">
+                    <input type="hidden" name="action" value="add_coupon">
+                    <input name="c" placeholder="كود الخصم" style="width:90%; padding:12px; margin-bottom:5px; background:#000; border:1px solid #333; color:white; border-radius:8px;">
+                    <div style="display:flex; gap:5px;">
+                        <input name="d" placeholder="النسبة %" type="number" style="width:45%; padding:12px; background:#000; border:1px solid #333; color:white; border-radius:8px;">
+                        <input name="u" placeholder="العدد" type="number" style="width:45%; padding:12px; background:#000; border:1px solid #333; color:white; border-radius:8px;">
+                    </div>
+                    <select name="p" style="width:100%; padding:12px; margin-top:5px; background:#000; border:1px solid #333; color:white; border-radius:8px;">
+                        <option value="all">كل المنتجات</option>
+                        {% for k,v in prods.items() %}<option value="{{k}}">{{v.name}}</option>{% endfor %}
+                    </select>
+                    <button style="width:100%; padding:12px; background:#2ecc71; color:white; border:none; border-radius:8px; margin-top:10px; cursor:pointer; font-weight:bold;">تفعيل الكوبون</button>
+                </form>
+            </div>
         </div>
 
-        <div style="display:flex; gap:20px; justify-content:center; flex-wrap:wrap;">
-            <div style="background:#111; padding:20px; border-radius:20px; width:300px; border:1px solid #333;">
-                <h3>🎁 جيفت</h3>
-                <form method="post"><input type="hidden" name="action" value="gift"><input name="gid" placeholder="ID العميل" style="width:90%; padding:10px; margin:5px 0;"><select name="gp" style="width:95%; padding:10px;">{% for k,v in prods.items() %}<option value="{{k}}">{{v.name}}</option>{% endfor %}</select><input name="gq" type="number" value="1" style="width:90%; padding:10px; margin:5px 0;"><button style="width:100%; padding:10px; background:#8e44ad; color:white; border:none; border-radius:5px;">إرسال</button></form>
+        <br><hr style="border-color:#222;"><br>
+
+        <h3 style="text-align:center; color:#ccc;">📦 المخزون (تعديل سريع)</h3>
+        <div style="display:flex; gap:15px; flex-wrap:wrap; justify-content:center;">
+            {% for k,v in prods.items() %}
+            <div style="background:#111; padding:20px; border-radius:15px; border:1px solid #222; width:280px;">
+                <h4 style="margin:0 0 10px 0;">{{v.name}}</h4>
+                <form method="post">
+                    <input type="hidden" name="action" value="edit_stock">
+                    <input type="hidden" name="pk" value="{{k}}">
+                    <textarea name="cont" style="width:90%; height:80px; background:black; color:#43b581; border:1px solid #333; padding:10px; border-radius:8px;">{{stocks[k]}}</textarea>
+                    <button style="width:100%; padding:8px; background:#2ecc71; color:white; border:none; border-radius:5px; margin-top:5px; cursor:pointer;">حفظ التعديل</button>
+                </form>
             </div>
-            <div style="background:#111; padding:20px; border-radius:20px; width:300px; border:1px solid #333;">
-                <h3>🎫 الكوبونات</h3>
-                <div style="height:100px; overflow-y:auto; margin-bottom:10px;">
-                    {% for c in coupons %}<div style="background:#000; padding:5px; margin-bottom:5px; display:flex; justify-content:space-between;"><span>{{c.code}} ({{c.discount}}%)</span><a href="/del_c/{{c.doc_id}}" style="color:red; text-decoration:none;">[X]</a></div>{% endfor %}
-                </div>
-                <form method="post"><input type="hidden" name="action" value="add_coupon"><input name="c" placeholder="الكود" style="width:90%; padding:10px;"><input name="d" placeholder="%" type="number" style="width:40%; padding:10px;"><input name="u" placeholder="العدد" type="number" style="width:40%; padding:10px;"><select name="p" style="width:95%; padding:10px;"><option value="all">الكل</option>{% for k,v in prods.items() %}<option value="{{k}}">{{v.name}}</option>{% endfor %}</select><button style="width:100%; padding:10px; background:#2ecc71; color:white; border:none; border-radius:5px; margin-top:5px;">إضافة</button></form>
-            </div>
+            {% endfor %}
         </div>
-        <br>
-        <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
-            {% for k,v in prods.items() %}<div style="background:#111; padding:15px; border-radius:15px; border:1px solid #222; width:250px;">
-                <h4>{{v.name}}</h4><form method="post"><input type="hidden" name="action" value="edit_stock"><input type="hidden" name="pk" value="{{k}}"><textarea name="cont" style="width:90%; height:60px; background:black; color:#43b581;">{{stocks[k]}}</textarea><button style="width:100%; background:#2ecc71; color:white; border:none; padding:5px;">حفظ</button></form>
-            </div>{% endfor %}
+
+        <br><br>
+        
+        <div style="text-align:center;">
+            <form method="post" style="display:inline;">
+                <input type="hidden" name="action" value="toggle_m">
+                <button style="background:orange; padding:12px 30px; border:none; border-radius:10px; cursor:pointer; font-weight:bold; color:black;">⚠️ وضع الصيانة (تشغيل/إيقاف)</button>
+            </form>
         </div>
-        <br><table border="1" width="100%" style="text-align:center; background:#111;"><tr><th>العميل</th><th>المنتج</th><th>السعر</th><th>الحالة</th><th>الإجراء</th></tr>
-        {% for o in orders|reverse %}<tr><td>{{o.discord_id}}</td><td>{{o.prod_name}}</td><td>{{o.total}}</td><td>{{o.status}}</td><td>{% if o.status == 'pending' %}<a href="/app/{{o.doc_id}}" style="color:green;">[قبول]</a> <a href="/rej/{{o.doc_id}}" style="color:red;">[رفض]</a>{% endif %}</td></tr>{% endfor %}</table>
-    </body>''', prods=PRODUCTS, orders=db_orders.all(), coupons=coupons, stocks=stocks, maint=is_maint)
+
+        <br><br>
+
+        <h3 style="text-align:center;">📋 آخر الطلبات</h3>
+        <table border="0" width="100%" style="text-align:center; background:#111; border-collapse: collapse;">
+            <tr style="background:#5865F2; color:white;">
+                <th style="padding:15px;">العميل</th>
+                <th>المنتج</th>
+                <th>المبلغ</th>
+                <th>الحالة</th>
+                <th>الإجراء</th>
+            </tr>
+            {% for o in orders|reverse %}
+            <tr style="border-bottom:1px solid #222;">
+                <td style="padding:15px;">{{o.discord_id}}</td>
+                <td>{{o.prod_name}}</td>
+                <td style="color:#43b581; font-weight:bold;">{{o.total}} ج.م</td>
+                <td>{{o.status}}</td>
+                <td>
+                    {% if o.status == 'pending' %}
+                    <a href="/app/{{o.doc_id}}" style="color:#2ecc71; text-decoration:none; font-weight:bold; margin:0 5px;">[قبول]</a> 
+                    <a href="/rej/{{o.doc_id}}" style="color:#e74c3c; text-decoration:none; font-weight:bold; margin:0 5px;">[رفض]</a>
+                    {% else %} - {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </body>''', prods=PRODUCTS, orders=db_orders.all(), coupons=coupons, stocks=stocks)
 
 @app.route('/del_c/<int:id>')
 def del_c(id):
@@ -614,3 +712,4 @@ async def on_ready(): client.loop = asyncio.get_running_loop(); print(f"✅ Bot 
 if __name__ == '__main__':
     threading.Thread(target=run_flask, daemon=True).start()
     client.run(TOKEN)
+

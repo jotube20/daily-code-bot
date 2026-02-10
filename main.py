@@ -99,6 +99,7 @@ def use_coupon(code):
         db_config.update({'uses': res['uses'] - 1}, doc_ids=[res.doc_id])
 
 # --- الواجهة (HTML STORE - V30 Spotlight) ---
+
 HTML_STORE = '''
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -111,8 +112,45 @@ HTML_STORE = '''
         body.light-mode { --bg: #f4f4f4; --card: #fff; --text: #333; }
         body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; margin: 0; overflow-x: hidden; transition: 0.3s; }
         
+        /* Navbar (Left) */
         .glass-nav { position: fixed; top: 20px; left: 20px; z-index: 1001; display: flex; align-items: center; gap: 15px; background: rgba(128,128,128,0.15); backdrop-filter: blur(15px); padding: 10px 25px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1); }
-        .nav-btn { background: none; border: none; color: var(--text); font-size: 28px; cursor: pointer; }
+        .nav-btn { background: none; border: none; color: var(--text); font-size: 24px; cursor: pointer; transition: 0.3s; }
+        .nav-btn:hover { transform: scale(1.1); color: var(--main); }
+
+        /* --- New Right Navbar (Beta & News) --- */
+        .right-nav { 
+            position: fixed; top: 20px; right: 20px; z-index: 1001; 
+            display: flex; align-items: center; gap: 10px; 
+            background: rgba(128,128,128,0.15); backdrop-filter: blur(15px); 
+            padding: 8px 20px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1); 
+        }
+        .beta-badge {
+            color: #f1c40f; font-weight: bold; font-family: monospace; letter-spacing: 1px; font-size: 16px;
+            text-shadow: 0 0 10px rgba(241, 196, 15, 0.5);
+        }
+        
+        /* News Modal Styling */
+        #news-modal { display: none; position: fixed; inset: 0; z-index: 12000; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .news-content { 
+            background: #111; width: 400px; padding: 0; border-radius: 25px; border: 1px solid #333; position: relative; overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5); animation: slideDown 0.4s ease;
+        }
+        @keyframes slideDown { from {transform: translateY(-50px); opacity:0;} to {transform: translateY(0); opacity:1;} }
+        
+        .news-header { background: var(--main); padding: 20px; text-align: center; }
+        .news-header h2 { margin: 0; color: white; font-size: 28px; }
+        .news-date { font-size: 12px; color: rgba(255,255,255,0.8); margin-top: 5px; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .news-body { padding: 25px; color: white; text-align: right; }
+        .update-title { color: #f1c40f; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px; font-weight: bold; font-size: 18px; }
+        .update-list { list-style: none; padding: 0; margin: 0; }
+        .update-list li { margin-bottom: 12px; font-size: 14px; line-height: 1.6; color: #ccc; display: flex; align-items: flex-start; gap: 10px; }
+        .update-icon { color: var(--main); font-size: 16px; }
+
+        .close-news { position: absolute; top: 15px; right: 20px; background: none; border: none; color: white; font-size: 20px; cursor: pointer; opacity: 0.7; }
+        .close-news:hover { opacity: 1; }
+
+        /* Sidebar & Layout */
         .sidebar { height: 100%; width: 0; position: fixed; z-index: 1000; top: 0; left: 0; background: var(--card); overflow-y: auto; transition: 0.5s ease; padding-top: 80px; border-right: 1px solid #333; }
         .sidebar a { padding: 15px 25px; display: block; text-align: right; color: #888; text-decoration: none; font-size: 18px; border-bottom: 1px solid #222; }
         #main-content { padding: 100px 20px; text-align: center; }
@@ -124,54 +162,55 @@ HTML_STORE = '''
         input, textarea { width: 90%; padding: 12px; margin: 6px 0; border-radius: 10px; border: 1px solid #333; background: #1a1a1a; color: white; text-align: center; font-family: inherit; }
         .btn-purchase { background: var(--main); color: white; border: none; padding: 14px; border-radius: 12px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 5px; }
 
-        /* --- نظام التوتوريال الجديد --- */
-        #tut-overlay { display: none; position: fixed; inset: 0; z-index: 15000; }
-        
-        .spotlight-hole {
-            position: absolute;
-            border-radius: 50%;
-            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.92); /* تعتيم قوي */
-            pointer-events: none;
-            transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            z-index: 15001;
-        }
-
-        .tut-arrow {
-            position: absolute;
-            font-size: 40px;
-            color: #f1c40f;
-            z-index: 15003;
-            animation: bounce 1s infinite;
-            text-shadow: 0 5px 15px black;
-            transition: all 0.5s ease;
-        }
-        @keyframes bounce { 0%, 100% {transform: translateY(0);} 50% {transform: translateY(-15px);} }
-
-        .tut-card {
-            position: absolute; background: white; color: black; padding: 20px;
-            border-radius: 20px; width: 280px; z-index: 15002; text-align: center;
-            box-shadow: 0 0 30px rgba(255,255,255,0.2);
-            transition: all 0.5s ease; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        }
-
-        /* نافذة البداية والنهاية */
-        .modal-box {
-            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95);
-            z-index: 16000; align-items: center; justify-content: center; flex-direction: column;
-        }
+        /* Modals & Popups */
+        .modal-box { display: none; position: fixed; inset: 0; z-index: 15000; background: rgba(0,0,0,0.95); align-items: center; justify-content: center; flex-direction: column; color: white; }
         .modal-content { background: #111; padding: 40px; border-radius: 30px; border: 2px solid var(--main); text-align: center; max-width: 90%; }
-
-        /* تعديل العداد و زر الـ OK */
         #wait-overlay { display: none; position: fixed; inset: 0; z-index: 20000; background: rgba(0,0,0,0.96); flex-direction: column; align-items: center; justify-content: center; color: white; }
         .timer-circle { width: 100px; height: 100px; border: 5px solid var(--main); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 35px; margin-top: 20px; }
-        /* زر الموافقة في الأعلى للموبايل */
-        .top-ok-btn {
-            position: absolute; top: 10%; right: 50%; transform: translateX(50%);
-            background: #e74c3c; padding: 10px 30px; border-radius: 20px; color: white; border: none; font-weight: bold; cursor: pointer; display: none; z-index: 20001;
-        }
+        .top-ok-btn { position: absolute; top: 10%; right: 50%; transform: translateX(50%); background: #e74c3c; padding: 10px 30px; border-radius: 20px; color: white; border: none; font-weight: bold; cursor: pointer; display: none; z-index: 20001; }
+
+        /* Tutorial Spotlight */
+        #tut-overlay { display: none; position: fixed; inset: 0; z-index: 15000; }
+        .spotlight-hole { position: absolute; border-radius: 50%; box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.92); pointer-events: none; transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94); z-index: 15001; }
+        .tut-arrow { position: absolute; font-size: 40px; color: #f1c40f; z-index: 15003; animation: bounce 1s infinite; text-shadow: 0 5px 15px black; transition: all 0.5s ease; }
+        @keyframes bounce { 0%, 100% {transform: translateY(0);} 50% {transform: translateY(-15px);} }
+        .tut-card { position: absolute; background: white; color: black; padding: 20px; border-radius: 20px; width: 280px; z-index: 15002; text-align: center; box-shadow: 0 0 30px rgba(255,255,255,0.2); transition: all 0.5s ease; top: 50%; left: 50%; transform: translate(-50%, -50%); }
     </style>
 </head>
 <body id="body">
+
+    <div id="news-modal">
+        <div class="news-content">
+            <button class="close-news" onclick="toggleNews()">✕</button>
+            <div class="news-header">
+                <h2>What is new?</h2>
+                <div class="news-date">Latest Update - <span id="current-date"></span></div>
+            </div>
+            <div class="news-body">
+                <div class="update-title">✨ Beta Update V1</div>
+                <ul class="update-list">
+                    <li><span class="update-icon">🌓</span> إطلاق الوضع الليلي (Dark Mode) لراحة عينيك.</li>
+                    <li><span class="update-icon">🎟️</span> إضافة خانة "كوبون الخصم" للعروض المميزة.</li>
+                    <li><span class="update-icon">⏳</span> نظام حماية (Countdown) بين كل عملية شراء.</li>
+                    <li><span class="update-icon">🛡️</span> التحقق الآلي من الـ ID ورفض الطلبات المخالفة.</li>
+                    <li><span class="update-icon">🔧</span> تحسينات عامة وإصلاح الأخطاء السابقة.</li>
+                </ul>
+                <button class="btn-purchase" onclick="toggleNews()" style="margin-top:20px; width:100%;">فهمت، شكراً!</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="right-nav">
+        <span class="beta-badge">Beta</span>
+        <div style="width:1px; height:20px; background:rgba(255,255,255,0.2);"></div>
+        <button class="nav-btn" onclick="toggleNews()">📢</button>
+    </div>
+
+    <div class="glass-nav">
+        <button class="nav-btn" id="menu-btn" onclick="toggleNav()">&#9776;</button>
+        <div style="width:1px; height:25px; background:#555; margin:0 10px;"></div>
+        <button class="nav-btn" onclick="toggleTheme()">🌓</button>
+    </div>
 
     <div id="server-error-modal" class="modal-box">
         <div class="modal-content">
@@ -217,17 +256,10 @@ HTML_STORE = '''
         <h3 style="margin-top:20px;">يرجى الانتظار دقيقة بين الطلبات.. ⌛</h3>
     </div>
 
-    <div class="glass-nav">
-        <button class="nav-btn" id="menu-btn" onclick="toggleNav()">&#9776;</button>
-        <div style="width:1px; height:25px; background:#555; margin:0 10px;"></div>
-        <button class="nav-btn" onclick="toggleTheme()">🌓</button>
-    </div>
-
     <div id="mySidebar" class="sidebar">
         <a href="/">🏠 الرئيسية</a>
         <a href="#" id="track-btn" onclick="checkOrders()">📋 تتبع طلباتي</a>
         <a href="https://discord.gg/db2sGRbrnJ" target="_blank" style="color:#5865F2;">💬 سيرفر المتجر</a>
-        
         <div id="feedback-area">
             <div style="padding:20px 20px 10px; color:var(--main); font-weight:bold;">رأيك يهمنا</div>
             <form action="/add_feedback" method="post" style="padding:0 20px;">
@@ -267,7 +299,15 @@ HTML_STORE = '''
     </div>
 
     <script>
-        // Check URL for Error
+        // Set Today's Date
+        const d = new Date();
+        document.getElementById('current-date').innerText = d.getDate() + "/" + (d.getMonth()+1) + "/" + d.getFullYear();
+
+        function toggleNews() {
+            let m = document.getElementById('news-modal');
+            m.style.display = (m.style.display === 'flex') ? 'none' : 'flex';
+        }
+
         if(new URLSearchParams(window.location.search).get('error') === 'not_in_server'){
             document.getElementById('server-error-modal').style.display = 'flex';
         }
@@ -275,22 +315,10 @@ HTML_STORE = '''
         function toggleTheme() { document.body.classList.toggle("light-mode"); localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark'); }
         if(localStorage.getItem('theme') === 'light') document.body.classList.add('light-mode');
         
-        function toggleNav() { 
-            var s = document.getElementById("mySidebar"); 
-            s.style.width = s.style.width === "300px" ? "0" : "300px"; 
-        }
-        
-        function showForm(id) { 
-            document.querySelectorAll('.order-form').forEach(f => f.style.display = 'none'); 
-            document.getElementById('form-' + id).style.display = 'block'; 
-        }
-        
-        function checkOrders() { 
-            let id = prompt("أدخل معرف الديسكورد:"); 
-            if(id) window.location.href="/my_orders/"+id; 
-        }
+        function toggleNav() { var s = document.getElementById("mySidebar"); s.style.width = s.style.width === "300px" ? "0" : "300px"; }
+        function showForm(id) { document.querySelectorAll('.order-form').forEach(f => f.style.display = 'none'); document.getElementById('form-' + id).style.display = 'block'; }
+        function checkOrders() { let id = prompt("أدخل معرف الديسكورد:"); if(id) window.location.href="/my_orders/"+id; }
 
-        // --- Spam Logic ---
         function checkWait() {
             let last = localStorage.getItem('last_buy');
             let now = Date.now();
@@ -307,8 +335,11 @@ HTML_STORE = '''
             return true;
         }
 
-        // --- Tutorial Logic ---
         window.onload = function() {
+            // Set Date
+            const d = new Date();
+            document.getElementById('current-date').innerText = d.getDate() + "/" + (d.getMonth()+1) + "/" + d.getFullYear();
+            
             if(localStorage.getItem('tut_completed_v30')) {
                 document.getElementById('start-modal').style.display = 'none';
             }
@@ -349,13 +380,9 @@ HTML_STORE = '''
                 spot.style.top = (rect.top-5)+'px'; spot.style.left = (rect.left-5)+'px';
                 spot.style.width = (rect.width+10)+'px'; spot.style.height = (rect.height+10)+'px';
                 spot.style.borderRadius = "50%";
-                
-                arrow.innerText = "⬆️";
-                arrow.style.top = (rect.bottom + 10) + 'px'; arrow.style.left = (rect.left + 10) + 'px';
-                
+                arrow.innerText = "⬆️"; arrow.style.top = (rect.bottom + 10) + 'px'; arrow.style.left = (rect.left + 10) + 'px';
                 txt.innerHTML = "<b>هذا هو زر الاختيارات</b><br>اضغط هنا لفتح القائمة الجانبية.";
                 card.style.top = (rect.bottom + 80) + 'px'; card.style.left = "20px"; card.style.transform = "none";
-            
             } else if(step === 2) {
                 sidebar.style.width = "300px"; 
                 setTimeout(() => {
@@ -364,25 +391,17 @@ HTML_STORE = '''
                     spot.style.top = (rect.top)+'px'; spot.style.left = (rect.left)+'px';
                     spot.style.width = (rect.width)+'px'; spot.style.height = (rect.height)+'px';
                     spot.style.borderRadius = "0";
-
-                    arrow.innerText = "⬅️";
-                    arrow.style.top = (rect.top) + 'px'; arrow.style.left = (rect.left - 50) + 'px';
-
+                    arrow.innerText = "⬅️"; arrow.style.top = (rect.top) + 'px'; arrow.style.left = (rect.left - 50) + 'px';
                     txt.innerText = "يمكنك تتبع طلبك من هنا.";
                     card.style.top = (rect.bottom + 20) + 'px'; card.style.left = "20px";
                 }, 300);
-
             } else if(step === 3) {
                 let el = document.getElementById('feedback-area');
                 let rect = el.getBoundingClientRect();
                 spot.style.top = (rect.top)+'px'; spot.style.left = (rect.left)+'px';
                 spot.style.width = (rect.width)+'px'; spot.style.height = (rect.height)+'px';
-                
-                arrow.innerText = "⬅️";
-                arrow.style.top = (rect.top + 50) + 'px'; arrow.style.left = (rect.left - 50) + 'px';
-
+                arrow.innerText = "⬅️"; arrow.style.top = (rect.top + 50) + 'px'; arrow.style.left = (rect.left - 50) + 'px';
                 txt.innerText = "يمكنك إبداء رأيك عن الخدمة من هنا.";
-            
             } else if(step === 4) {
                 sidebar.style.width = "0"; 
                 setTimeout(() => {
@@ -390,19 +409,14 @@ HTML_STORE = '''
                     if(cardEl) {
                         let rect = cardEl.getBoundingClientRect();
                         cardEl.click(); 
-                        
                         spot.style.top = (rect.top-10)+'px'; spot.style.left = (rect.left-10)+'px';
                         spot.style.width = (rect.width+20)+'px'; spot.style.height = (rect.height+20)+'px';
                         spot.style.borderRadius = "40px";
-
-                        arrow.innerText = "⬇️";
-                        arrow.style.top = (rect.top - 60) + 'px'; arrow.style.left = (rect.left + rect.width/2) + 'px';
-
+                        arrow.innerText = "⬇️"; arrow.style.top = (rect.top - 60) + 'px'; arrow.style.left = (rect.left + rect.width/2) + 'px';
                         txt.innerHTML = "هنا المنتجات..<br>للشراء قم بكتابة <b>الكمية</b> و <b>ID الديسكورد</b> و <b>رقم الكاش</b>.<br><small>⚠️ تأكد أنك داخل سيرفر الديسكورد الخاص بنا.</small>";
                         card.style.top = (window.innerHeight - 200) + 'px'; card.style.left = "50%"; card.style.transform = "translateX(-50%)";
                     }
                 }, 400);
-
             } else {
                 document.getElementById('tut-overlay').style.display = 'none';
                 document.getElementById('end-modal').style.display = 'flex';
@@ -412,6 +426,7 @@ HTML_STORE = '''
 </body>
 </html>
 '''
+
 
 # --- الروابط (Routes) ---
 

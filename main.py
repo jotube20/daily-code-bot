@@ -142,111 +142,145 @@ HTML_STORE = '''
     <style>
         :root { --main: #5865F2; --bg: #0a0a0a; --card: #111; --text: white; }
         body.light-mode { --bg: #f4f4f4; --card: #fff; --text: #333; }
-        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; overflow-x: hidden; transition: 0.3s; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; margin: 0; overflow-x: hidden; transition: 0.3s; }
         
-        /* Navbar & Sidebar & Cards (نفس الستايل القديم) */
-        .glass-nav { position: fixed; top: 20px; left: 20px; z-index: 1001; display: flex; align-items: center; gap: 15px; background: rgba(128,128,128,0.15); backdrop-filter: blur(15px); padding: 12px 25px; border-radius: 30px; border: 1px solid rgba(255, 255, 255, 0.1); }
+        /* الأساسيات (نفس القديم) */
+        .glass-nav { position: fixed; top: 20px; left: 20px; z-index: 1001; display: flex; align-items: center; gap: 15px; background: rgba(128,128,128,0.15); backdrop-filter: blur(15px); padding: 10px 25px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1); }
         .nav-btn { background: none; border: none; color: var(--text); font-size: 28px; cursor: pointer; }
         .sidebar { height: 100%; width: 0; position: fixed; z-index: 1000; top: 0; left: 0; background: var(--card); overflow-y: auto; transition: 0.5s ease; padding-top: 80px; border-right: 1px solid #333; }
-        .sidebar a { padding: 18px 25px; display: block; text-align: right; color: #888; text-decoration: none; font-size: 18px; border-bottom: 1px solid #222; }
+        .sidebar a { padding: 15px 25px; display: block; text-align: right; color: #888; text-decoration: none; font-size: 18px; border-bottom: 1px solid #222; }
         #main-content { padding: 100px 20px; text-align: center; }
         .products-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 45px; margin-top: 60px; }
         .product-card { width: 320px; height: 520px; border-radius: 40px; position: relative; overflow: hidden; cursor: pointer; border: 1px solid #333; background: var(--card); transition: 0.5s; }
         .card-image { position: absolute; inset: 0; background-size: cover; background-position: center; z-index: 1; transition: 1s; }
         .card-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.5) 45%, transparent 85%); z-index: 2; display: flex; flex-direction: column; justify-content: flex-end; padding: 35px; }
         .order-form { display: none; background: rgba(12, 12, 12, 0.98); padding: 20px; border-radius: 25px; border: 1px solid var(--main); margin-top: 15px; }
-        input { width: 90%; padding: 14px; margin: 8px 0; border-radius: 12px; border: 1px solid #333; background: #1a1a1a; color: white; text-align: center; }
-        .btn-purchase { background: var(--main); color: white; border: none; padding: 16px; border-radius: 15px; cursor: pointer; width: 100%; font-weight: bold; }
+        input, textarea { width: 90%; padding: 12px; margin: 6px 0; border-radius: 10px; border: 1px solid #333; background: #1a1a1a; color: white; text-align: center; font-family: inherit; }
+        .btn-purchase { background: var(--main); color: white; border: none; padding: 14px; border-radius: 12px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 5px; }
 
-        /* --- TWEAKED TUTORIAL SYSTEM --- */
-        #tut-overlay { display: none; position: fixed; inset: 0; z-index: 5000; }
+        /* --- نظام التوتوريال الجديد --- */
+        #tut-overlay { display: none; position: fixed; inset: 0; z-index: 15000; }
         
-        /* الثقب المضيء (بدون حدود صفراء) */
-        .spotlight { 
-            position: absolute; 
-            border-radius: 50%; /* دائرة */
-            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.9); /* الظلام المحيط */
-            z-index: 5001; 
-            pointer-events: none; 
-            transition: all 0.5s ease;
+        .spotlight-hole {
+            position: absolute;
+            border-radius: 50%;
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.92); /* تعتيم قوي */
+            pointer-events: none;
+            transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            z-index: 15001;
         }
 
-        /* سهم CSS مرسوم (مش إيموجي) */
         .tut-arrow {
             position: absolute;
-            width: 0; 
-            height: 0; 
-            border-left: 20px solid transparent;
-            border-right: 20px solid transparent;
-            border-top: 30px solid #f1c40f; /* لون السهم */
-            z-index: 5003;
-            filter: drop-shadow(0 0 10px rgba(241,196,15,0.8));
-            animation: float 1s infinite alternate;
+            font-size: 40px;
+            color: #f1c40f;
+            z-index: 15003;
+            animation: bounce 1s infinite;
+            text-shadow: 0 5px 15px black;
             transition: all 0.5s ease;
         }
-        @keyframes float { from {transform: translateY(0);} to {transform: translateY(-15px);} }
+        @keyframes bounce { 0%, 100% {transform: translateY(0);} 50% {transform: translateY(-15px);} }
 
-        .tut-card { 
-            position: absolute; background: white; color: black; padding: 20px; 
-            border-radius: 20px; width: 250px; z-index: 5002; text-align: center; font-weight: bold; 
-            box-shadow: 0 0 30px rgba(0,0,0,0.5);
-            transition: all 0.5s ease;
+        .tut-card {
+            position: absolute; background: white; color: black; padding: 20px;
+            border-radius: 20px; width: 280px; z-index: 15002; text-align: center;
+            box-shadow: 0 0 30px rgba(255,255,255,0.2);
+            transition: all 0.5s ease; top: 50%; left: 50%; transform: translate(-50%, -50%);
         }
 
-        /* Countdown (Z-Index Fixed) */
-        #wait-overlay { display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,0.95); flex-direction: column; align-items: center; justify-content: center; color: white; }
-        .timer-box { width: 120px; height: 120px; border: 6px solid var(--main); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 42px; margin-bottom: 25px; }
+        /* نافذة البداية والنهاية */
+        .modal-box {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95);
+            z-index: 16000; align-items: center; justify-content: center; flex-direction: column;
+        }
+        .modal-content { background: #111; padding: 40px; border-radius: 30px; border: 2px solid var(--main); text-align: center; max-width: 90%; }
+
+        /* تعديل العداد و زر الـ OK */
+        #wait-overlay { display: none; position: fixed; inset: 0; z-index: 20000; background: rgba(0,0,0,0.96); flex-direction: column; align-items: center; justify-content: center; color: white; }
+        .timer-circle { width: 100px; height: 100px; border: 5px solid var(--main); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 35px; margin-top: 20px; }
+        /* زر الموافقة في الأعلى للموبايل */
+        .top-ok-btn {
+            position: absolute; top: 10%; right: 50%; transform: translateX(50%);
+            background: #e74c3c; padding: 10px 30px; border-radius: 20px; color: white; border: none; font-weight: bold; cursor: pointer; display: none; z-index: 20001;
+        }
     </style>
 </head>
 <body id="body">
-    <div id="wait-overlay">
-        <div class="timer-box" id="timer-val">60</div>
-        <h3>يرجى الانتظار دقيقة.. ⌛</h3>
-        <button class="btn-purchase" id="ok-btn" style="display: none; width: auto; padding: 10px 40px;" onclick="document.getElementById('wait-overlay').style.display='none'">حسناً</button>
+
+    <div id="start-modal" class="modal-box" style="display: flex;">
+        <div class="modal-content">
+            <h2 style="color:var(--main)">أهلاً بك في Jo Store 👋</h2>
+            <p style="color:#ccc; margin: 20px 0;">هل ترغب في جولة سريعة لمعرفة كيفية الشراء؟</p>
+            <div style="display:flex; gap:10px;">
+                <button class="btn-purchase" onclick="startTutorial()">نعم، ابدأ الجولة</button>
+                <button class="btn-purchase" style="background:#333;" onclick="skipTutorial()">لا شكراً</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="end-modal" class="modal-box">
+        <div class="modal-content">
+            <h1>🎊 تهانينا!</h1>
+            <p style="color:#ccc;">أنت الآن جاهز للتسوق في متجرنا بأمان.</p>
+            <button class="btn-purchase" onclick="finishTutorial()">إنهاء</button>
+        </div>
     </div>
 
     <div id="tut-overlay">
-        <div id="spotlight" class="spotlight"></div>
-        <div id="arrow" class="tut-arrow"></div>
-        <div id="tut-card" class="tut-card">
+        <div id="spotlight" class="spotlight-hole"></div>
+        <div id="arrow" class="tut-arrow">⬆️</div>
+        <div id="tut-card" class="tut-card" style="display:none;">
             <div id="tut-text"></div>
-            <button class="btn-purchase" style="padding: 8px 20px; margin-top: 10px;" onclick="nextStep()">التالي</button>
+            <button class="btn-purchase" style="padding: 8px 20px; margin-top: 10px; font-size:14px;" onclick="nextStep()">التالي</button>
         </div>
+    </div>
+
+    <div id="wait-overlay">
+        <button id="wait-ok" class="top-ok-btn" onclick="document.getElementById('wait-overlay').style.display='none'">إغلاق النافذة (OK)</button>
+        <div class="timer-circle" id="timer-val">60</div>
+        <h3 style="margin-top:20px;">يرجى الانتظار دقيقة بين الطلبات.. ⌛</h3>
     </div>
 
     <div class="glass-nav">
         <button class="nav-btn" id="menu-btn" onclick="toggleNav()">&#9776;</button>
-        <button class="nav-btn" onclick="toggleTheme()" style="margin-right:15px;">🌓</button>
+        <div style="width:1px; height:25px; background:#555; margin:0 10px;"></div>
+        <button class="nav-btn" onclick="toggleTheme()">🌓</button>
     </div>
 
     <div id="mySidebar" class="sidebar">
         <a href="/">🏠 الرئيسية</a>
-        <a href="#" onclick="checkOrders()">📋 تتبع طلباتي</a>
-        <div style="padding:20px; color:var(--main); font-weight:bold;">رأيك يهمنا</div>
-        <form action="/add_feedback" method="post" style="padding:0 20px;">
-            <input name="user_name" placeholder="الاسم" required>
-            <textarea name="comment" placeholder="رأيك..." style="width:90%; background:#222; color:white; height:60px; border:1px solid #333;"></textarea>
-            <button class="btn-purchase">إرسال</button>
-        </form>
+        <a href="#" id="track-btn" onclick="checkOrders()">📋 تتبع طلباتي</a>
+        
+        <div id="feedback-area">
+            <div style="padding:20px 20px 10px; color:var(--main); font-weight:bold;">رأيك يهمنا</div>
+            <form action="/add_feedback" method="post" style="padding:0 20px;">
+                <input name="user_name" placeholder="الاسم" required>
+                <textarea name="comment" placeholder="رأيك..." style="height:60px;"></textarea>
+                <button class="btn-purchase">إرسال</button>
+            </form>
+        </div>
     </div>
 
     <div id="main-content">
         <h1>Jo Store 🔒</h1>
         <div class="products-container" id="prod-list">
             {% for key, info in prods.items() %}
-            <div class="product-card" onclick="showForm('{{key}}')">
+            <div class="product-card" id="card-{{key}}" onclick="showForm('{{key}}')">
                 <div class="card-image" style="background-image: url('{{ info.img }}');"></div>
                 <div class="card-overlay">
                     <h3>{{ info.name }}</h3>
-                    <div style="color:#43b581; font-weight:bold; font-size:30px;">{{ info.price }} ج.م</div>
+                    <h2 style="color:#43b581">{{ info.price }} ج.م</h2>
+                    <small style="color:#ccc">متاح: {{ stocks[key] }}</small>
                     <div class="order-form" id="form-{{key}}" onclick="event.stopPropagation()">
                         <form action="/place_order" method="post" onsubmit="return checkWait()">
                             <input type="hidden" name="prod_key" value="{{key}}">
-                            <input type="number" name="quantity" min="1" value="1">
-                            <input type="text" name="discord_id" placeholder="ID Discord" required>
-                            <input type="text" name="cash_number" placeholder="رقم الكاش" required>
+                            <div id="tut-inputs-{{key}}">
+                                <input type="number" name="quantity" min="1" value="1" placeholder="الكمية">
+                                <input type="text" name="discord_id" placeholder="ID الديسكورد" required>
+                                <input type="text" name="cash_number" placeholder="رقم الكاش" required>
+                            </div>
                             <input type="text" name="coupon" placeholder="كود الخصم">
-                            <button class="btn-purchase">تأكيد</button>
+                            <button class="btn-purchase">تأكيد الشراء</button>
                         </form>
                     </div>
                 </div>
@@ -256,78 +290,159 @@ HTML_STORE = '''
     </div>
 
     <script>
+        // --- الأساسيات ---
         function toggleTheme() { document.body.classList.toggle("light-mode"); localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark'); }
         if(localStorage.getItem('theme') === 'light') document.body.classList.add('light-mode');
-        function toggleNav() { var s = document.getElementById("mySidebar"); s.style.width = s.style.width === "300px" ? "0" : "300px"; }
-        function showForm(id) { document.querySelectorAll('.order-form').forEach(f => f.style.display = 'none'); document.getElementById('form-' + id).style.display = 'block'; }
-        function checkOrders() { let id = prompt("أدخل ID الديسكورد:"); if(id) window.location.href="/my_orders/"+id; }
+        
+        function toggleNav() { 
+            var s = document.getElementById("mySidebar"); 
+            s.style.width = s.style.width === "300px" ? "0" : "300px"; 
+        }
+        
+        function showForm(id) { 
+            document.querySelectorAll('.order-form').forEach(f => f.style.display = 'none'); 
+            document.getElementById('form-' + id).style.display = 'block'; 
+        }
+        
+        function checkOrders() { 
+            let id = prompt("أدخل معرف الديسكورد:"); 
+            if(id) window.location.href="/my_orders/"+id; 
+        }
 
+        // --- Spam Logic (Fixed Button) ---
         function checkWait() {
             let last = localStorage.getItem('last_buy');
             let now = Date.now();
             if(last && (now - last < 60000)) {
                 document.getElementById('wait-overlay').style.display='flex';
                 let sec = 60 - Math.floor((now - last)/1000);
-                let t = setInterval(() => { sec--; document.getElementById('timer-val').innerText = sec; if(sec<=0) { clearInterval(t); document.getElementById('ok-btn').style.display='block'; } }, 1000);
+                let t = setInterval(() => {
+                    sec--; document.getElementById('timer-val').innerText = sec;
+                    if(sec<=0) { clearInterval(t); document.getElementById('wait-ok').style.display='block'; }
+                }, 1000);
                 return false;
             }
             localStorage.setItem('last_buy', now);
             return true;
         }
 
-        // --- Spotlight & Arrow Logic ---
+        // --- Tutorial Logic (Specific Scenario) ---
+        
+        // التحقق من الزيارة الأولى
+        window.onload = function() {
+            if(localStorage.getItem('tut_completed_v30')) {
+                document.getElementById('start-modal').style.display = 'none';
+            }
+        };
+
+        function skipTutorial() {
+            document.getElementById('start-modal').style.display = 'none';
+            localStorage.setItem('tut_completed_v30', 'true');
+        }
+
+        function startTutorial() {
+            document.getElementById('start-modal').style.display = 'none';
+            document.getElementById('tut-overlay').style.display = 'block';
+            nextStep();
+        }
+
+        function finishTutorial() {
+            document.getElementById('end-modal').style.display = 'none';
+            localStorage.setItem('tut_completed_v30', 'true');
+            // إعادة الصفحة لوضعها الطبيعي
+            document.getElementById('mySidebar').style.width = '0';
+            document.querySelectorAll('.order-form').forEach(f => f.style.display = 'none');
+        }
+
         let step = 0;
         function nextStep() {
             step++;
-            const s = document.getElementById('spotlight');
-            const a = document.getElementById('arrow');
-            const c = document.getElementById('tut-card');
-            const t = document.getElementById('tut-text');
+            const spot = document.getElementById('spotlight');
+            const arrow = document.getElementById('arrow');
+            const card = document.getElementById('tut-card');
+            const txt = document.getElementById('tut-text');
+            const sidebar = document.getElementById('mySidebar');
 
-            if(step===1) {
-                // Step 1: Highlight Products
-                let rect = document.getElementById('prod-list').getBoundingClientRect();
-                s.style.top = (rect.top-20)+'px'; s.style.left = (rect.left-20)+'px'; 
-                s.style.width = (rect.width+40)+'px'; s.style.height = (rect.height+40)+'px'; 
-                s.style.borderRadius = "30px"; // مستطيل مدور للمنتجات
+            card.style.display = 'block'; // إظهار الشرح
 
-                // سهم يشير للأسفل
-                a.style.borderTop = "30px solid #f1c40f"; a.style.borderBottom = "0";
-                a.style.top = (rect.top - 50)+'px'; a.style.left = (rect.left + rect.width/2 - 20)+'px';
+            if(step === 1) {
+                // 1. زر القائمة
+                let el = document.getElementById('menu-btn');
+                let rect = el.getBoundingClientRect();
+                spot.style.top = (rect.top-5)+'px'; spot.style.left = (rect.left-5)+'px';
+                spot.style.width = (rect.width+10)+'px'; spot.style.height = (rect.height+10)+'px';
+                spot.style.borderRadius = "50%";
+                
+                arrow.innerText = "⬆️";
+                arrow.style.top = (rect.bottom + 10) + 'px'; arrow.style.left = (rect.left + 10) + 'px';
+                
+                txt.innerHTML = "<b>هذا هو زر الاختيارات</b><br>اضغط هنا لفتح القائمة الجانبية.";
+                card.style.top = (rect.bottom + 80) + 'px'; card.style.left = "20px"; card.style.transform = "none";
+            
+            } else if(step === 2) {
+                // 2. فتح القائمة + زر التتبع
+                sidebar.style.width = "300px"; // فتح القائمة
+                setTimeout(() => {
+                    let el = document.getElementById('track-btn');
+                    let rect = el.getBoundingClientRect();
+                    spot.style.top = (rect.top)+'px'; spot.style.left = (rect.left)+'px';
+                    spot.style.width = (rect.width)+'px'; spot.style.height = (rect.height)+'px';
+                    spot.style.borderRadius = "0";
 
-                t.innerText = "هنا المنتجات المتاحة، اضغط على الكارت للشراء.";
-                c.style.top = (rect.bottom + 20)+'px'; c.style.left = (window.innerWidth/2 - 125)+'px';
+                    arrow.innerText = "⬅️";
+                    arrow.style.top = (rect.top) + 'px'; arrow.style.left = (rect.left - 50) + 'px';
 
-            } else if(step===2) {
-                // Step 2: Highlight Menu Button
-                let rect = document.getElementById('menu-btn').getBoundingClientRect();
-                s.style.top = (rect.top-10)+'px'; s.style.left = (rect.left-10)+'px'; 
-                s.style.width = (rect.width+20)+'px'; s.style.height = (rect.height+20)+'px'; 
-                s.style.borderRadius = "50%"; // دائرة للزرار
+                    txt.innerText = "يمكنك تتبع حالة طلبك ومعرفة الأكواد من هنا.";
+                    card.style.top = (rect.bottom + 20) + 'px'; card.style.left = "20px";
+                }, 300);
 
-                // سهم يشير للأعلى/اليسار
-                a.style.borderBottom = "30px solid #f1c40f"; a.style.borderTop = "0";
-                a.style.top = (rect.bottom + 20)+'px'; a.style.left = (rect.left + 10)+'px';
+            } else if(step === 3) {
+                // 3. الفيدباك
+                let el = document.getElementById('feedback-area');
+                let rect = el.getBoundingClientRect();
+                spot.style.top = (rect.top)+'px'; spot.style.left = (rect.left)+'px';
+                spot.style.width = (rect.width)+'px'; spot.style.height = (rect.height)+'px';
+                
+                arrow.innerText = "⬅️";
+                arrow.style.top = (rect.top + 50) + 'px'; arrow.style.left = (rect.left - 50) + 'px';
 
-                t.innerText = "من القائمة دي تقدر تتابع حالة طلبك أو تبعتلنا رأيك.";
-                c.style.top = (rect.bottom + 70)+'px'; c.style.left = "20px";
+                txt.innerText = "يمكنك إبداء رأيك عن الخدمة من هنا.";
+            
+            } else if(step === 4) {
+                // 4. قفل القائمة + فتح منتج
+                sidebar.style.width = "0"; // قفل القائمة
+                setTimeout(() => {
+                    let firstProdKey = Object.keys({{ prods|tojson }})[0]; // الحصول على أول مفتاح منتج
+                    // محاكاة فتح الفورم لأول منتج (أو تحديد الكارت الأول)
+                    let cardEl = document.querySelector('.product-card'); 
+                    if(cardEl) {
+                        let rect = cardEl.getBoundingClientRect();
+                        // فتح الفورم برمجياً
+                        cardEl.click(); 
+                        
+                        spot.style.top = (rect.top-10)+'px'; spot.style.left = (rect.left-10)+'px';
+                        spot.style.width = (rect.width+20)+'px'; spot.style.height = (rect.height+20)+'px';
+                        spot.style.borderRadius = "40px";
+
+                        arrow.innerText = "⬇️";
+                        arrow.style.top = (rect.top - 60) + 'px'; arrow.style.left = (rect.left + rect.width/2) + 'px';
+
+                        txt.innerHTML = "هنا المنتجات..<br>للشراء قم بكتابة <b>الكمية</b> و <b>ID الديسكورد</b> و <b>رقم الكاش</b>.<br><small>⚠️ تأكد أنك داخل سيرفر الديسكورد الخاص بنا لتستلم الطلب.</small>";
+                        card.style.top = (window.innerHeight - 200) + 'px'; card.style.left = "50%"; card.style.transform = "translateX(-50%)";
+                    }
+                }, 400);
 
             } else {
-                document.getElementById('tut-overlay').style.display='none';
-                localStorage.setItem('tut_v27', 'done');
+                // النهاية
+                document.getElementById('tut-overlay').style.display = 'none';
+                document.getElementById('end-modal').style.display = 'flex';
             }
         }
-        
-        window.onload = function() { 
-            if(!localStorage.getItem('tut_v27')) { 
-                document.getElementById('tut-overlay').style.display='block'; 
-                nextStep(); 
-            } 
-        };
     </script>
 </body>
 </html>
 '''
+
 
 # --- الروابط (Routes) ---
 

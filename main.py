@@ -425,14 +425,14 @@ def place_order():
 @app.route('/success_page')
 def success_page():
     t = request.args.get('total')
-    # صفحة النجاح الجديدة (Timer 10s)
-    return render_template_string(f'''
+    # التصحيح: شلنا حرف f واستخدمنا Jinja2 {{ }} للمتغيرات عشان الجافاسكريبت يشتغل صح
+    return render_template_string('''
     <!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>تم الطلب</title><style>body{background:#0a0a0a;color:white;font-family:'Segoe UI',sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}.success-card{border:2px solid #5865F2;padding:40px;border-radius:30px;text-align:center;background:rgba(88,101,242,0.05);box-shadow:0 0 30px rgba(88,101,242,0.2);max-width:90%}.checkmark{font-size:60px;color:#43b581;margin-bottom:10px}.btn{display:block;width:100%;padding:12px;border-radius:12px;border:none;font-weight:bold;cursor:pointer;margin-top:15px;text-decoration:none}.btn-track{background:rgba(88,101,242,0.2);color:#5865F2}.btn-back{background:#333;color:#888;cursor:not-allowed}</style></head><body>
         <div class="success-card">
             <div class="checkmark">✅</div>
             <h2 style="margin:0;">تم تسجيل الطلب</h2>
-            <p style="font-size:18px;">حول <b style="color:#43b581;">{t} ج.م</b> للرقم:</p>
-            <h1 style="font-size:40px; margin:10px 0; letter-spacing:2px;">{PAYMENT_NUMBER}</h1>
+            <p style="font-size:18px;">حول <b style="color:#43b581;">{{ t }} ج.م</b> للرقم:</p>
+            <h1 style="font-size:40px; margin:10px 0; letter-spacing:2px;">{{ payment_number }}</h1>
             <a href="/my_orders_page" class="btn btn-track">تتبع طلبك الآن</a>
             <button id="back-btn" class="btn btn-back" disabled>العودة للرئيسية (10)</button>
         </div>
@@ -440,7 +440,7 @@ def success_page():
             let sec = 10; const btn = document.getElementById('back-btn');
             const timer = setInterval(() => { sec--; btn.innerText = `العودة للرئيسية (${sec})`; if(sec<=0){ clearInterval(timer); btn.removeAttribute('disabled'); btn.style.background='#5865F2'; btn.style.color='white'; btn.style.cursor='pointer'; btn.innerText='العودة للرئيسية'; btn.onclick=()=>window.location.href='/'; } }, 1000);
         </script>
-    </body></html>''')
+    </body></html>''', t=t, payment_number=PAYMENT_NUMBER)
 
 @app.route('/my_orders_page')
 def my_orders_page():

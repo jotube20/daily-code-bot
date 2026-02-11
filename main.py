@@ -112,45 +112,21 @@ HTML_STORE = '''
         body.light-mode { --bg: #f4f4f4; --card: #fff; --text: #333; }
         body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; margin: 0; overflow-x: hidden; transition: 0.3s; }
         
-        /* Navbar (Left) */
         .glass-nav { position: fixed; top: 20px; left: 20px; z-index: 1001; display: flex; align-items: center; gap: 15px; background: rgba(128,128,128,0.15); backdrop-filter: blur(15px); padding: 10px 25px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1); }
         .nav-btn { background: none; border: none; color: var(--text); font-size: 24px; cursor: pointer; transition: 0.3s; }
-        .nav-btn:hover { transform: scale(1.1); color: var(--main); }
 
-        /* --- New Right Navbar (Beta & News) --- */
-        .right-nav { 
-            position: fixed; top: 20px; right: 20px; z-index: 1001; 
-            display: flex; align-items: center; gap: 10px; 
-            background: rgba(128,128,128,0.15); backdrop-filter: blur(15px); 
-            padding: 8px 20px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1); 
-        }
-        .beta-badge {
-            color: #f1c40f; font-weight: bold; font-family: monospace; letter-spacing: 1px; font-size: 16px;
-            text-shadow: 0 0 10px rgba(241, 196, 15, 0.5);
-        }
+        /* Beta Navbar */
+        .right-nav { position: fixed; top: 20px; right: 20px; z-index: 1001; display: flex; align-items: center; gap: 10px; background: rgba(128,128,128,0.15); backdrop-filter: blur(15px); padding: 8px 20px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1); }
+        .beta-badge { color: #f1c40f; font-weight: bold; font-family: monospace; letter-spacing: 1px; font-size: 16px; text-shadow: 0 0 10px rgba(241, 196, 15, 0.5); }
         
-        /* News Modal Styling */
+        /* News Modal */
         #news-modal { display: none; position: fixed; inset: 0; z-index: 12000; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; backdrop-filter: blur(5px); }
-        .news-content { 
-            background: #111; width: 400px; padding: 0; border-radius: 25px; border: 1px solid #333; position: relative; overflow: hidden;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5); animation: slideDown 0.4s ease;
-        }
+        .news-content { background: #111; width: 400px; padding: 0; border-radius: 25px; border: 1px solid #333; position: relative; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5); animation: slideDown 0.4s ease; }
         @keyframes slideDown { from {transform: translateY(-50px); opacity:0;} to {transform: translateY(0); opacity:1;} }
-        
-        .news-header { background: var(--main); padding: 20px; text-align: center; }
-        .news-header h2 { margin: 0; color: white; font-size: 28px; }
-        .news-date { font-size: 12px; color: rgba(255,255,255,0.8); margin-top: 5px; text-transform: uppercase; letter-spacing: 1px; }
-        
-        .news-body { padding: 25px; color: white; text-align: right; }
-        .update-title { color: #f1c40f; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px; font-weight: bold; font-size: 18px; }
-        .update-list { list-style: none; padding: 0; margin: 0; }
-        .update-list li { margin-bottom: 12px; font-size: 14px; line-height: 1.6; color: #ccc; display: flex; align-items: flex-start; gap: 10px; }
-        .update-icon { color: var(--main); font-size: 16px; }
-
+        .news-header { background: var(--main); padding: 20px; text-align: center; } .news-header h2 { margin: 0; color: white; font-size: 28px; } .news-date { font-size: 12px; color: rgba(255,255,255,0.8); margin-top: 5px; text-transform: uppercase; letter-spacing: 1px; }
+        .news-body { padding: 25px; color: white; text-align: right; } .update-title { color: #f1c40f; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px; font-weight: bold; font-size: 18px; } .update-list { list-style: none; padding: 0; margin: 0; } .update-list li { margin-bottom: 12px; font-size: 14px; line-height: 1.6; color: #ccc; display: flex; align-items: flex-start; gap: 10px; } .update-icon { color: var(--main); font-size: 16px; }
         .close-news { position: absolute; top: 15px; right: 20px; background: none; border: none; color: white; font-size: 20px; cursor: pointer; opacity: 0.7; }
-        .close-news:hover { opacity: 1; }
 
-        /* Sidebar & Layout */
         .sidebar { height: 100%; width: 0; position: fixed; z-index: 1000; top: 0; left: 0; background: var(--card); overflow-y: auto; transition: 0.5s ease; padding-top: 80px; border-right: 1px solid #333; }
         .sidebar a { padding: 15px 25px; display: block; text-align: right; color: #888; text-decoration: none; font-size: 18px; border-bottom: 1px solid #222; }
         #main-content { padding: 100px 20px; text-align: center; }
@@ -162,14 +138,12 @@ HTML_STORE = '''
         input, textarea { width: 90%; padding: 12px; margin: 6px 0; border-radius: 10px; border: 1px solid #333; background: #1a1a1a; color: white; text-align: center; font-family: inherit; }
         .btn-purchase { background: var(--main); color: white; border: none; padding: 14px; border-radius: 12px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 5px; }
 
-        /* Modals & Popups */
         .modal-box { display: none; position: fixed; inset: 0; z-index: 15000; background: rgba(0,0,0,0.95); align-items: center; justify-content: center; flex-direction: column; color: white; }
         .modal-content { background: #111; padding: 40px; border-radius: 30px; border: 2px solid var(--main); text-align: center; max-width: 90%; }
         #wait-overlay { display: none; position: fixed; inset: 0; z-index: 20000; background: rgba(0,0,0,0.96); flex-direction: column; align-items: center; justify-content: center; color: white; }
         .timer-circle { width: 100px; height: 100px; border: 5px solid var(--main); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 35px; margin-top: 20px; }
         .top-ok-btn { position: absolute; top: 10%; right: 50%; transform: translateX(50%); background: #e74c3c; padding: 10px 30px; border-radius: 20px; color: white; border: none; font-weight: bold; cursor: pointer; display: none; z-index: 20001; }
 
-        /* Tutorial Spotlight */
         #tut-overlay { display: none; position: fixed; inset: 0; z-index: 15000; }
         .spotlight-hole { position: absolute; border-radius: 50%; box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.92); pointer-events: none; transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94); z-index: 15001; }
         .tut-arrow { position: absolute; font-size: 40px; color: #f1c40f; z-index: 15003; animation: bounce 1s infinite; text-shadow: 0 5px 15px black; transition: all 0.5s ease; }
@@ -182,10 +156,7 @@ HTML_STORE = '''
     <div id="news-modal">
         <div class="news-content">
             <button class="close-news" onclick="toggleNews()">✕</button>
-            <div class="news-header">
-                <h2>What is new?</h2>
-                <div class="news-date">Latest Update - <span id="current-date"></span></div>
-            </div>
+            <div class="news-header"><h2>What is new?</h2><div class="news-date">Latest Update - <span id="current-date"></span></div></div>
             <div class="news-body">
                 <div class="update-title">✨ Beta Update V1</div>
                 <ul class="update-list">
@@ -204,12 +175,6 @@ HTML_STORE = '''
         <span class="beta-badge">Beta</span>
         <div style="width:1px; height:20px; background:rgba(255,255,255,0.2);"></div>
         <button class="nav-btn" onclick="toggleNews()">📢</button>
-    </div>
-
-    <div class="glass-nav">
-        <button class="nav-btn" id="menu-btn" onclick="toggleNav()">&#9776;</button>
-        <div style="width:1px; height:25px; background:#555; margin:0 10px;"></div>
-        <button class="nav-btn" onclick="toggleTheme()">🌓</button>
     </div>
 
     <div id="server-error-modal" class="modal-box">
@@ -256,6 +221,12 @@ HTML_STORE = '''
         <h3 style="margin-top:20px;">يرجى الانتظار دقيقة بين الطلبات.. ⌛</h3>
     </div>
 
+    <div class="glass-nav">
+        <button class="nav-btn" id="menu-btn" onclick="toggleNav()">&#9776;</button>
+        <div style="width:1px; height:25px; background:#555; margin:0 10px;"></div>
+        <button class="nav-btn" onclick="toggleTheme()">🌓</button>
+    </div>
+
     <div id="mySidebar" class="sidebar">
         <a href="/">🏠 الرئيسية</a>
         <a href="#" id="track-btn" onclick="checkOrders()">📋 تتبع طلباتي</a>
@@ -299,18 +270,10 @@ HTML_STORE = '''
     </div>
 
     <script>
-        // Set Today's Date
         const d = new Date();
         document.getElementById('current-date').innerText = d.getDate() + "/" + (d.getMonth()+1) + "/" + d.getFullYear();
-
-        function toggleNews() {
-            let m = document.getElementById('news-modal');
-            m.style.display = (m.style.display === 'flex') ? 'none' : 'flex';
-        }
-
-        if(new URLSearchParams(window.location.search).get('error') === 'not_in_server'){
-            document.getElementById('server-error-modal').style.display = 'flex';
-        }
+        function toggleNews() { let m = document.getElementById('news-modal'); m.style.display = (m.style.display === 'flex') ? 'none' : 'flex'; }
+        if(new URLSearchParams(window.location.search).get('error') === 'not_in_server'){ document.getElementById('server-error-modal').style.display = 'flex'; }
 
         function toggleTheme() { document.body.classList.toggle("light-mode"); localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark'); }
         if(localStorage.getItem('theme') === 'light') document.body.classList.add('light-mode');
@@ -336,32 +299,12 @@ HTML_STORE = '''
         }
 
         window.onload = function() {
-            // Set Date
-            const d = new Date();
-            document.getElementById('current-date').innerText = d.getDate() + "/" + (d.getMonth()+1) + "/" + d.getFullYear();
-            
-            if(localStorage.getItem('tut_completed_v30')) {
-                document.getElementById('start-modal').style.display = 'none';
-            }
+            if(localStorage.getItem('tut_completed_v30')) { document.getElementById('start-modal').style.display = 'none'; }
         };
 
-        function skipTutorial() {
-            document.getElementById('start-modal').style.display = 'none';
-            localStorage.setItem('tut_completed_v30', 'true');
-        }
-
-        function startTutorial() {
-            document.getElementById('start-modal').style.display = 'none';
-            document.getElementById('tut-overlay').style.display = 'block';
-            nextStep();
-        }
-
-        function finishTutorial() {
-            document.getElementById('end-modal').style.display = 'none';
-            localStorage.setItem('tut_completed_v30', 'true');
-            document.getElementById('mySidebar').style.width = '0';
-            document.querySelectorAll('.order-form').forEach(f => f.style.display = 'none');
-        }
+        function skipTutorial() { document.getElementById('start-modal').style.display = 'none'; localStorage.setItem('tut_completed_v30', 'true'); }
+        function startTutorial() { document.getElementById('start-modal').style.display = 'none'; document.getElementById('tut-overlay').style.display = 'block'; nextStep(); }
+        function finishTutorial() { document.getElementById('end-modal').style.display = 'none'; localStorage.setItem('tut_completed_v30', 'true'); document.getElementById('mySidebar').style.width = '0'; document.querySelectorAll('.order-form').forEach(f => f.style.display = 'none'); }
 
         let step = 0;
         function nextStep() {
@@ -371,35 +314,26 @@ HTML_STORE = '''
             const card = document.getElementById('tut-card');
             const txt = document.getElementById('tut-text');
             const sidebar = document.getElementById('mySidebar');
-
             card.style.display = 'block'; 
 
             if(step === 1) {
-                let el = document.getElementById('menu-btn');
-                let rect = el.getBoundingClientRect();
-                spot.style.top = (rect.top-5)+'px'; spot.style.left = (rect.left-5)+'px';
-                spot.style.width = (rect.width+10)+'px'; spot.style.height = (rect.height+10)+'px';
-                spot.style.borderRadius = "50%";
+                let el = document.getElementById('menu-btn'); let rect = el.getBoundingClientRect();
+                spot.style.top = (rect.top-5)+'px'; spot.style.left = (rect.left-5)+'px'; spot.style.width = (rect.width+10)+'px'; spot.style.height = (rect.height+10)+'px'; spot.style.borderRadius = "50%";
                 arrow.innerText = "⬆️"; arrow.style.top = (rect.bottom + 10) + 'px'; arrow.style.left = (rect.left + 10) + 'px';
                 txt.innerHTML = "<b>هذا هو زر الاختيارات</b><br>اضغط هنا لفتح القائمة الجانبية.";
                 card.style.top = (rect.bottom + 80) + 'px'; card.style.left = "20px"; card.style.transform = "none";
             } else if(step === 2) {
                 sidebar.style.width = "300px"; 
                 setTimeout(() => {
-                    let el = document.getElementById('track-btn');
-                    let rect = el.getBoundingClientRect();
-                    spot.style.top = (rect.top)+'px'; spot.style.left = (rect.left)+'px';
-                    spot.style.width = (rect.width)+'px'; spot.style.height = (rect.height)+'px';
-                    spot.style.borderRadius = "0";
+                    let el = document.getElementById('track-btn'); let rect = el.getBoundingClientRect();
+                    spot.style.top = (rect.top)+'px'; spot.style.left = (rect.left)+'px'; spot.style.width = (rect.width)+'px'; spot.style.height = (rect.height)+'px'; spot.style.borderRadius = "0";
                     arrow.innerText = "⬅️"; arrow.style.top = (rect.top) + 'px'; arrow.style.left = (rect.left - 50) + 'px';
                     txt.innerText = "يمكنك تتبع طلبك من هنا.";
                     card.style.top = (rect.bottom + 20) + 'px'; card.style.left = "20px";
                 }, 300);
             } else if(step === 3) {
-                let el = document.getElementById('feedback-area');
-                let rect = el.getBoundingClientRect();
-                spot.style.top = (rect.top)+'px'; spot.style.left = (rect.left)+'px';
-                spot.style.width = (rect.width)+'px'; spot.style.height = (rect.height)+'px';
+                let el = document.getElementById('feedback-area'); let rect = el.getBoundingClientRect();
+                spot.style.top = (rect.top)+'px'; spot.style.left = (rect.left)+'px'; spot.style.width = (rect.width)+'px'; spot.style.height = (rect.height)+'px';
                 arrow.innerText = "⬅️"; arrow.style.top = (rect.top + 50) + 'px'; arrow.style.left = (rect.left - 50) + 'px';
                 txt.innerText = "يمكنك إبداء رأيك عن الخدمة من هنا.";
             } else if(step === 4) {
@@ -407,19 +341,15 @@ HTML_STORE = '''
                 setTimeout(() => {
                     let cardEl = document.querySelector('.product-card'); 
                     if(cardEl) {
-                        let rect = cardEl.getBoundingClientRect();
-                        cardEl.click(); 
-                        spot.style.top = (rect.top-10)+'px'; spot.style.left = (rect.left-10)+'px';
-                        spot.style.width = (rect.width+20)+'px'; spot.style.height = (rect.height+20)+'px';
-                        spot.style.borderRadius = "40px";
+                        let rect = cardEl.getBoundingClientRect(); cardEl.click(); 
+                        spot.style.top = (rect.top-10)+'px'; spot.style.left = (rect.left-10)+'px'; spot.style.width = (rect.width+20)+'px'; spot.style.height = (rect.height+20)+'px'; spot.style.borderRadius = "40px";
                         arrow.innerText = "⬇️"; arrow.style.top = (rect.top - 60) + 'px'; arrow.style.left = (rect.left + rect.width/2) + 'px';
                         txt.innerHTML = "هنا المنتجات..<br>للشراء قم بكتابة <b>الكمية</b> و <b>ID الديسكورد</b> و <b>رقم الكاش</b>.<br><small>⚠️ تأكد أنك داخل سيرفر الديسكورد الخاص بنا.</small>";
                         card.style.top = (window.innerHeight - 200) + 'px'; card.style.left = "50%"; card.style.transform = "translateX(-50%)";
                     }
                 }, 400);
             } else {
-                document.getElementById('tut-overlay').style.display = 'none';
-                document.getElementById('end-modal').style.display = 'flex';
+                document.getElementById('tut-overlay').style.display = 'none'; document.getElementById('end-modal').style.display = 'flex';
             }
         }
     </script>
@@ -427,13 +357,35 @@ HTML_STORE = '''
 </html>
 '''
 
-
 # --- الروابط (Routes) ---
 
 @app.route('/')
 def home():
     if is_maintenance_mode() and not session.get('logged_in'):
-        return render_template_string('<body style="background:#0a0a0a;color:white;text-align:center;padding-top:150px;"><h1>🚧 الموقع في الصيانة</h1><a href="/admin_login">Portal</a></body>')
+        return render_template_string('''
+        <!DOCTYPE html>
+        <html dir="rtl" lang="ar">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>الصيانة</title>
+            <style>
+                body { background: #000; color: white; height: 100vh; margin: 0; display: flex; align-items: center; justify-content: center; font-family: 'Segoe UI', sans-serif; }
+                .maint-card { border: 2px solid #f1c40f; padding: 40px; border-radius: 20px; text-align: center; max-width: 90%; background: rgba(241, 196, 15, 0.02); box-shadow: 0 0 30px rgba(241, 196, 15, 0.1); }
+                h1 { font-size: 32px; margin-bottom: 10px; }
+                p { color: #888; font-size: 14px; }
+                a { color: #333; text-decoration: none; font-size: 12px; margin-top: 20px; display: block; }
+            </style>
+        </head>
+        <body>
+            <div class="maint-card">
+                <h1>🚧 الموقع في وضع الصيانة</h1>
+                <p>نحن نعمل على تحسين المتجر يرجى العودة لاحقاً</p>
+                <a href="/admin_login">Portal</a>
+            </div>
+        </body>
+        </html>''')
+        
     stocks = {k: get_stock(k) for k in PRODUCTS}
     return render_template_string(HTML_STORE, prods=PRODUCTS, stocks=stocks, feedbacks=db_feedbacks.all()[-5:])
 
@@ -501,12 +453,60 @@ def success_page():
 @app.route('/my_orders/<uid>')
 def my_orders(uid):
     orders = db_orders.search(Order.discord_id == uid)
-    return render_template_string('''<body style="background:#0a0a0a;color:white;text-align:center;padding:20px;">
-        <h3>🔍 تتبع طلباتك</h3>
-        {% for o in orders %}<div style="background:#111; padding:20px; margin-bottom:10px; border-radius:15px; text-align:right;">
-        <b>{{o.prod_name}}</b> | الحالة: {{o.status}}
-        {% if 'approved' in o.status %}<button onclick="alert('{{o.reserved_codes|join('\\n')}}')" style="background:#43b581; padding:5px 15px; border:none; color:white; cursor:pointer;">عرض الكود</button>{% endif %}</div>{% endfor %}
-        <a href="/" style="color:#5865F2;">رجوع</a></body>''', orders=orders)
+    return render_template_string('''
+    <!DOCTYPE html>
+    <html dir="rtl" lang="ar">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>طلباتي</title>
+        <style>
+            body { background: #0a0a0a; color: white; font-family: 'Segoe UI', sans-serif; padding: 20px; }
+            .header-box { border: 1px solid #5865F2; background: rgba(88,101,242,0.05); border-radius: 20px; padding: 20px; text-align: center; margin-bottom: 30px; }
+            .order-card { background: #000; border: 1px solid #222; border-radius: 20px; padding: 25px; margin-bottom: 20px; }
+            .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+            .prod-name { font-weight: bold; font-size: 18px; }
+            .prod-price { color: #43b581; font-weight: bold; font-size: 18px; }
+            .progress-bg { background: #222; height: 12px; border-radius: 10px; overflow: hidden; margin-bottom: 10px; }
+            .progress-fill { height: 100%; border-radius: 10px; transition: 1s; }
+            .status-row { display: flex; justify-content: space-between; font-size: 12px; color: #888; align-items: center; }
+            .show-code-btn { background: #43b581; color: white; border: none; padding: 8px 20px; border-radius: 10px; cursor: pointer; font-size: 12px; margin-top: 10px; width: 100%; }
+            .code-reveal { display: none; background: #111; padding: 15px; border-radius: 10px; margin-top: 10px; border: 1px solid #333; color: #f1c40f; font-family: monospace; word-break: break-all; }
+        </style>
+    </head>
+    <body>
+        <div class="header-box">
+            <h3 style="margin:0; color:#5865F2;">🔍 تتبع ومعالجة طلباتك</h3>
+            <p style="margin:5px 0 0; color:#888; font-size:12px;">هنا يمكنك معرفة أين وصل طلبك، ورؤية الأكواد عند القبول.</p>
+        </div>
+
+        {% for o in orders|reverse %}
+            <div class="order-card">
+                <div class="top-row">
+                    <div class="prod-name">{{o.prod_name}} ({{o.quantity}})</div>
+                    <div class="prod-price">{{o.total}} ج.م</div>
+                </div>
+
+                {% if 'approved' in o.status %}
+                    <div class="progress-bg"><div class="progress-fill" style="width:100%; background:#43b581;"></div></div>
+                    <div class="status-row"><div>الحالة: <span style="color:#43b581">approved ✅</span></div><div>{{o.time}}</div></div>
+                    <button class="show-code-btn" onclick="document.getElementById('code-{{loop.index}}').style.display = 'block'">عرض الكود</button>
+                    <div id="code-{{loop.index}}" class="code-reveal">{% for c in o.reserved_codes %}{{c}}<br>{% endfor %}</div>
+
+                {% elif 'rejected' in o.status %}
+                    <div class="progress-bg"><div class="progress-fill" style="width:100%; background:#e74c3c;"></div></div>
+                    <div class="status-row"><div>الحالة: <span style="color:#e74c3c">rejected ❌</span></div><div>{{o.time}}</div></div>
+
+                {% else %}
+                    <div class="progress-bg"><div class="progress-fill" style="width:50%; background:#f1c40f;"></div></div>
+                    <div class="status-row"><div>الحالة: <span style="color:#ccc">pending ⏳</span></div><div>{{o.time}}</div></div>
+                {% endif %}
+            </div>
+        {% endfor %}
+        <div style="text-align:center; margin-top:30px;"><a href="/" style="color:#5865F2; text-decoration:none;">العودة للمتجر</a></div>
+    </body>
+    </html>
+    ''', orders=orders)
 
 # --- لوحة التحكم (Classic UI) ---
 
@@ -515,7 +515,23 @@ def admin_login():
     if request.method == 'POST' and request.form.get('password') == ADMIN_PASSWORD:
         session['logged_in'] = True
         return redirect('/admin_jo_secret')
-    return '<body style="background:black; color:white; text-align:center; padding-top:100px"><form method="post"><input type="password" name="password"><button>Login</button></form></body>'
+        
+    return render_template_string('''
+    <!DOCTYPE html>
+    <html>
+    <head><title>Admin Access</title></head>
+    <body style="background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: sans-serif;">
+        <div style="background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); padding: 50px; border-radius: 30px; border: 1px solid rgba(255, 255, 255, 0.1); text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.5);">
+            <div style="font-size: 50px; margin-bottom: 20px;">🔐</div>
+            <h2 style="color: white; margin-bottom: 30px; font-weight: normal;">Admin Access</h2>
+            <form method="post">
+                <input type="password" name="password" placeholder="Enter Password" style="width: 250px; padding: 15px; border-radius: 15px; border: none; background: rgba(0,0,0,0.3); color: white; text-align: center; font-size: 16px; outline: none; margin-bottom: 20px;">
+                <br>
+                <button style="padding: 12px 40px; background: #5865F2; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.3s; width: 100%;">Login</button>
+            </form>
+        </div>
+    </body>
+    </html>''')
 
 @app.route('/admin_jo_secret', methods=['GET', 'POST'])
 def admin_panel():

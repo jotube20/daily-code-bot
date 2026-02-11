@@ -19,23 +19,26 @@ SERVER_ID = 1272670682324533333
 # توقيت القاهرة
 EGYPT_TZ = pytz.timezone('Africa/Cairo')
 
-# المنتجات
+# المنتجات (تم إضافة الوصف 'desc')
 PRODUCTS = {
     'xbox': {
         'name': 'Xbox Game Pass Premium',
         'price': 10,
+        'desc': 'اشتراك Xbox Game Pass Premium لمدة شهر. استمتع بمكتبة ضخمة من الألعاب.',
         'file': 'xbox.txt',
         'img': 'https://media.discordapp.net/attachments/111/xbox_bg.png'
     },
     'nitro1': {
         'name': 'Discord Nitro 1 Month',
         'price': 5,
+        'desc': 'اشتراك ديسكورد نيترو لمدة شهر. مميزات إضافية، جودة بث أعلى، والمزيد.',
         'file': 'nitro1.txt',
         'img': 'https://media.discordapp.net/attachments/111/nitro1_bg.png'
     },
     'nitro3': {
         'name': 'Discord Nitro 3 Months',
         'price': 10,
+        'desc': 'اشتراك ديسكورد نيترو لمدة 3 أشهر. أفضل قيمة لعشاق ديسكورد.',
         'file': 'nitro3.txt',
         'img': 'https://media.discordapp.net/attachments/111/nitro3_bg.png'
     }
@@ -108,29 +111,48 @@ HTML_STORE = '''
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jo Store | متجرك المفضل</title>
     <style>
-        :root { --main: #5865F2; --bg: #0a0a0a; --card: #111; --text: white; }
+        :root { --main: #5865F2; --bg: #0a0a0a; --card: #111; --text: white; --accent: #43b581; }
         body.light-mode { --bg: #f4f4f4; --card: #fff; --text: #333; }
         body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; margin: 0; overflow-x: hidden; transition: 0.3s; }
-        
+
         /* Navbars */
         .glass-nav { position: fixed; top: 20px; left: 20px; z-index: 1001; display: flex; align-items: center; gap: 15px; background: rgba(128,128,128,0.15); backdrop-filter: blur(15px); padding: 10px 25px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1); }
         .nav-btn { background: none; border: none; color: var(--text); font-size: 24px; cursor: pointer; transition: 0.3s; }
         .right-nav { position: fixed; top: 20px; right: 20px; z-index: 1001; display: flex; align-items: center; gap: 10px; background: rgba(128,128,128,0.15); backdrop-filter: blur(15px); padding: 8px 20px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1); }
         .beta-badge { color: #f1c40f; font-weight: bold; font-family: monospace; letter-spacing: 1px; font-size: 16px; text-shadow: 0 0 10px rgba(241, 196, 15, 0.5); }
-        
+
         /* Layout */
         .sidebar { height: 100%; width: 0; position: fixed; z-index: 1000; top: 0; left: 0; background: var(--card); overflow-y: auto; transition: 0.5s ease; padding-top: 80px; border-right: 1px solid #333; }
         .sidebar a { padding: 15px 25px; display: block; text-align: right; color: #888; text-decoration: none; font-size: 18px; border-bottom: 1px solid #222; }
         #main-content { padding: 100px 20px; text-align: center; }
         .products-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 45px; margin-top: 60px; }
-        .product-card { width: 320px; height: 520px; border-radius: 40px; position: relative; overflow: hidden; cursor: pointer; border: 1px solid #333; background: var(--card); transition: 0.5s; }
-        .card-image { position: absolute; inset: 0; background-size: cover; background-position: center; z-index: 1; transition: 1s; }
-        .card-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.5) 45%, transparent 85%); z-index: 2; display: flex; flex-direction: column; justify-content: flex-end; padding: 35px; }
-        
+
+        /* Product Cards (New Design) */
+        .product-card { width: 320px; height: 480px; border-radius: 30px; position: relative; overflow: hidden; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); background: var(--card); transition: 0.3s; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        .product-card:hover { transform: translateY(-10px); box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+        .card-image { height: 65%; background-size: cover; background-position: center; position: relative; }
+        .card-image::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, var(--card) 5%, transparent 70%); }
+        .card-info { padding: 20px; text-align: right; }
+        .card-info h3 { margin: 0; font-size: 22px; }
+        .card-info h2 { color: var(--accent); margin: 5px 0; }
+        .card-info small { color: #888; }
+
+        /* Product Modal (New) */
+        #product-modal { display: none; position: fixed; inset: 0; z-index: 11000; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; backdrop-filter: blur(8px); }
+        .modal-content-prod { background: var(--card); width: 450px; border-radius: 35px; overflow: hidden; position: relative; box-shadow: 0 25px 50px rgba(0,0,0,0.5); animation: zoomIn 0.3s ease; border: 1px solid rgba(255,255,255,0.1); }
+        @keyframes zoomIn { from{transform:scale(0.9);opacity:0} to{transform:scale(1);opacity:1} }
+        .modal-header-prod { height: 150px; background-size: cover; background-position: center; position: relative; }
+        .modal-header-prod::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, var(--card) 10%, transparent); }
+        .modal-body-prod { padding: 30px; text-align: right; }
+        .close-modal-prod { position: absolute; top: 15px; right: 20px; background: rgba(0,0,0,0.5); color: white; border: none; font-size: 20px; cursor: pointer; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 2; }
+        .prod-desc { color: #ccc; font-size: 14px; line-height: 1.6; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #333; }
+
         /* Forms & Interactive */
-        .order-form { display: none; background: rgba(12, 12, 12, 0.98); padding: 20px; border-radius: 25px; border: 1px solid var(--main); margin-top: 15px; }
-        input, textarea { width: 90%; padding: 12px; margin: 6px 0; border-radius: 10px; border: 1px solid #333; background: #1a1a1a; color: white; text-align: center; font-family: inherit; }
-        .btn-purchase { background: var(--main); color: white; border: none; padding: 14px; border-radius: 12px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 5px; }
+        .order-form { margin-top: 15px; }
+        input, textarea { width: 100%; padding: 14px; margin: 8px 0; border-radius: 12px; border: 1px solid #333; background: #1a1a1a; color: white; text-align: center; font-family: inherit; box-sizing: border-box; }
+        input:focus { border-color: var(--main); outline: none; }
+        .btn-purchase { background: var(--main); color: white; border: none; padding: 16px; border-radius: 15px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 15px; font-size: 16px; transition: 0.3s; }
+        .btn-purchase:hover { background: #4752c4; }
 
         /* Modals & Tutorial */
         .modal-box { display: none; position: fixed; inset: 0; z-index: 15000; background: rgba(0,0,0,0.95); align-items: center; justify-content: center; flex-direction: column; color: white; }
@@ -138,7 +160,7 @@ HTML_STORE = '''
         #wait-overlay { display: none; position: fixed; inset: 0; z-index: 20000; background: rgba(0,0,0,0.96); flex-direction: column; align-items: center; justify-content: center; color: white; }
         .timer-circle { width: 100px; height: 100px; border: 5px solid var(--main); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 35px; margin-top: 20px; }
         .top-ok-btn { position: absolute; top: 10%; right: 50%; transform: translateX(50%); background: #e74c3c; padding: 10px 30px; border-radius: 20px; color: white; border: none; font-weight: bold; cursor: pointer; display: none; z-index: 20001; }
-        
+
         /* What's New Modal */
         #news-modal { display: none; position: fixed; inset: 0; z-index: 12000; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; backdrop-filter: blur(5px); }
         .news-content { background: #111; width: 400px; padding: 0; border-radius: 25px; border: 1px solid #333; position: relative; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5); animation: slideDown 0.4s ease; }
@@ -156,6 +178,30 @@ HTML_STORE = '''
 </head>
 <body id="body">
 
+    <div id="product-modal">
+        <div class="modal-content-prod">
+            <button class="close-modal-prod" onclick="closeProdModal()">✕</button>
+            <div id="pm-header" class="modal-header-prod"></div>
+            <div class="modal-body-prod">
+                <h2 id="pm-name" style="margin:0;"></h2>
+                <h1 id="pm-price" style="color:var(--accent); margin:5px 0;"></h1>
+                <div id="pm-desc" class="prod-desc"></div>
+                <div class="order-form">
+                    <form action="/place_order" method="post" onsubmit="return checkWait()">
+                        <input type="hidden" id="pm-key" name="prod_key">
+                        <div id="tut-inputs-modal">
+                            <input type="number" name="quantity" min="1" value="1" placeholder="الكمية" required>
+                            <input type="text" name="discord_id" placeholder="ID الديسكورد" required>
+                            <input type="text" name="cash_number" placeholder="رقم الكاش" required>
+                        </div>
+                        <input type="text" name="coupon" placeholder="كود الخصم (اختياري)">
+                        <button class="btn-purchase">تأكيد الشراء Now</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="news-modal">
         <div class="news-content">
             <button class="close-news" onclick="toggleNews()">✕</button>
@@ -167,7 +213,7 @@ HTML_STORE = '''
                     <li>🎟️ إضافة نظام الكوبونات.</li>
                     <li>⏳ نظام حماية (Countdown).</li>
                     <li>🛡️ التحقق من الـ ID.</li>
-                    <li>🔧 إصلاحات وتحسينات عامة.</li>
+                    <li>✨ تصميم جديد كلياً للمنتجات.</li>
                 </ul>
                 <button class="btn-purchase" onclick="toggleNews()" style="margin-top:15px;">فهمت، شكراً!</button>
             </div>
@@ -179,14 +225,14 @@ HTML_STORE = '''
 
     <div id="server-error-modal" class="modal-box"><div class="modal-content"><div style="font-size:60px;">❌</div><h3 style="color:#e74c3c;">عذراً لا يمكنك اتمام العملية</h3><p style="color:#ccc;">يجب عليك دخول سيرفر الديسكورد أولاً.</p><a href="https://discord.gg/db2sGRbrnJ" target="_blank" class="btn-purchase" style="background:#5865F2; display:inline-block; text-decoration:none; width:auto; padding:10px 40px;">دخول السيرفر</a><button onclick="window.location.href='/'" class="btn-purchase" style="background:#333; width:auto; padding:10px 40px; margin-top:10px;">رجوع</button></div></div>
     <div id="wait-overlay"><button id="wait-ok" class="top-ok-btn" onclick="document.getElementById('wait-overlay').style.display='none'">إغلاق النافذة (OK)</button><div class="timer-circle" id="timer-val">60</div><h3>يرجى الانتظار دقيقة.. ⌛</h3></div>
-    
+
     <div id="start-modal" class="modal-box" style="display:flex;"><div class="modal-content"><h2 style="color:var(--main)">أهلاً بك في Jo Store 👋</h2><p style="color:#ccc;">هل ترغب في جولة سريعة؟</p><div style="display:flex; gap:10px;"><button class="btn-purchase" onclick="startTutorial()">نعم، ابدأ الجولة</button><button class="btn-purchase" style="background:#333;" onclick="skipTutorial()">لا شكراً</button></div></div></div>
     <div id="end-modal" class="modal-box"><div class="modal-content"><h1>🎊 تهانينا!</h1><p style="color:#ccc;">أنت الآن جاهز للتسوق.</p><button class="btn-purchase" onclick="finishTutorial()">إنهاء</button></div></div>
     <div id="tut-overlay"><div id="spotlight" class="spotlight-hole"></div><div id="arrow" class="tut-arrow">⬆️</div><div id="tut-card" class="tut-card" style="display:none;"><div id="tut-text"></div><button class="btn-purchase" style="padding:8px 20px; margin-top:10px;" onclick="nextStep()">التالي</button></div></div>
 
     <div id="mySidebar" class="sidebar">
         <a href="/">🏠 الرئيسية</a>
-        <a href="#" id="track-btn" onclick="checkOrders()">📋 تتبع طلباتي</a>
+        <a href="/my_orders_page" id="track-btn">📋 تتبع طلباتي</a>
         <a href="https://discord.gg/db2sGRbrnJ" target="_blank" style="color:#5865F2;">💬 سيرفر المتجر</a>
         <div id="feedback-area" style="padding:20px;">
             <div style="color:var(--main); font-weight:bold; margin-bottom:10px;">رأيك يهمنا</div>
@@ -198,24 +244,12 @@ HTML_STORE = '''
         <h1>Jo Store 🔒</h1>
         <div class="products-container" id="prod-list">
             {% for key, info in prods.items() %}
-            <div class="product-card" id="card-{{key}}" onclick="showForm('{{key}}')">
+            <div class="product-card" id="card-{{key}}" onclick="openProdModal('{{key}}', '{{info.name}}', '{{info.price}}', '{{info.img}}', '{{info.desc}}')">
                 <div class="card-image" style="background-image: url('{{ info.img }}');"></div>
-                <div class="card-overlay">
+                <div class="card-info">
                     <h3>{{ info.name }}</h3>
-                    <h2 style="color:#43b581">{{ info.price }} ج.م</h2>
-                    <small style="color:#ccc">متاح: {{ stocks[key] }}</small>
-                    <div class="order-form" id="form-{{key}}" onclick="event.stopPropagation()">
-                        <form action="/place_order" method="post" onsubmit="return checkWait()">
-                            <input type="hidden" name="prod_key" value="{{key}}">
-                            <div id="tut-inputs-{{key}}">
-                                <input type="number" name="quantity" min="1" value="1" placeholder="الكمية">
-                                <input type="text" name="discord_id" placeholder="ID الديسكورد" required>
-                                <input type="text" name="cash_number" placeholder="رقم الكاش" required>
-                            </div>
-                            <input type="text" name="coupon" placeholder="كود الخصم">
-                            <button class="btn-purchase">تأكيد الشراء</button>
-                        </form>
-                    </div>
+                    <h2>{{ info.price }} ج.م</h2>
+                    <small>متاح: {{ stocks[key] }}</small>
                 </div>
             </div>
             {% endfor %}
@@ -229,9 +263,17 @@ HTML_STORE = '''
         function toggleTheme() { document.body.classList.toggle("light-mode"); localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark'); }
         if(localStorage.getItem('theme') === 'light') document.body.classList.add('light-mode');
         function toggleNav() { var s = document.getElementById("mySidebar"); s.style.width = s.style.width === "300px" ? "0" : "300px"; }
-        function showForm(id) { document.querySelectorAll('.order-form').forEach(f => f.style.display = 'none'); document.getElementById('form-' + id).style.display = 'block'; }
-        function checkOrders() { let id = prompt("أدخل معرف الديسكورد:"); if(id) window.location.href="/my_orders/"+id; }
-        
+
+        function openProdModal(key, name, price, img, desc) {
+            document.getElementById('pm-key').value = key;
+            document.getElementById('pm-name').innerText = name;
+            document.getElementById('pm-price').innerText = price + ' ج.م';
+            document.getElementById('pm-header').style.backgroundImage = `url('${img}')`;
+            document.getElementById('pm-desc').innerText = desc;
+            document.getElementById('product-modal').style.display = 'flex';
+        }
+        function closeProdModal() { document.getElementById('product-modal').style.display = 'none'; }
+
         function checkWait() {
             let last = localStorage.getItem('last_buy'); let now = Date.now();
             if(last && (now - last < 60000)) {
@@ -246,7 +288,7 @@ HTML_STORE = '''
         window.onload = function() { if(localStorage.getItem('tut_completed_v30')) { document.getElementById('start-modal').style.display = 'none'; } };
         function skipTutorial() { document.getElementById('start-modal').style.display = 'none'; localStorage.setItem('tut_completed_v30', 'true'); }
         function startTutorial() { document.getElementById('start-modal').style.display = 'none'; document.getElementById('tut-overlay').style.display = 'block'; nextStep(); }
-        function finishTutorial() { document.getElementById('end-modal').style.display = 'none'; localStorage.setItem('tut_completed_v30', 'true'); document.getElementById('mySidebar').style.width = '0'; document.querySelectorAll('.order-form').forEach(f => f.style.display = 'none'); }
+        function finishTutorial() { document.getElementById('end-modal').style.display = 'none'; localStorage.setItem('tut_completed_v30', 'true'); document.getElementById('mySidebar').style.width = '0'; closeProdModal(); }
 
         let step = 0;
         function nextStep() {
@@ -259,12 +301,12 @@ HTML_STORE = '''
                 t.innerHTML = "<b>هذا هو زر الاختيارات</b><br>اضغط هنا لفتح القائمة الجانبية.";
                 c.style.top = (rect.bottom + 80) + 'px'; c.style.left = "20px"; c.style.transform = "none";
             } else if(step === 2) {
-                sb.style.width = "300px"; 
+                sb.style.width = "300px";
                 setTimeout(() => { let el = document.getElementById('track-btn'); let rect = el.getBoundingClientRect(); s.style.top = (rect.top)+'px'; s.style.left = (rect.left)+'px'; s.style.width = (rect.width)+'px'; s.style.height = (rect.height)+'px'; s.style.borderRadius = "0"; a.innerText = "⬅️"; a.style.top = (rect.top) + 'px'; a.style.left = (rect.left - 50) + 'px'; t.innerText = "يمكنك تتبع طلبك من هنا."; c.style.top = (rect.bottom + 20) + 'px'; c.style.left = "20px"; }, 300);
             } else if(step === 3) {
                 let el = document.getElementById('feedback-area'); let rect = el.getBoundingClientRect(); s.style.top = (rect.top)+'px'; s.style.left = (rect.left)+'px'; s.style.width = (rect.width)+'px'; s.style.height = (rect.height)+'px'; a.innerText = "⬅️"; a.style.top = (rect.top + 50) + 'px'; a.style.left = (rect.left - 50) + 'px'; t.innerText = "يمكنك إبداء رأيك عن الخدمة من هنا.";
             } else if(step === 4) {
-                sb.style.width = "0"; setTimeout(() => { let cardEl = document.querySelector('.product-card'); if(cardEl) { let rect = cardEl.getBoundingClientRect(); cardEl.click(); s.style.top = (rect.top-10)+'px'; s.style.left = (rect.left-10)+'px'; s.style.width = (rect.width+20)+'px'; s.style.height = (rect.height+20)+'px'; s.style.borderRadius = "40px"; a.innerText = "⬇️"; a.style.top = (rect.top - 60) + 'px'; a.style.left = (rect.left + rect.width/2) + 'px'; t.innerHTML = "هنا المنتجات..<br>للشراء قم بكتابة <b>الكمية</b> و <b>ID الديسكورد</b> و <b>رقم الكاش</b>.<br><small>⚠️ تأكد أنك داخل سيرفر الديسكورد الخاص بنا.</small>"; c.style.top = (window.innerHeight - 200) + 'px'; c.style.left = "50%"; c.style.transform = "translateX(-50%)"; } }, 400);
+                sb.style.width = "0"; setTimeout(() => { let cardEl = document.querySelector('.product-card'); if(cardEl) { cardEl.click(); setTimeout(() => { let el = document.getElementById('tut-inputs-modal'); let rect = el.getBoundingClientRect(); s.style.top = (rect.top-10)+'px'; s.style.left = (rect.left-10)+'px'; s.style.width = (rect.width+20)+'px'; s.style.height = (rect.height+20)+'px'; s.style.borderRadius = "15px"; a.innerText = "⬇️"; a.style.top = (rect.top - 60) + 'px'; a.style.left = (rect.left + rect.width/2) + 'px'; t.innerHTML = "هنا تقوم بإدخال بياناتك للشراء.<br><small>⚠️ تأكد أنك داخل سيرفر الديسكورد.</small>"; c.style.top = (rect.bottom + 20) + 'px'; c.style.left = "50%"; c.style.transform = "translateX(-50%)"; }, 500); } }, 400);
             } else { document.getElementById('tut-overlay').style.display = 'none'; document.getElementById('end-modal').style.display = 'flex'; }
         }
     </script>
@@ -286,11 +328,57 @@ def home():
 
 @app.route('/place_order', methods=['POST'])
 def place_order():
+    if is_maintenance_mode() and not session.get('logged_in'): return "Maintenance Mode"
+
     p_key = request.form.get('prod_key')
     qty = int(request.form.get('quantity', 1))
     d_id = request.form.get('discord_id').strip()
     cash_num = request.form.get('cash_number').strip()
     coupon = request.form.get('coupon', '').strip()
+
+    # فحص السيرفر
+    if SERVER_ID:
+        try:
+            future = asyncio.run_coroutine_threadsafe(client.fetch_guild(SERVER_ID), client.loop)
+            guild = future.result()
+            member_future = asyncio.run_coroutine_threadsafe(guild.fetch_member(int(d_id)), client.loop)
+            try: member_future.result()
+            except: return redirect('/?error=not_in_server')
+        except: pass
+
+    reserved = pull_codes(p_key, qty)
+    if not reserved: return "نفذت الكمية!"
+
+    total = qty * PRODUCTS[p_key]['price']
+    disc_txt = ""
+
+    if coupon:
+        cp = get_discount(coupon, p_key)
+        if cp:
+            total -= total * (cp['discount'] / 100)
+            use_coupon(coupon)
+            disc_txt = f"\n🎟️ خصم: {cp['discount']}%"
+
+    db_orders.insert({
+        'discord_id': d_id, 'prod_name': PRODUCTS[p_key]['name'], 'prod_key': p_key,
+        'total': total, 'status': 'pending', 'time': datetime.now(EGYPT_TZ).strftime("%I:%M %p"),
+        'reserved_codes': reserved, 'cash_number': cash_num, 'quantity': qty
+    })
+
+    # إرسال Embed للآدمن (ذهبي)
+    async def notify():
+        try:
+            admin = await client.fetch_user(ADMIN_DISCORD_ID)
+            embed = discord.Embed(title="🔔 طلب جديد!", color=0xf1c40f)
+            embed.add_field(name="👤 العميل:", value=f"<@{d_id}> (`{d_id}`)", inline=False)
+            embed.add_field(name="📦 المنتج:", value=PRODUCTS[p_key]['name'], inline=False)
+            embed.add_field(name="💰 المبلغ:", value=f"{total} ج.م {disc_txt}", inline=False)
+            embed.add_field(name="📱 رقم الكاش:", value=cash_num, inline=False)
+            embed.set_footer(text=datetime.now(EGYPT_TZ).strftime('%I:%M %p'))
+            await admin.send(embed=embed)
+        except: pass
+    if client.loop: asyncio.run_coroutine_threadsafe(notify(), client.loop)
+    return redirect(f'/success_page?total={total}')
 
     # --- التحقق من السيرفر ---
     if SERVER_ID:
@@ -337,38 +425,37 @@ def place_order():
 @app.route('/success_page')
 def success_page():
     t = request.args.get('total')
-    return render_template_string(f'''<body style="background:#0a0a0a;color:white;text-align:center;padding-top:100px;">
-        <div style="border:2px solid #5865F2; padding:40px; border-radius:30px; display:inline-block;">
-            <h2>✅ تم تسجيل الطلب</h2>
-            <p>حول <b>{t} ج.م</b> للرقم: <h1>{PAYMENT_NUMBER}</h1></p>
-            <div style="background:rgba(88,101,242,0.1); padding:15px; border-radius:15px; color:#f1c40f;">تتبع طلبك من القائمة الجانبية.</div>
-            <br><a href="/" style="color:#5865F2;">رجوع</a>
-        </div></body>''')
+    # صفحة النجاح الجديدة (Timer 10s)
+    return render_template_string(f'''
+    <!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>تم الطلب</title><style>body{background:#0a0a0a;color:white;font-family:'Segoe UI',sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}.success-card{border:2px solid #5865F2;padding:40px;border-radius:30px;text-align:center;background:rgba(88,101,242,0.05);box-shadow:0 0 30px rgba(88,101,242,0.2);max-width:90%}.checkmark{font-size:60px;color:#43b581;margin-bottom:10px}.btn{display:block;width:100%;padding:12px;border-radius:12px;border:none;font-weight:bold;cursor:pointer;margin-top:15px;text-decoration:none}.btn-track{background:rgba(88,101,242,0.2);color:#5865F2}.btn-back{background:#333;color:#888;cursor:not-allowed}</style></head><body>
+        <div class="success-card">
+            <div class="checkmark">✅</div>
+            <h2 style="margin:0;">تم تسجيل الطلب</h2>
+            <p style="font-size:18px;">حول <b style="color:#43b581;">{t} ج.م</b> للرقم:</p>
+            <h1 style="font-size:40px; margin:10px 0; letter-spacing:2px;">{PAYMENT_NUMBER}</h1>
+            <a href="/my_orders_page" class="btn btn-track">تتبع طلبك الآن</a>
+            <button id="back-btn" class="btn btn-back" disabled>العودة للرئيسية (10)</button>
+        </div>
+        <script>
+            let sec = 10; const btn = document.getElementById('back-btn');
+            const timer = setInterval(() => { sec--; btn.innerText = `العودة للرئيسية (${sec})`; if(sec<=0){ clearInterval(timer); btn.removeAttribute('disabled'); btn.style.background='#5865F2'; btn.style.color='white'; btn.style.cursor='pointer'; btn.innerText='العودة للرئيسية'; btn.onclick=()=>window.location.href='/'; } }, 1000);
+        </script>
+    </body></html>''')
 
-@app.route('/my_orders/<uid>')
-def my_orders(uid):
-    orders = db_orders.search(Order.discord_id == uid)
-    # صفحة الطلبات (Progress Bars + Code Reveal)
+@app.route('/my_orders_page')
+def my_orders_page():
+    # صفحة إدخال الـ ID للتتبع
     return render_template_string('''
-    <!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>طلباتي</title><style>body { background: #0a0a0a; color: white; font-family: 'Segoe UI', sans-serif; padding: 20px; } .header-box { border: 1px solid #5865F2; background: rgba(88,101,242,0.05); border-radius: 20px; padding: 20px; text-align: center; margin-bottom: 30px; } .order-card { background: #000; border: 1px solid #222; border-radius: 20px; padding: 25px; margin-bottom: 20px; } .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; } .prod-name { font-weight: bold; font-size: 18px; } .prod-price { color: #43b581; font-weight: bold; font-size: 18px; } .progress-bg { background: #222; height: 12px; border-radius: 10px; overflow: hidden; margin-bottom: 10px; } .progress-fill { height: 100%; border-radius: 10px; transition: 1s; } .status-row { display: flex; justify-content: space-between; font-size: 12px; color: #888; align-items: center; } .show-code-btn { background: #43b581; color: white; border: none; padding: 8px 20px; border-radius: 10px; cursor: pointer; font-size: 12px; margin-top: 10px; width: 100%; } .code-reveal { display: none; background: #111; padding: 15px; border-radius: 10px; margin-top: 10px; border: 1px solid #333; color: #f1c40f; font-family: monospace; word-break: break-all; }</style></head>
-    <body>
-        <div class="header-box"><h3 style="margin:0; color:#5865F2;">🔍 تتبع ومعالجة طلباتك</h3><p style="margin:5px 0 0; color:#888; font-size:12px;">هنا يمكنك معرفة أين وصل طلبك، ورؤية الأكواد عند القبول.</p></div>
-        {% for o in orders|reverse %}
-            <div class="order-card">
-                <div class="top-row"><div class="prod-name">{{o.prod_name}} ({{o.quantity}})</div><div class="prod-price">{{o.total}} ج.م</div></div>
-                {% if 'approved' in o.status %}
-                    <div class="progress-bg"><div class="progress-fill" style="width:100%; background:#43b581;"></div></div><div class="status-row"><div>الحالة: <span style="color:#43b581">approved ✅</span></div><div>{{o.time}}</div></div><button class="show-code-btn" onclick="document.getElementById('code-{{loop.index}}').style.display = 'block'">عرض الكود</button><div id="code-{{loop.index}}" class="code-reveal">{% for c in o.reserved_codes %}{{c}}<br>{% endfor %}</div>
-                {% elif 'rejected' in o.status %}
-                    <div class="progress-bg"><div class="progress-fill" style="width:100%; background:#e74c3c;"></div></div><div class="status-row"><div>الحالة: <span style="color:#e74c3c">rejected ❌</span></div><div>{{o.time}}</div></div>
-                {% else %}
-                    <div class="progress-bg"><div class="progress-fill" style="width:50%; background:#f1c40f;"></div></div><div class="status-row"><div>الحالة: <span style="color:#ccc">pending ⏳</span></div><div>{{o.time}}</div></div>
-                {% endif %}
-            </div>
-        {% endfor %}
-        <div style="text-align:center; margin-top:30px;"><a href="/" style="color:#5865F2; text-decoration:none;">العودة للمتجر</a></div>
-    </body></html>
-    ''', orders=orders)
-
+    <!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>تتبع الطلبات</title><style>body{background:#0a0a0a;color:white;font-family:'Segoe UI',sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}.track-card{background:#111;padding:40px;border-radius:30px;text-align:center;border:1px solid #333;width:400px;max-width:90%}input{width:100%;padding:14px;margin:20px 0;border-radius:12px;border:1px solid #333;background:#1a1a1a;color:white;text-align:center;font-size:16px;box-sizing:border-box}button{width:100%;padding:14px;border-radius:12px;border:none;font-weight:bold;cursor:pointer;background:#5865F2;color:white;font-size:16px}</style></head><body>
+        <div class="track-card">
+            <h2>📋 تتبع طلباتك</h2>
+            <p style="color:#888;">أدخل معرف الديسكورد (ID) الخاص بك لعرض طلباتك.</p>
+            <input type="text" id="discord-id" placeholder="Discord ID">
+            <button onclick="let id=document.getElementById('discord-id').value; if(id) window.location.href='/my_orders/'+id">عرض الطلبات</button>
+            <a href="/" style="display:block; margin-top:20px; color:#888; text-decoration:none;">رجوع</a>
+        </div>
+    </body></html>''')
+    
 # --- لوحة التحكم (Classic UI) ---
 
 @app.route('/admin_login', methods=['GET', 'POST'])
@@ -606,9 +693,23 @@ def admin_panel():
     </body></html>
     ''', prods=PRODUCTS, orders=db_orders.all(), coupons=coupons, stocks=stocks)
 
-@app.route('/del_c/<int:id>')
-def del_c(id):
-    if session.get('logged_in'): db_config.remove(doc_ids=[id])
+@app.route('/app/<int:id>')
+def approve(id):
+    if session.get('logged_in'):
+        o = db_orders.get(doc_id=id)
+        db_orders.update({'status': 'approved ✅'}, doc_ids=[id])
+        
+        # إرسال Embed للعميل (أخضر)
+        async def send():
+            try:
+                u = await client.fetch_user(int(o['discord_id']))
+                embed = discord.Embed(title="🔥 مبروك! تم تأكيد طلبك", description=f"تم استلام طلبك لـ **{o['prod_name']}** بنجاح!", color=0x43b581)
+                codes_str = "\n".join(o['reserved_codes'])
+                embed.add_field(name="📦 إليك الأكواد الخاصة بك:", value=f"```{codes_str}```", inline=False)
+                embed.set_footer(text="شكراً لثقتك بنا! ❤️")
+                await u.send(embed=embed)
+            except: pass
+        asyncio.run_coroutine_threadsafe(send(), client.loop)
     return redirect('/admin_jo_secret')
 
 @app.route('/app/<int:id>')

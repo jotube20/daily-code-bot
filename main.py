@@ -128,7 +128,7 @@ HTML_STORE = '''
         #main-content { padding: 100px 20px; text-align: center; }
         .products-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 45px; margin-top: 60px; }
 
-        /* الكروت (إضاءة زرقاء + شريط أصفر) */
+        /* Cards */
         .product-card { width: 320px; height: 480px; border-radius: 30px; position: relative; overflow: hidden; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); background: var(--card); transition: 0.3s; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
         .product-card:hover { transform: translateY(-10px); box-shadow: 0 0 20px rgba(88, 101, 242, 0.6); border-color: var(--main); }
         .card-image { height: 65%; background-size: cover; background-position: center; position: relative; }
@@ -137,31 +137,29 @@ HTML_STORE = '''
         .card-info h3 { margin: 0; font-size: 22px; }
         .card-info h2 { color: var(--accent); margin: 5px 0; }
         .card-info small { color: #888; }
-        
-        /* شريط الأكثر مبيعاً */
         .badge { position: absolute; top: 20px; left: -35px; background: #f1c40f; color: black; padding: 5px 40px; transform: rotate(-45deg); font-weight: bold; font-size: 14px; z-index: 10; box-shadow: 0 5px 10px rgba(0,0,0,0.3); }
 
-        /* نوافذ منبثقة */
+        /* Modals */
         #product-modal, #out-of-stock-modal { display: none; position: fixed; inset: 0; z-index: 11000; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; backdrop-filter: blur(8px); }
         
-        /* تكبير القائمة (Modal) */
-        .modal-content-prod { background: var(--card); width: 600px; max-width: 95%; border-radius: 35px; overflow: hidden; position: relative; box-shadow: 0 25px 50px rgba(0,0,0,0.5); animation: zoomIn 0.3s ease; border: 1px solid rgba(255,255,255,0.1); }
+        /* تصغير القائمة لتناسب الشاشات (450px) مع Scroll */
+        .modal-content-prod { background: var(--card); width: 450px; max-width: 95%; max-height: 90vh; overflow-y: auto; border-radius: 35px; position: relative; box-shadow: 0 25px 50px rgba(0,0,0,0.5); animation: zoomIn 0.3s ease; border: 1px solid rgba(255,255,255,0.1); }
         @keyframes zoomIn { from{transform:scale(0.9);opacity:0} to{transform:scale(1);opacity:1} }
-        .modal-header-prod { height: 200px; background-size: cover; background-position: center; position: relative; }
+        .modal-header-prod { height: 180px; background-size: cover; background-position: center; position: relative; flex-shrink: 0; }
         .modal-header-prod::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, var(--card) 10%, transparent); }
-        .modal-body-prod { padding: 30px 40px; text-align: right; }
-        .close-modal-prod { position: absolute; top: 20px; right: 25px; background: rgba(0,0,0,0.6); color: white; border: none; font-size: 20px; cursor: pointer; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 2; transition: 0.3s; }
+        .modal-body-prod { padding: 20px 30px; text-align: right; }
+        .close-modal-prod { position: absolute; top: 15px; right: 20px; background: rgba(0,0,0,0.6); color: white; border: none; font-size: 18px; cursor: pointer; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 5; transition: 0.3s; }
         .close-modal-prod:hover { background: #e74c3c; transform: rotate(90deg); }
         
-        /* رسالة نفاد الكمية */
         .oos-content { background: #111; padding: 40px; border-radius: 25px; text-align: center; border: 2px solid #e74c3c; width: 400px; }
         .oos-icon { font-size: 50px; margin-bottom: 20px; }
 
-        input, textarea { width: 100%; padding: 15px; margin: 10px 0; border-radius: 12px; border: 1px solid #333; background: #1a1a1a; color: white; text-align: center; font-family: inherit; box-sizing: border-box; font-size: 16px; }
+        input, textarea { width: 100%; padding: 12px; margin: 8px 0; border-radius: 12px; border: 1px solid #333; background: #1a1a1a; color: white; text-align: center; font-family: inherit; box-sizing: border-box; font-size: 15px; }
         input:focus { border-color: var(--main); outline: none; }
-        .btn-purchase { background: var(--main); color: white; border: none; padding: 18px; border-radius: 15px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 20px; font-size: 18px; transition: 0.3s; }
+        .btn-purchase { background: var(--main); color: white; border: none; padding: 15px; border-radius: 15px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 15px; font-size: 16px; transition: 0.3s; }
         .btn-purchase:hover { background: #4752c4; }
 
+        /* Standard Modals */
         .modal-box { display: none; position: fixed; inset: 0; z-index: 15000; background: rgba(0,0,0,0.95); align-items: center; justify-content: center; flex-direction: column; color: white; }
         .modal-content { background: #111; padding: 40px; border-radius: 30px; border: 2px solid var(--main); text-align: center; max-width: 90%; }
         #news-modal { display: none; position: fixed; inset: 0; z-index: 12000; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; backdrop-filter: blur(5px); }
@@ -185,18 +183,18 @@ HTML_STORE = '''
             <button class="close-modal-prod" onclick="closeProdModal()">✕</button>
             <div id="pm-header" class="modal-header-prod"></div>
             <div class="modal-body-prod">
-                <h2 id="pm-name" style="margin:0; font-size:28px;"></h2>
-                <h1 id="pm-price" style="color:var(--accent); margin:10px 0; font-size:32px;"></h1>
-                <div id="pm-desc" style="color:#ccc; font-size:16px; line-height:1.6; margin-bottom:25px; padding-bottom:20px; border-bottom:1px solid #333;"></div>
+                <h2 id="pm-name" style="margin:0; font-size:24px;"></h2>
+                <h1 id="pm-price" style="color:var(--accent); margin:10px 0; font-size:28px;"></h1>
+                <div id="pm-desc" style="color:#ccc; font-size:14px; line-height:1.6; margin-bottom:20px; padding-bottom:15px; border-bottom:1px solid #333;"></div>
                 <div class="order-form">
                     <form action="/place_order" method="post" onsubmit="return checkWait()">
                         <input type="hidden" id="pm-key" name="prod_key">
                         <div id="tut-inputs-modal">
-                            <input type="number" name="quantity" min="1" value="1" placeholder="الكمية" required style="font-size:18px;">
-                            <input type="text" name="discord_id" placeholder="ID الديسكورد" required style="font-size:18px;">
-                            <input type="text" name="cash_number" placeholder="رقم الكاش" required style="font-size:18px;">
+                            <input type="number" name="quantity" min="1" value="1" placeholder="الكمية" required>
+                            <input type="text" name="discord_id" placeholder="ID الديسكورد" required>
+                            <input type="text" name="cash_number" placeholder="رقم الكاش" required>
                         </div>
-                        <input type="text" name="coupon" placeholder="كود الخصم (اختياري)" style="font-size:18px;">
+                        <input type="text" name="coupon" placeholder="كود الخصم (اختياري)">
                         <button class="btn-purchase">تأكيد الشراء Now</button>
                     </form>
                 </div>
@@ -253,15 +251,17 @@ HTML_STORE = '''
 
     <script>
         const d = new Date(); document.getElementById('current-date').innerText = d.getDate() + "/" + (d.getMonth()+1) + "/" + d.getFullYear();
+        let isTutorialMode = false; // متغير لتحديد وضع التوتوريال
+
         function toggleNews() { let m = document.getElementById('news-modal'); m.style.display = (m.style.display === 'flex') ? 'none' : 'flex'; }
         if(new URLSearchParams(window.location.search).get('error') === 'not_in_server'){ document.getElementById('server-error-modal').style.display = 'flex'; }
         function toggleTheme() { document.body.classList.toggle("light-mode"); localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark'); }
         if(localStorage.getItem('theme') === 'light') document.body.classList.add('light-mode');
         function toggleNav() { var s = document.getElementById("mySidebar"); s.style.width = s.style.width === "300px" ? "0" : "300px"; }
 
-        // دالة التحقق من المخزون
+        // دالة الضغط (معدلة لتعمل أثناء التوتوريال حتى لو الكمية 0)
         function handleProductClick(key, name, price, img, desc, stock) {
-            if (stock <= 0) {
+            if (stock <= 0 && !isTutorialMode) {
                 document.getElementById('out-of-stock-modal').style.display = 'flex';
             } else {
                 openProdModal(key, name, price, img, desc);
@@ -290,9 +290,22 @@ HTML_STORE = '''
         }
 
         window.onload = function() { if(localStorage.getItem('tut_completed_v30')) { document.getElementById('start-modal').style.display = 'none'; } };
-        function skipTutorial() { document.getElementById('start-modal').style.display = 'none'; localStorage.setItem('tut_completed_v30', 'true'); }
-        function startTutorial() { document.getElementById('start-modal').style.display = 'none'; document.getElementById('tut-overlay').style.display = 'block'; nextStep(); }
-        function finishTutorial() { document.getElementById('end-modal').style.display = 'none'; localStorage.setItem('tut_completed_v30', 'true'); document.getElementById('mySidebar').style.width = '0'; closeProdModal(); }
+        function skipTutorial() { document.getElementById('start-modal').style.display = 'none'; localStorage.setItem('tut_completed_v30', 'true'); isTutorialMode = false; }
+        
+        function startTutorial() { 
+            document.getElementById('start-modal').style.display = 'none'; 
+            document.getElementById('tut-overlay').style.display = 'block'; 
+            isTutorialMode = true; // تفعيل وضع التوتوريال
+            nextStep(); 
+        }
+        
+        function finishTutorial() { 
+            document.getElementById('end-modal').style.display = 'none'; 
+            localStorage.setItem('tut_completed_v30', 'true'); 
+            document.getElementById('mySidebar').style.width = '0'; 
+            closeProdModal(); 
+            isTutorialMode = false; // إيقاف وضع التوتوريال
+        }
 
         let step = 0;
         function nextStep() {
@@ -306,7 +319,21 @@ HTML_STORE = '''
             } else if(step === 3) {
                 let el = document.getElementById('feedback-area'); let rect = el.getBoundingClientRect(); s.style.top = (rect.top)+'px'; s.style.left = (rect.left)+'px'; s.style.width = (rect.width)+'px'; s.style.height = (rect.height)+'px'; a.innerText = "⬅️"; a.style.top = (rect.top + 50) + 'px'; a.style.left = (rect.left - 50) + 'px'; t.innerText = "يمكنك إبداء رأيك عن الخدمة من هنا.";
             } else if(step === 4) {
-                sb.style.width = "0"; setTimeout(() => { let cardEl = document.querySelector('.product-card'); if(cardEl) { cardEl.click(); setTimeout(() => { let el = document.getElementById('tut-inputs-modal'); let rect = el.getBoundingClientRect(); s.style.top = (rect.top-10)+'px'; s.style.left = (rect.left-10)+'px'; s.style.width = (rect.width+20)+'px'; s.style.height = (rect.height+20)+'px'; s.style.borderRadius = "15px"; a.innerText = "⬇️"; a.style.top = (rect.top - 60) + 'px'; a.style.left = (rect.left + rect.width/2) + 'px'; t.innerHTML = "هنا تقوم بإدخال بياناتك للشراء.<br><small>⚠️ تأكد أنك داخل سيرفر الديسكورد.</small>"; c.style.top = (rect.bottom + 20) + 'px'; c.style.left = "50%"; c.style.transform = "translateX(-50%)"; }, 500); } }, 400);
+                sb.style.width = "0"; 
+                setTimeout(() => { 
+                    let cardEl = document.querySelector('.product-card'); 
+                    if(cardEl) { 
+                        cardEl.click(); // الآن سيفتح القائمة حتى لو الكمية 0 بسبب وضع التوتوريال
+                        setTimeout(() => { 
+                            let el = document.getElementById('tut-inputs-modal'); 
+                            let rect = el.getBoundingClientRect(); 
+                            s.style.top = (rect.top-10)+'px'; s.style.left = (rect.left-10)+'px'; s.style.width = (rect.width+20)+'px'; s.style.height = (rect.height+20)+'px'; s.style.borderRadius = "15px"; 
+                            a.innerText = "⬇️"; a.style.top = (rect.top - 60) + 'px'; a.style.left = (rect.left + rect.width/2) + 'px'; 
+                            t.innerHTML = "هنا تقوم بإدخال بياناتك (ID والكاش) لإتمام الشراء.<br><small>⚠️ تأكد أنك داخل سيرفر الديسكورد.</small>"; 
+                            c.style.top = (rect.bottom + 20) + 'px'; c.style.left = "50%"; c.style.transform = "translateX(-50%)"; 
+                        }, 500); 
+                    } 
+                }, 400);
             } else { document.getElementById('tut-overlay').style.display = 'none'; document.getElementById('end-modal').style.display = 'flex'; }
         }
     </script>
@@ -574,8 +601,24 @@ def admin_login():
     if request.method == 'POST' and request.form.get('password') == ADMIN_PASSWORD:
         session['logged_in'] = True
         return redirect('/admin_jo_secret')
-    return '<body style="background:black; color:white; text-align:center; padding-top:100px"><form method="post"><input type="password" name="password"><button>Login</button></form></body>'
-
+        
+    # تصميم Glassmorphism الحديث
+    return render_template_string('''
+    <!DOCTYPE html>
+    <html>
+    <head><title>Admin Access</title></head>
+    <body style="background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: sans-serif;">
+        <div style="background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); padding: 50px; border-radius: 30px; border: 1px solid rgba(255, 255, 255, 0.1); text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.5);">
+            <div style="font-size: 50px; margin-bottom: 20px;">🔐</div>
+            <h2 style="color: white; margin-bottom: 30px; font-weight: normal;">Admin Access</h2>
+            <form method="post">
+                <input type="password" name="password" placeholder="Enter Password" style="width: 250px; padding: 15px; border-radius: 15px; border: none; background: rgba(0,0,0,0.3); color: white; text-align: center; font-size: 16px; outline: none; margin-bottom: 20px;">
+                <br>
+                <button style="padding: 12px 40px; background: #5865F2; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.3s; width: 100%;">Login</button>
+            </form>
+        </div>
+    </body>
+    </html>''')
 @app.route('/admin_jo_secret', methods=['GET', 'POST'])
 def admin_panel():
     if not session.get('logged_in'): return redirect('/admin_login')

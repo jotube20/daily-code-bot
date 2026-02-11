@@ -712,25 +712,6 @@ def approve(id):
         asyncio.run_coroutine_threadsafe(send(), client.loop)
     return redirect('/admin_jo_secret')
 
-@app.route('/app/<int:id>')
-def approve(id):
-    if session.get('logged_in'):
-        o = db_orders.get(doc_id=id)
-        db_orders.update({'status': 'approved ✅'}, doc_ids=[id])
-        
-        # إرسال Embed للعميل (أخضر)
-        async def send():
-            try:
-                u = await client.fetch_user(int(o['discord_id']))
-                embed = discord.Embed(title="🔥 مبروك! تم تأكيد طلبك", description=f"تم استلام طلبك لـ **{o['prod_name']}** بنجاح!", color=0x43b581)
-                codes_str = "\n".join(o['reserved_codes'])
-                embed.add_field(name="📦 إليك الأكواد الخاصة بك:", value=f"```{codes_str}```", inline=False)
-                embed.set_footer(text="شكراً لثقتك بنا! ❤️")
-                await u.send(embed=embed)
-            except: pass
-        asyncio.run_coroutine_threadsafe(send(), client.loop)
-    return redirect('/admin_jo_secret')
-
 @app.route('/rej/<int:id>')
 def reject(id):
     if session.get('logged_in'):

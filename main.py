@@ -19,28 +19,31 @@ SERVER_ID = 1272670682324533333
 # توقيت القاهرة
 EGYPT_TZ = pytz.timezone('Africa/Cairo')
 
-# المنتجات (تم إضافة الوصف 'desc')
+# المنتجات (تم تحديث الوصف وإضافة شارة 'badge' للأكثر مبيعاً)
 PRODUCTS = {
-    'xbox': {
-        'name': 'Xbox Game Pass Premium',
-        'price': 10,
-        'desc': 'اشتراك Xbox Game Pass Premium لمدة شهر. استمتع بمكتبة ضخمة من الألعاب.',
-        'file': 'xbox.txt',
-        'img': 'https://media.discordapp.net/attachments/111/xbox_bg.png'
-    },
     'nitro1': {
         'name': 'Discord Nitro 1 Month',
         'price': 5,
         'desc': 'اشتراك ديسكورد نيترو لمدة شهر. مميزات إضافية، جودة بث أعلى، والمزيد.',
         'file': 'nitro1.txt',
-        'img': 'https://media.discordapp.net/attachments/111/nitro1_bg.png'
+        'img': 'https://media.discordapp.net/attachments/111/nitro1_bg.png',
+        'badge': 'الاكثر مبيعا' # الشريط الأصفر المميز
+    },
+    'xbox': {
+        'name': 'Xbox Game Pass Premium',
+        'price': 10,
+        'desc': 'اشتراك Xbox Game Pass Premium لمدة شهر. استمتع بمكتبة ضخمة من الألعاب.',
+        'file': 'xbox.txt',
+        'img': 'https://media.discordapp.net/attachments/111/xbox_bg.png',
+        'badge': None
     },
     'nitro3': {
         'name': 'Discord Nitro 3 Months',
         'price': 10,
         'desc': 'اشتراك ديسكورد نيترو لمدة 3 أشهر. أفضل قيمة لعشاق ديسكورد.',
         'file': 'nitro3.txt',
-        'img': 'https://media.discordapp.net/attachments/111/nitro3_bg.png'
+        'img': 'https://media.discordapp.net/attachments/111/nitro3_bg.png',
+        'badge': None
     }
 }
 
@@ -109,71 +112,70 @@ HTML_STORE = '''
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jo Store | متجرك المفضل</title>
+    <title>Jo Store</title>
     <style>
         :root { --main: #5865F2; --bg: #0a0a0a; --card: #111; --text: white; --accent: #43b581; }
         body.light-mode { --bg: #f4f4f4; --card: #fff; --text: #333; }
         body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; margin: 0; overflow-x: hidden; transition: 0.3s; }
 
-        /* Navbars */
         .glass-nav { position: fixed; top: 20px; left: 20px; z-index: 1001; display: flex; align-items: center; gap: 15px; background: rgba(128,128,128,0.15); backdrop-filter: blur(15px); padding: 10px 25px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1); }
         .nav-btn { background: none; border: none; color: var(--text); font-size: 24px; cursor: pointer; transition: 0.3s; }
         .right-nav { position: fixed; top: 20px; right: 20px; z-index: 1001; display: flex; align-items: center; gap: 10px; background: rgba(128,128,128,0.15); backdrop-filter: blur(15px); padding: 8px 20px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1); }
-        .beta-badge { color: #f1c40f; font-weight: bold; font-family: monospace; letter-spacing: 1px; font-size: 16px; text-shadow: 0 0 10px rgba(241, 196, 15, 0.5); }
+        .beta-badge { color: #f1c40f; font-weight: bold; font-family: monospace; letter-spacing: 1px; }
 
-        /* Layout */
         .sidebar { height: 100%; width: 0; position: fixed; z-index: 1000; top: 0; left: 0; background: var(--card); overflow-y: auto; transition: 0.5s ease; padding-top: 80px; border-right: 1px solid #333; }
         .sidebar a { padding: 15px 25px; display: block; text-align: right; color: #888; text-decoration: none; font-size: 18px; border-bottom: 1px solid #222; }
         #main-content { padding: 100px 20px; text-align: center; }
         .products-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 45px; margin-top: 60px; }
 
-        /* Product Cards (New Design) */
+        /* الكروت (إضاءة زرقاء + شريط أصفر) */
         .product-card { width: 320px; height: 480px; border-radius: 30px; position: relative; overflow: hidden; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); background: var(--card); transition: 0.3s; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-        .product-card:hover { transform: translateY(-10px); box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+        .product-card:hover { transform: translateY(-10px); box-shadow: 0 0 20px rgba(88, 101, 242, 0.6); border-color: var(--main); }
         .card-image { height: 65%; background-size: cover; background-position: center; position: relative; }
         .card-image::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, var(--card) 5%, transparent 70%); }
         .card-info { padding: 20px; text-align: right; }
         .card-info h3 { margin: 0; font-size: 22px; }
         .card-info h2 { color: var(--accent); margin: 5px 0; }
         .card-info small { color: #888; }
+        
+        /* شريط الأكثر مبيعاً */
+        .badge { position: absolute; top: 20px; left: -35px; background: #f1c40f; color: black; padding: 5px 40px; transform: rotate(-45deg); font-weight: bold; font-size: 14px; z-index: 10; box-shadow: 0 5px 10px rgba(0,0,0,0.3); }
 
-        /* Product Modal (New) */
-        #product-modal { display: none; position: fixed; inset: 0; z-index: 11000; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; backdrop-filter: blur(8px); }
-        .modal-content-prod { background: var(--card); width: 450px; border-radius: 35px; overflow: hidden; position: relative; box-shadow: 0 25px 50px rgba(0,0,0,0.5); animation: zoomIn 0.3s ease; border: 1px solid rgba(255,255,255,0.1); }
+        /* نوافذ منبثقة */
+        #product-modal, #out-of-stock-modal { display: none; position: fixed; inset: 0; z-index: 11000; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; backdrop-filter: blur(8px); }
+        
+        /* تكبير القائمة (Modal) */
+        .modal-content-prod { background: var(--card); width: 600px; max-width: 95%; border-radius: 35px; overflow: hidden; position: relative; box-shadow: 0 25px 50px rgba(0,0,0,0.5); animation: zoomIn 0.3s ease; border: 1px solid rgba(255,255,255,0.1); }
         @keyframes zoomIn { from{transform:scale(0.9);opacity:0} to{transform:scale(1);opacity:1} }
-        .modal-header-prod { height: 150px; background-size: cover; background-position: center; position: relative; }
+        .modal-header-prod { height: 200px; background-size: cover; background-position: center; position: relative; }
         .modal-header-prod::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, var(--card) 10%, transparent); }
-        .modal-body-prod { padding: 30px; text-align: right; }
-        .close-modal-prod { position: absolute; top: 15px; right: 20px; background: rgba(0,0,0,0.5); color: white; border: none; font-size: 20px; cursor: pointer; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 2; }
-        .prod-desc { color: #ccc; font-size: 14px; line-height: 1.6; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #333; }
+        .modal-body-prod { padding: 30px 40px; text-align: right; }
+        .close-modal-prod { position: absolute; top: 20px; right: 25px; background: rgba(0,0,0,0.6); color: white; border: none; font-size: 20px; cursor: pointer; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 2; transition: 0.3s; }
+        .close-modal-prod:hover { background: #e74c3c; transform: rotate(90deg); }
+        
+        /* رسالة نفاد الكمية */
+        .oos-content { background: #111; padding: 40px; border-radius: 25px; text-align: center; border: 2px solid #e74c3c; width: 400px; }
+        .oos-icon { font-size: 50px; margin-bottom: 20px; }
 
-        /* Forms & Interactive */
-        .order-form { margin-top: 15px; }
-        input, textarea { width: 100%; padding: 14px; margin: 8px 0; border-radius: 12px; border: 1px solid #333; background: #1a1a1a; color: white; text-align: center; font-family: inherit; box-sizing: border-box; }
+        input, textarea { width: 100%; padding: 15px; margin: 10px 0; border-radius: 12px; border: 1px solid #333; background: #1a1a1a; color: white; text-align: center; font-family: inherit; box-sizing: border-box; font-size: 16px; }
         input:focus { border-color: var(--main); outline: none; }
-        .btn-purchase { background: var(--main); color: white; border: none; padding: 16px; border-radius: 15px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 15px; font-size: 16px; transition: 0.3s; }
+        .btn-purchase { background: var(--main); color: white; border: none; padding: 18px; border-radius: 15px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 20px; font-size: 18px; transition: 0.3s; }
         .btn-purchase:hover { background: #4752c4; }
 
-        /* Modals & Tutorial */
         .modal-box { display: none; position: fixed; inset: 0; z-index: 15000; background: rgba(0,0,0,0.95); align-items: center; justify-content: center; flex-direction: column; color: white; }
         .modal-content { background: #111; padding: 40px; border-radius: 30px; border: 2px solid var(--main); text-align: center; max-width: 90%; }
+        #news-modal { display: none; position: fixed; inset: 0; z-index: 12000; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .news-content { background: #111; width: 400px; padding: 0; border-radius: 25px; border: 1px solid #333; position: relative; overflow: hidden; }
+        .news-header { background: var(--main); padding: 20px; text-align: center; } .news-body { padding: 25px; color: white; text-align: right; }
+        .close-news { position: absolute; top: 15px; right: 20px; background: none; border: none; color: white; font-size: 20px; cursor: pointer; }
+        #tut-overlay { display: none; position: fixed; inset: 0; z-index: 15000; }
+        .spotlight-hole { position: absolute; border-radius: 50%; box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.92); pointer-events: none; transition: 0.6s; z-index: 15001; }
+        .tut-arrow { position: absolute; font-size: 40px; color: #f1c40f; z-index: 15003; animation: bounce 1s infinite; }
+        @keyframes bounce { 0%, 100% {transform: translateY(0);} 50% {transform: translateY(-15px);} }
+        .tut-card { position: absolute; background: white; color: black; padding: 20px; border-radius: 20px; width: 280px; z-index: 15002; text-align: center; }
         #wait-overlay { display: none; position: fixed; inset: 0; z-index: 20000; background: rgba(0,0,0,0.96); flex-direction: column; align-items: center; justify-content: center; color: white; }
         .timer-circle { width: 100px; height: 100px; border: 5px solid var(--main); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 35px; margin-top: 20px; }
         .top-ok-btn { position: absolute; top: 10%; right: 50%; transform: translateX(50%); background: #e74c3c; padding: 10px 30px; border-radius: 20px; color: white; border: none; font-weight: bold; cursor: pointer; display: none; z-index: 20001; }
-
-        /* What's New Modal */
-        #news-modal { display: none; position: fixed; inset: 0; z-index: 12000; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; backdrop-filter: blur(5px); }
-        .news-content { background: #111; width: 400px; padding: 0; border-radius: 25px; border: 1px solid #333; position: relative; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5); animation: slideDown 0.4s ease; }
-        @keyframes slideDown { from {transform: translateY(-50px); opacity:0;} to {transform: translateY(0); opacity:1;} }
-        .news-header { background: var(--main); padding: 20px; text-align: center; } .news-header h2 { margin: 0; color: white; font-size: 28px; }
-        .news-body { padding: 25px; color: white; text-align: right; } .close-news { position: absolute; top: 15px; right: 20px; background: none; border: none; color: white; font-size: 20px; cursor: pointer; }
-
-        /* Tutorial Spotlight */
-        #tut-overlay { display: none; position: fixed; inset: 0; z-index: 15000; }
-        .spotlight-hole { position: absolute; border-radius: 50%; box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.92); pointer-events: none; transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94); z-index: 15001; }
-        .tut-arrow { position: absolute; font-size: 40px; color: #f1c40f; z-index: 15003; animation: bounce 1s infinite; text-shadow: 0 5px 15px black; transition: all 0.5s ease; }
-        @keyframes bounce { 0%, 100% {transform: translateY(0);} 50% {transform: translateY(-15px);} }
-        .tut-card { position: absolute; background: white; color: black; padding: 20px; border-radius: 20px; width: 280px; z-index: 15002; text-align: center; box-shadow: 0 0 30px rgba(255,255,255,0.2); transition: all 0.5s ease; top: 50%; left: 50%; transform: translate(-50%, -50%); }
     </style>
 </head>
 <body id="body">
@@ -183,18 +185,18 @@ HTML_STORE = '''
             <button class="close-modal-prod" onclick="closeProdModal()">✕</button>
             <div id="pm-header" class="modal-header-prod"></div>
             <div class="modal-body-prod">
-                <h2 id="pm-name" style="margin:0;"></h2>
-                <h1 id="pm-price" style="color:var(--accent); margin:5px 0;"></h1>
-                <div id="pm-desc" class="prod-desc"></div>
+                <h2 id="pm-name" style="margin:0; font-size:28px;"></h2>
+                <h1 id="pm-price" style="color:var(--accent); margin:10px 0; font-size:32px;"></h1>
+                <div id="pm-desc" style="color:#ccc; font-size:16px; line-height:1.6; margin-bottom:25px; padding-bottom:20px; border-bottom:1px solid #333;"></div>
                 <div class="order-form">
                     <form action="/place_order" method="post" onsubmit="return checkWait()">
                         <input type="hidden" id="pm-key" name="prod_key">
                         <div id="tut-inputs-modal">
-                            <input type="number" name="quantity" min="1" value="1" placeholder="الكمية" required>
-                            <input type="text" name="discord_id" placeholder="ID الديسكورد" required>
-                            <input type="text" name="cash_number" placeholder="رقم الكاش" required>
+                            <input type="number" name="quantity" min="1" value="1" placeholder="الكمية" required style="font-size:18px;">
+                            <input type="text" name="discord_id" placeholder="ID الديسكورد" required style="font-size:18px;">
+                            <input type="text" name="cash_number" placeholder="رقم الكاش" required style="font-size:18px;">
                         </div>
-                        <input type="text" name="coupon" placeholder="كود الخصم (اختياري)">
+                        <input type="text" name="coupon" placeholder="كود الخصم (اختياري)" style="font-size:18px;">
                         <button class="btn-purchase">تأكيد الشراء Now</button>
                     </form>
                 </div>
@@ -202,30 +204,20 @@ HTML_STORE = '''
         </div>
     </div>
 
-    <div id="news-modal">
-        <div class="news-content">
-            <button class="close-news" onclick="toggleNews()">✕</button>
-            <div class="news-header"><h2>What is new?</h2><div style="color:rgba(255,255,255,0.7); font-size:12px;">Latest Update - <span id="current-date"></span></div></div>
-            <div class="news-body">
-                <div style="color:#f1c40f; font-weight:bold; font-size:18px; margin-bottom:10px;">✨ Beta Update V1</div>
-                <ul style="list-style:none; padding:0; line-height:1.8; color:#ccc;">
-                    <li>🌓 إطلاق الوضع الليلي.</li>
-                    <li>🎟️ إضافة نظام الكوبونات.</li>
-                    <li>⏳ نظام حماية (Countdown).</li>
-                    <li>🛡️ التحقق من الـ ID.</li>
-                    <li>✨ تصميم جديد كلياً للمنتجات.</li>
-                </ul>
-                <button class="btn-purchase" onclick="toggleNews()" style="margin-top:15px;">فهمت، شكراً!</button>
-            </div>
+    <div id="out-of-stock-modal">
+        <div class="oos-content">
+            <div class="oos-icon">❌</div>
+            <h3 style="color:#e74c3c; margin-top:0;">عفواً، نفذت الكمية</h3>
+            <p style="color:#ccc; line-height:1.6;">لا يوجد كمية من هذا المنتج حالياً.<br>يمكنك الشراء حين توفر كمية وسنقوم بتنبيهك.</p>
+            <button onclick="document.getElementById('out-of-stock-modal').style.display='none'" class="btn-purchase" style="background:#333; margin-top:10px;">حسناً</button>
         </div>
     </div>
 
+    <div id="news-modal"><div class="news-content"><button class="close-news" onclick="toggleNews()">✕</button><div class="news-header"><h2>What is new?</h2><div style="color:rgba(255,255,255,0.7); font-size:12px;">Latest Update - <span id="current-date"></span></div></div><div class="news-body"><div style="color:#f1c40f; font-weight:bold; font-size:18px; margin-bottom:10px;">✨ Beta Update V1</div><ul style="list-style:none; padding:0; line-height:1.8; color:#ccc;"><li>🌓 إطلاق الوضع الليلي.</li><li>🎟️ إضافة نظام الكوبونات.</li><li>⏳ نظام حماية (Countdown).</li><li>🛡️ التحقق من الـ ID.</li><li>✨ تصميم جديد كلياً للمنتجات.</li></ul><button class="btn-purchase" onclick="toggleNews()" style="margin-top:15px;">فهمت، شكراً!</button></div></div></div>
     <div class="right-nav"><span class="beta-badge">Beta</span><div style="width:1px; height:20px; background:rgba(255,255,255,0.2); margin:0 10px;"></div><button class="nav-btn" onclick="toggleNews()">📢</button></div>
     <div class="glass-nav"><button class="nav-btn" id="menu-btn" onclick="toggleNav()">&#9776;</button><div style="width:1px; height:25px; background:#555; margin:0 10px;"></div><button class="nav-btn" onclick="toggleTheme()">🌓</button></div>
-
     <div id="server-error-modal" class="modal-box"><div class="modal-content"><div style="font-size:60px;">❌</div><h3 style="color:#e74c3c;">عذراً لا يمكنك اتمام العملية</h3><p style="color:#ccc;">يجب عليك دخول سيرفر الديسكورد أولاً.</p><a href="https://discord.gg/db2sGRbrnJ" target="_blank" class="btn-purchase" style="background:#5865F2; display:inline-block; text-decoration:none; width:auto; padding:10px 40px;">دخول السيرفر</a><button onclick="window.location.href='/'" class="btn-purchase" style="background:#333; width:auto; padding:10px 40px; margin-top:10px;">رجوع</button></div></div>
     <div id="wait-overlay"><button id="wait-ok" class="top-ok-btn" onclick="document.getElementById('wait-overlay').style.display='none'">إغلاق النافذة (OK)</button><div class="timer-circle" id="timer-val">60</div><h3>يرجى الانتظار دقيقة.. ⌛</h3></div>
-
     <div id="start-modal" class="modal-box" style="display:flex;"><div class="modal-content"><h2 style="color:var(--main)">أهلاً بك في Jo Store 👋</h2><p style="color:#ccc;">هل ترغب في جولة سريعة؟</p><div style="display:flex; gap:10px;"><button class="btn-purchase" onclick="startTutorial()">نعم، ابدأ الجولة</button><button class="btn-purchase" style="background:#333;" onclick="skipTutorial()">لا شكراً</button></div></div></div>
     <div id="end-modal" class="modal-box"><div class="modal-content"><h1>🎊 تهانينا!</h1><p style="color:#ccc;">أنت الآن جاهز للتسوق.</p><button class="btn-purchase" onclick="finishTutorial()">إنهاء</button></div></div>
     <div id="tut-overlay"><div id="spotlight" class="spotlight-hole"></div><div id="arrow" class="tut-arrow">⬆️</div><div id="tut-card" class="tut-card" style="display:none;"><div id="tut-text"></div><button class="btn-purchase" style="padding:8px 20px; margin-top:10px;" onclick="nextStep()">التالي</button></div></div>
@@ -244,7 +236,10 @@ HTML_STORE = '''
         <h1>Jo Store 🔒</h1>
         <div class="products-container" id="prod-list">
             {% for key, info in prods.items() %}
-            <div class="product-card" id="card-{{key}}" onclick="openProdModal('{{key}}', '{{info.name}}', '{{info.price}}', '{{info.img}}', '{{info.desc}}')">
+            <div class="product-card" id="card-{{key}}" onclick="handleProductClick('{{key}}', '{{info.name}}', '{{info.price}}', '{{info.img}}', '{{info.desc}}', {{ stocks[key] }})">
+                {% if info.badge %}
+                <div class="badge">{{ info.badge }}</div>
+                {% endif %}
                 <div class="card-image" style="background-image: url('{{ info.img }}');"></div>
                 <div class="card-info">
                     <h3>{{ info.name }}</h3>
@@ -263,6 +258,15 @@ HTML_STORE = '''
         function toggleTheme() { document.body.classList.toggle("light-mode"); localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark'); }
         if(localStorage.getItem('theme') === 'light') document.body.classList.add('light-mode');
         function toggleNav() { var s = document.getElementById("mySidebar"); s.style.width = s.style.width === "300px" ? "0" : "300px"; }
+
+        // دالة التحقق من المخزون
+        function handleProductClick(key, name, price, img, desc, stock) {
+            if (stock <= 0) {
+                document.getElementById('out-of-stock-modal').style.display = 'flex';
+            } else {
+                openProdModal(key, name, price, img, desc);
+            }
+        }
 
         function openProdModal(key, name, price, img, desc) {
             document.getElementById('pm-key').value = key;
@@ -296,13 +300,9 @@ HTML_STORE = '''
             c.style.display = 'block';
             if(step === 1) {
                 let el = document.getElementById('menu-btn'); let rect = el.getBoundingClientRect();
-                s.style.top = (rect.top-5)+'px'; s.style.left = (rect.left-5)+'px'; s.style.width = (rect.width+10)+'px'; s.style.height = (rect.height+10)+'px'; s.style.borderRadius = "50%";
-                a.innerText = "⬆️"; a.style.top = (rect.bottom + 10) + 'px'; a.style.left = (rect.left + 10) + 'px';
-                t.innerHTML = "<b>هذا هو زر الاختيارات</b><br>اضغط هنا لفتح القائمة الجانبية.";
-                c.style.top = (rect.bottom + 80) + 'px'; c.style.left = "20px"; c.style.transform = "none";
+                s.style.top = (rect.top-5)+'px'; s.style.left = (rect.left-5)+'px'; s.style.width = (rect.width+10)+'px'; s.style.height = (rect.height+10)+'px'; s.style.borderRadius = "50%"; a.innerText = "⬆️"; a.style.top = (rect.bottom + 10) + 'px'; a.style.left = (rect.left + 10) + 'px'; t.innerHTML = "<b>هذا هو زر الاختيارات</b><br>اضغط هنا لفتح القائمة الجانبية."; c.style.top = (rect.bottom + 80) + 'px'; c.style.left = "20px"; c.style.transform = "none";
             } else if(step === 2) {
-                sb.style.width = "300px";
-                setTimeout(() => { let el = document.getElementById('track-btn'); let rect = el.getBoundingClientRect(); s.style.top = (rect.top)+'px'; s.style.left = (rect.left)+'px'; s.style.width = (rect.width)+'px'; s.style.height = (rect.height)+'px'; s.style.borderRadius = "0"; a.innerText = "⬅️"; a.style.top = (rect.top) + 'px'; a.style.left = (rect.left - 50) + 'px'; t.innerText = "يمكنك تتبع طلبك من هنا."; c.style.top = (rect.bottom + 20) + 'px'; c.style.left = "20px"; }, 300);
+                sb.style.width = "300px"; setTimeout(() => { let el = document.getElementById('track-btn'); let rect = el.getBoundingClientRect(); s.style.top = (rect.top)+'px'; s.style.left = (rect.left)+'px'; s.style.width = (rect.width)+'px'; s.style.height = (rect.height)+'px'; s.style.borderRadius = "0"; a.innerText = "⬅️"; a.style.top = (rect.top) + 'px'; a.style.left = (rect.left - 50) + 'px'; t.innerText = "يمكنك تتبع طلبك من هنا."; c.style.top = (rect.bottom + 20) + 'px'; c.style.left = "20px"; }, 300);
             } else if(step === 3) {
                 let el = document.getElementById('feedback-area'); let rect = el.getBoundingClientRect(); s.style.top = (rect.top)+'px'; s.style.left = (rect.left)+'px'; s.style.width = (rect.width)+'px'; s.style.height = (rect.height)+'px'; a.innerText = "⬅️"; a.style.top = (rect.top + 50) + 'px'; a.style.left = (rect.left - 50) + 'px'; t.innerText = "يمكنك إبداء رأيك عن الخدمة من هنا.";
             } else if(step === 4) {
@@ -442,19 +442,130 @@ def success_page():
         </script>
     </body></html>''', t=t, payment_number=PAYMENT_NUMBER)
 
+# --- 1. صفحة البحث عن الطلب (اللي الزبون بيدخل فيها الايدي) ---
 @app.route('/my_orders_page')
 def my_orders_page():
-    # صفحة إدخال الـ ID للتتبع
     return render_template_string('''
-    <!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>تتبع الطلبات</title><style>body{background:#0a0a0a;color:white;font-family:'Segoe UI',sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}.track-card{background:#111;padding:40px;border-radius:30px;text-align:center;border:1px solid #333;width:400px;max-width:90%}input{width:100%;padding:14px;margin:20px 0;border-radius:12px;border:1px solid #333;background:#1a1a1a;color:white;text-align:center;font-size:16px;box-sizing:border-box}button{width:100%;padding:14px;border-radius:12px;border:none;font-weight:bold;cursor:pointer;background:#5865F2;color:white;font-size:16px}</style></head><body>
+    <!DOCTYPE html>
+    <html dir="rtl" lang="ar">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>تتبع الطلبات</title>
+        <style>
+            body{background:#0a0a0a;color:white;font-family:'Segoe UI',sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
+            .track-card{background:#111;padding:40px;border-radius:30px;text-align:center;border:1px solid #333;width:400px;max-width:90%; box-shadow: 0 10px 30px rgba(0,0,0,0.5);}
+            input{width:100%;padding:15px;margin:20px 0;border-radius:12px;border:1px solid #333;background:#1a1a1a;color:white;text-align:center;font-size:16px;box-sizing:border-box; transition:0.3s;}
+            input:focus{border-color:#5865F2; outline:none;}
+            button{width:100%;padding:15px;border-radius:12px;border:none;font-weight:bold;cursor:pointer;background:#5865F2;color:white;font-size:16px; transition:0.3s;}
+            button:hover{background:#4752c4;}
+            a{color:#888; text-decoration:none; transition:0.3s;}
+            a:hover{color:white;}
+        </style>
+    </head>
+    <body>
         <div class="track-card">
-            <h2>📋 تتبع طلباتك</h2>
-            <p style="color:#888;">أدخل معرف الديسكورد (ID) الخاص بك لعرض طلباتك.</p>
-            <input type="text" id="discord-id" placeholder="Discord ID">
+            <h2 style="margin-bottom:10px;">📋 تتبع طلباتك</h2>
+            <p style="color:#888; margin-top:0;">أدخل معرف الديسكورد (ID) الخاص بك لعرض طلباتك.</p>
+            <input type="text" id="discord-id" placeholder="Discord ID e.g. 123456789">
             <button onclick="let id=document.getElementById('discord-id').value; if(id) window.location.href='/my_orders/'+id">عرض الطلبات</button>
-            <a href="/" style="display:block; margin-top:20px; color:#888; text-decoration:none;">رجوع</a>
+            <br><br>
+            <a href="/">← العودة للرئيسية</a>
         </div>
-    </body></html>''')
+    </body>
+    </html>''')
+
+# --- 2. صفحة عرض النتائج (اللي بتظهر فيها الكروت والبروجرس بار) ---
+@app.route('/my_orders/<uid>')
+def my_orders(uid):
+    orders = db_orders.search(Order.discord_id == uid)
+    return render_template_string('''
+    <!DOCTYPE html>
+    <html dir="rtl" lang="ar">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>طلباتي</title>
+        <style>
+            body { background: #0a0a0a; color: white; font-family: 'Segoe UI', sans-serif; padding: 20px; }
+            .container { max-width: 600px; margin: 0 auto; }
+            .header-box { border: 1px solid #5865F2; background: rgba(88,101,242,0.05); border-radius: 20px; padding: 20px; text-align: center; margin-bottom: 30px; }
+            .order-card { background: #111; border: 1px solid #333; border-radius: 20px; padding: 25px; margin-bottom: 20px; transition:0.3s; }
+            .order-card:hover { border-color: #555; }
+            .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+            .prod-name { font-weight: bold; font-size: 18px; }
+            .prod-price { color: #43b581; font-weight: bold; font-size: 18px; }
+            
+            /* Progress Bar Styles */
+            .progress-bg { background: #222; height: 10px; border-radius: 10px; overflow: hidden; margin-bottom: 10px; position: relative; }
+            .progress-fill { height: 100%; border-radius: 10px; transition: 1s; }
+            
+            .status-row { display: flex; justify-content: space-between; font-size: 13px; color: #888; align-items: center; }
+            
+            .show-code-btn { background: #43b581; color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 14px; margin-top: 15px; width: 100%; font-weight:bold; }
+            .show-code-btn:hover { background: #3aa673; }
+            
+            .code-reveal { display: none; background: #000; padding: 15px; border-radius: 10px; margin-top: 10px; border: 1px dashed #43b581; color: #f1c40f; font-family: monospace; word-break: break-all; line-height: 1.6; }
+            
+            .no-orders { text-align: center; color: #777; margin-top: 50px; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header-box">
+                <h3 style="margin:0; color:#5865F2;">🔍 سجل الطلبات لـ {{uid}}</h3>
+                <p style="margin:5px 0 0; color:#888; font-size:12px;">هنا يمكنك متابعة حالة طلباتك واستلام الأكواد.</p>
+            </div>
+
+            {% for o in orders|reverse %}
+                <div class="order-card">
+                    <div class="top-row">
+                        <div class="prod-name">{{o.prod_name}} <span style="font-size:14px; color:#777;">(x{{o.quantity}})</span></div>
+                        <div class="prod-price">{{o.total}} ج.م</div>
+                    </div>
+
+                    {% if 'approved' in o.status %}
+                        <div class="progress-bg"><div class="progress-fill" style="width:100%; background:#43b581;"></div></div>
+                        <div class="status-row">
+                            <div>الحالة: <span style="color:#43b581">مكتمل ✅</span></div>
+                            <div>{{o.time}}</div>
+                        </div>
+                        <button class="show-code-btn" onclick="let c=document.getElementById('code-{{loop.index}}'); c.style.display = c.style.display==='block'?'none':'block';">عرض الكود / التفاصيل</button>
+                        <div id="code-{{loop.index}}" class="code-reveal">
+                            {% for c in o.reserved_codes %}
+                                {{c}}<br>
+                            {% endfor %}
+                        </div>
+
+                    {% elif 'rejected' in o.status %}
+                        <div class="progress-bg"><div class="progress-fill" style="width:100%; background:#e74c3c;"></div></div>
+                        <div class="status-row">
+                            <div>الحالة: <span style="color:#e74c3c">مرفوض ❌</span></div>
+                            <div>{{o.time}}</div>
+                        </div>
+
+                    {% else %}
+                        <div class="progress-bg"><div class="progress-fill" style="width:60%; background:#f1c40f;"></div></div>
+                        <div class="status-row">
+                            <div>الحالة: <span style="color:#f1c40f">قيد المراجعة ⏳</span></div>
+                            <div>{{o.time}}</div>
+                        </div>
+                    {% endif %}
+                </div>
+            {% else %}
+                <div class="no-orders">
+                    <h2>📭</h2>
+                    <p>لا توجد طلبات مسجلة لهذا الحساب.</p>
+                </div>
+            {% endfor %}
+            
+            <div style="text-align:center; margin-top:30px;">
+                <a href="/" style="color:#5865F2; text-decoration:none; font-weight:bold;">العودة للمتجر</a>
+            </div>
+        </div>
+    </body>
+    </html>
+    ''', orders=orders, uid=uid)
     
 # --- لوحة التحكم (Classic UI) ---
 

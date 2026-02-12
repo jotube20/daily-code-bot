@@ -1,4 +1,4 @@
 flask
 discord.py
-tinydb
+pymongo[srv]
 pytz

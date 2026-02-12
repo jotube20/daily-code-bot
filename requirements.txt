@@ -1,4 +1,5 @@
 flask
 discord.py
 pymongo[srv]
+dnspython
 pytz

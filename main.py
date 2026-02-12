@@ -170,57 +170,41 @@ HTML_STORE = '''
         .timer-circle { width: 100px; height: 100px; border: 5px solid var(--main); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 35px; margin-top: 20px; }
         .top-ok-btn { position: absolute; top: 10%; right: 50%; transform: translateX(50%); background: #e74c3c; padding: 10px 30px; border-radius: 20px; color: white; border: none; font-weight: bold; cursor: pointer; display: none; z-index: 20001; }
 
-        /* تحسينات الموبايل */
+        /* --- وضع الموبايل المدمج (Compact Mode) --- */
         @media (max-width: 768px) {
             .modal-content-prod, .news-content, .oos-content, .modal-content {
-                width: 90% !important; /* عرض أقل للنافذة */
-                max-width: 90% !important;
-                max-height: 85vh; /* ارتفاع أقصى أقل */
-                margin: auto;
-                border-radius: 25px; /* زوايا دائرية أقل */
-            }
-            .modal-header-prod {
-                height: 150px; /* ارتفاع رأس النافذة أقل */
-            }
-            .modal-body-prod, .news-body, .oos-content, .modal-content {
-                padding: 20px !important; /* حشوة داخلية أقل */
-            }
-            #pm-name {
-                font-size: 20px !important; /* خط أصغر لاسم المنتج */
-            }
-            #pm-price {
-                font-size: 24px !important; /* خط أصغر للسعر */
-            }
-            #pm-desc, .news-body ul li {
-                font-size: 13px !important; /* خط أصغر للوصف والتحديثات */
-            }
-            input, textarea, .btn-purchase {
-                padding: 10px !important; /* حشوة أقل للأزرار والحقول */
-                font-size: 14px !important; /* خط أصغر */
-            }
-            .tut-card {
                 width: 85% !important;
-                left: 7.5% !important;
-                font-size: 14px;
-                padding: 15px;
+                max-width: 350px !important;
+                margin: auto;
+                border-radius: 20px;
+                border: 1px solid rgba(255,255,255,0.1);
             }
+            .modal-header-prod { height: 100px !important; }
+            .modal-body-prod, .news-body, .oos-content, .modal-content { padding: 15px !important; }
+            #pm-name { font-size: 18px !important; margin-bottom: 5px !important; }
+            #pm-price { font-size: 20px !important; margin: 5px 0 !important; }
+            #pm-desc { font-size: 12px !important; margin-bottom: 10px !important; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+            input, textarea { padding: 8px !important; margin: 5px 0 !important; font-size: 13px !important; height: 38px !important; }
+            .btn-purchase { padding: 10px !important; font-size: 14px !important; margin-top: 10px !important; }
+            .tut-card { width: 90% !important; left: 5% !important; bottom: 20px !important; top: auto !important; }
+            .close-modal-prod { top: 10px; right: 10px; width: 30px; height: 30px; font-size: 14px; background: rgba(0,0,0,0.8); }
         }
+
+        /* زينة رمضان */
+        .ramadan-decor{position:fixed;top:0;left:0;width:100%;z-index:99999;display:flex;justify-content:space-around;pointer-events:none}
+        .fanoos-box{position:relative;animation:swing 2s infinite ease-in-out alternate;transform-origin:top center}
+        .rope{width:2px;background:#d4af37;margin:0 auto}
+        .fanoos{font-size:30px;margin-top:-5px;filter:drop-shadow(0 0 10px gold)}
+        @keyframes swing{0%{transform:rotate(-8deg)}100%{transform:rotate(8deg)}}
     </style>
 </head>
 <body id="body">
-<style>
-    .ramadan-decor{position:fixed;top:0;left:0;width:100%;z-index:99999;display:flex;justify-content:space-around;pointer-events:none}
-    .fanoos-box{position:relative;animation:swing 2s infinite ease-in-out alternate;transform-origin:top center}
-    .rope{width:2px;background:#d4af37;margin:0 auto}
-    .fanoos{font-size:30px;margin-top:-5px;filter:drop-shadow(0 0 10px gold)}
-    @keyframes swing{0%{transform:rotate(-8deg)}100%{transform:rotate(8deg)}}
-</style>
-<div class="ramadan-decor">
-    <div class="fanoos-box"><div class="rope" style="height:60px"></div><div class="fanoos">🏮</div></div>
-    <div class="fanoos-box" style="animation-delay:1s"><div class="rope" style="height:40px"></div><div class="fanoos">🌙</div></div>
-    <div class="fanoos-box" style="animation-delay:0.5s"><div class="rope" style="height:70px"></div><div class="fanoos">⭐</div></div>
-    <div class="fanoos-box" style="animation-delay:1.5s"><div class="rope" style="height:50px"></div><div class="fanoos">🏮</div></div>
-</div>
+    <div class="ramadan-decor">
+        <div class="fanoos-box"><div class="rope" style="height:60px"></div><div class="fanoos">🏮</div></div>
+        <div class="fanoos-box" style="animation-delay:1s"><div class="rope" style="height:40px"></div><div class="fanoos">🌙</div></div>
+        <div class="fanoos-box" style="animation-delay:0.5s"><div class="rope" style="height:70px"></div><div class="fanoos">⭐</div></div>
+        <div class="fanoos-box" style="animation-delay:1.5s"><div class="rope" style="height:50px"></div><div class="fanoos">🏮</div></div>
+    </div>
 
     <div id="product-modal">
         <div class="modal-content-prod">

@@ -124,18 +124,24 @@ HTML_STORE = '''
         :root { --main: #5865F2; --bg: #0a0a0a; --card: #111; --text: white; --accent: #43b581; }
         body.light-mode { --bg: #f4f4f4; --card: #fff; --text: #333; }
         body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; margin: 0; overflow-x: hidden; transition: 0.3s; }
+        
+        /* تنسيق الأزرار العلوية (الأساسي للكمبيوتر) */
         .glass-nav { position: fixed; top: 20px; left: 20px; z-index: 1001; display: flex; align-items: center; gap: 15px; background: rgba(128,128,128,0.15); backdrop-filter: blur(15px); padding: 10px 25px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1); }
         .nav-btn { background: none; border: none; color: var(--text); font-size: 24px; cursor: pointer; transition: 0.3s; }
         .right-nav { position: fixed; top: 20px; right: 20px; z-index: 1001; display: flex; align-items: center; gap: 10px; background: rgba(128,128,128,0.15); backdrop-filter: blur(15px); padding: 8px 20px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1); }
+        
         .beta-badge { color: #f1c40f; font-weight: bold; font-family: monospace; letter-spacing: 1px; }
         .sidebar { height: 100%; width: 0; position: fixed; z-index: 1000; top: 0; left: 0; background: var(--card); overflow-y: auto; transition: 0.5s ease; padding-top: 80px; border-right: 1px solid #333; }
         .sidebar a { padding: 15px 25px; display: block; text-align: right; color: #888; text-decoration: none; font-size: 18px; border-bottom: 1px solid #222; }
         #main-content { padding: 100px 20px; text-align: center; }
         .products-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 45px; margin-top: 60px; }
+        
+        /* تنسيق كارت المنتج (الأساسي للكمبيوتر) */
         .product-card { width: 320px; height: 480px; border-radius: 30px; position: relative; overflow: hidden; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); background: var(--card); transition: 0.3s; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
         .product-card:hover { transform: translateY(-10px); box-shadow: 0 0 20px rgba(88, 101, 242, 0.6); border-color: var(--main); }
         .card-image { height: 65%; background-size: cover; background-position: center; position: relative; }
         .card-image::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, var(--card) 5%, transparent 70%); }
+        
         .card-info { padding: 20px; text-align: right; }
         .card-info h3 { margin: 0; font-size: 22px; }
         .card-info h2 { color: var(--accent); margin: 5px 0; }
@@ -170,8 +176,36 @@ HTML_STORE = '''
         .timer-circle { width: 100px; height: 100px; border: 5px solid var(--main); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 35px; margin-top: 20px; }
         .top-ok-btn { position: absolute; top: 10%; right: 50%; transform: translateX(50%); background: #e74c3c; padding: 10px 30px; border-radius: 20px; color: white; border: none; font-weight: bold; cursor: pointer; display: none; z-index: 20001; }
 
-        /* --- وضع الموبايل المدمج (Compact Mode) --- */
+        /* -------------------------------------------
+           🔥 تعديلات الموبايل (إصلاح الكروت والأزرار) 🔥
+           ------------------------------------------- */
         @media (max-width: 768px) {
+            /* 1. إصلاح الأزرار العلوية (تصغير الحجم والمسافات) */
+            .glass-nav, .right-nav {
+                padding: 6px 15px !important; /* تقليل الحواف الداخلية */
+                gap: 8px !important; /* تقريب الأزرار من بعض */
+                top: 15px !important; /* رفع القائمة قليلاً */
+            }
+            .nav-btn { font-size: 18px !important; } /* تصغير الأيقونات */
+            .beta-badge { font-size: 10px !important; letter-spacing: 0; }
+
+            /* 2. إصلاح كروت المنتجات (تصغيرها جداً) */
+            .products-container { gap: 20px !important; margin-top: 40px !important; }
+            .product-card {
+                width: 90% !important; /* العرض ياخد 90% من الشاشة */
+                max-width: 320px !important;
+                height: auto !important; /* الارتفاع على قد المحتوى (مش طويل) */
+                min-height: 350px !important;
+                border-radius: 20px !important;
+            }
+            .card-image {
+                height: 180px !important; /* تصغير الصورة داخل الكارت */
+            }
+            .card-info { padding: 15px !important; }
+            .card-info h3 { font-size: 18px !important; }
+            .card-info h2 { font-size: 22px !important; margin: 5px 0 !important; }
+
+            /* 3. إصلاح النوافذ المنبثقة (Compact Mode) */
             .modal-content-prod, .news-content, .oos-content, .modal-content {
                 width: 85% !important;
                 max-width: 350px !important;

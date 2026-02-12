@@ -69,30 +69,30 @@ client_discord = discord.Client(intents=intents)
 
 # --- الدوال المعدلة لـ MongoDB ---
 def get_stock(prod_key):
-    if not os.path.exists(PRODUCTS[prod_key]['file']): return 0
-    try:
-        with open(PRODUCTS[prod_key]['file'], 'r') as f: return len([l for l in f.readlines() if l.strip()])
-    except: return 0
+    # جلب المخزون من MongoDB بدل الملفات
+    res = db_config.find_one({'type': 'stock', 'prod_key': prod_key})
+    if res and res.get('codes'):
+        return len([l for l in res['codes'] if l.strip()])
+    return 0
 
 def pull_codes(p_key, qty):
-    if not os.path.exists(PRODUCTS[p_key]['file']): return []
-    try:
-        with open(PRODUCTS[p_key]['file'], 'r') as f: lines = [l for l in f.readlines() if l.strip()]
-        if len(lines) < qty: return []
-        pulled = lines[:qty]
-        remaining = lines[qty:]
-        with open(PRODUCTS[p_key]['file'], 'w') as f: f.writelines(remaining)
-        return [c.strip() for c in pulled]
-    except: return []
+    res = db_config.find_one({'type': 'stock', 'prod_key': p_key})
+    if not res or len(res.get('codes', [])) < qty: return []
+    
+    pulled = res['codes'][:qty]
+    remaining = res['codes'][qty:]
+    
+    # تحديث المخزون في السحاب فوراً
+    db_config.update_one({'type': 'stock', 'prod_key': p_key}, {'$set': {'codes': remaining}})
+    return [c.strip() for c in pulled]
 
 def return_codes(p_key, codes):
-    fname = PRODUCTS[p_key]['file']
-    existing = []
-    if os.path.exists(fname):
-        with open(fname, 'r') as f: existing = [l.strip() for l in f.readlines()]
-    with open(fname, 'a') as f:
-        for c in codes:
-            if c.strip() not in existing: f.write(c.strip() + "\n")
+    res = db_config.find_one({'type': 'stock', 'prod_key': p_key})
+    existing = res.get('codes', []) if res else []
+    for c in codes:
+        if c.strip() not in existing:
+            existing.append(c.strip())
+    db_config.update_one({'type': 'stock', 'prod_key': p_key}, {'$set': {'codes': existing}}, upsert=True)
 
 def is_maintenance_mode():
     res = db_config.find_one({'type': 'maintenance'})
@@ -494,8 +494,11 @@ def admin_panel():
 
         elif action == 'edit_stock':
             try:
-                with open(PRODUCTS[request.form.get('pk')]['file'], 'w') as f: f.write(request.form.get('cont').strip() + "\n")
-                flash("تم تحديث المخزون ✅", "success")
+                pk = request.form.get('pk')
+                # تعديل: حفظ الأكواد في مونجو مباشرة
+                content = [l.strip() for l in request.form.get('cont').strip().split('\n') if l.strip()]
+                db_config.update_one({'type': 'stock', 'prod_key': pk}, {'$set': {'codes': content}}, upsert=True)
+                flash("تم تحديث المخزون في السحاب ✅", "success")
             except: flash("خطأ في الحفظ ❌", "error")
 
         elif action == 'toggle_m':
@@ -543,8 +546,15 @@ def admin_panel():
                     flash(f"جاري الإرسال لـ {len(all_customers)} عميل 📨", "success")
             except: flash("خطأ في الإرسال ❌", "error")
 
+    # تجهيز البيانات للعرض
     coupons = list(db_config.find({'type':'coupon'}))
-    stocks = {k: open(v['file']).read() if os.path.exists(v['file']) else "" for k,v in PRODUCTS.items()}
+    
+    # تعديل: جلب المخزون من مونجو للعرض في البانل
+    stocks = {}
+    for k in PRODUCTS:
+        res = db_config.find_one({'type': 'stock', 'prod_key': k})
+        stocks[k] = "\n".join(res.get('codes', [])) if res else ""
+        
     orders_list = list(db_orders.find())
 
     return render_template_string('''
@@ -631,6 +641,7 @@ def admin_panel():
     </body></html>
     ''', prods=PRODUCTS, orders=orders_list, coupons=coupons, stocks=stocks)
 
+
 @app.route('/app/<id>')
 def approve(id):
     if session.get('logged_in'):
@@ -673,3 +684,4 @@ async def on_ready(): client_discord.loop = asyncio.get_running_loop(); print(f"
 if __name__ == '__main__':
     threading.Thread(target=run_flask, daemon=True).start()
     client_discord.run(TOKEN)
+

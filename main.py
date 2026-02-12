@@ -172,6 +172,20 @@ HTML_STORE = '''
     </style>
 </head>
 <body id="body">
+<style>
+    .ramadan-decor{position:fixed;top:0;left:0;width:100%;z-index:99999;display:flex;justify-content:space-around;pointer-events:none}
+    .fanoos-box{position:relative;animation:swing 2s infinite ease-in-out alternate;transform-origin:top center}
+    .rope{width:2px;background:#d4af37;margin:0 auto}
+    .fanoos{font-size:30px;margin-top:-5px;filter:drop-shadow(0 0 10px gold)}
+    @keyframes swing{0%{transform:rotate(-8deg)}100%{transform:rotate(8deg)}}
+</style>
+<div class="ramadan-decor">
+    <div class="fanoos-box"><div class="rope" style="height:60px"></div><div class="fanoos">🏮</div></div>
+    <div class="fanoos-box" style="animation-delay:1s"><div class="rope" style="height:40px"></div><div class="fanoos">🌙</div></div>
+    <div class="fanoos-box" style="animation-delay:0.5s"><div class="rope" style="height:70px"></div><div class="fanoos">⭐</div></div>
+    <div class="fanoos-box" style="animation-delay:1.5s"><div class="rope" style="height:50px"></div><div class="fanoos">🏮</div></div>
+</div>
+
     <div id="product-modal">
         <div class="modal-content-prod">
             <button class="close-modal-prod" onclick="closeProdModal()">✕</button>
@@ -588,6 +602,20 @@ def admin_panel():
         </style>
     </head>
     <body>
+    <style>
+    .ramadan-decor{position:fixed;top:0;left:0;width:100%;z-index:99999;display:flex;justify-content:space-around;pointer-events:none}
+    .fanoos-box{position:relative;animation:swing 2s infinite ease-in-out alternate;transform-origin:top center}
+    .rope{width:2px;background:#d4af37;margin:0 auto}
+    .fanoos{font-size:30px;margin-top:-5px;filter:drop-shadow(0 0 10px gold)}
+    @keyframes swing{0%{transform:rotate(-8deg)}100%{transform:rotate(8deg)}}
+</style>
+<div class="ramadan-decor">
+    <div class="fanoos-box"><div class="rope" style="height:60px"></div><div class="fanoos">🏮</div></div>
+    <div class="fanoos-box" style="animation-delay:1s"><div class="rope" style="height:40px"></div><div class="fanoos">🌙</div></div>
+    <div class="fanoos-box" style="animation-delay:0.5s"><div class="rope" style="height:70px"></div><div class="fanoos">⭐</div></div>
+    <div class="fanoos-box" style="animation-delay:1.5s"><div class="rope" style="height:50px"></div><div class="fanoos">🏮</div></div>
+</div>
+
         <div class="toast-container">
             {% with messages = get_flashed_messages(with_categories=true) %}
               {% if messages %}

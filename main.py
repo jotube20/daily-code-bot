@@ -169,6 +169,42 @@ HTML_STORE = '''
         #wait-overlay { display: none; position: fixed; inset: 0; z-index: 20000; background: rgba(0,0,0,0.96); flex-direction: column; align-items: center; justify-content: center; color: white; }
         .timer-circle { width: 100px; height: 100px; border: 5px solid var(--main); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 35px; margin-top: 20px; }
         .top-ok-btn { position: absolute; top: 10%; right: 50%; transform: translateX(50%); background: #e74c3c; padding: 10px 30px; border-radius: 20px; color: white; border: none; font-weight: bold; cursor: pointer; display: none; z-index: 20001; }
+
+        /* تحسينات الموبايل */
+        @media (max-width: 768px) {
+            .modal-content-prod, .news-content, .oos-content, .modal-content {
+                width: 90% !important; /* عرض أقل للنافذة */
+                max-width: 90% !important;
+                max-height: 85vh; /* ارتفاع أقصى أقل */
+                margin: auto;
+                border-radius: 25px; /* زوايا دائرية أقل */
+            }
+            .modal-header-prod {
+                height: 150px; /* ارتفاع رأس النافذة أقل */
+            }
+            .modal-body-prod, .news-body, .oos-content, .modal-content {
+                padding: 20px !important; /* حشوة داخلية أقل */
+            }
+            #pm-name {
+                font-size: 20px !important; /* خط أصغر لاسم المنتج */
+            }
+            #pm-price {
+                font-size: 24px !important; /* خط أصغر للسعر */
+            }
+            #pm-desc, .news-body ul li {
+                font-size: 13px !important; /* خط أصغر للوصف والتحديثات */
+            }
+            input, textarea, .btn-purchase {
+                padding: 10px !important; /* حشوة أقل للأزرار والحقول */
+                font-size: 14px !important; /* خط أصغر */
+            }
+            .tut-card {
+                width: 85% !important;
+                left: 7.5% !important;
+                font-size: 14px;
+                padding: 15px;
+            }
+        }
     </style>
 </head>
 <body id="body">

@@ -671,6 +671,7 @@ def admin_panel():
         stocks[k] = "\n".join(res.get('codes', [])) if res else ""
         
     orders_list = list(db_orders.find())
+    feedbacks_list = list(db_feedbacks.find()) # جلب الآراء للوحة التحكم
 
     return render_template_string('''
     <!DOCTYPE html>
@@ -733,6 +734,7 @@ def admin_panel():
             <button class="tab-btn" onclick="openTab('stock')">📦 المخزون</button>
             <button class="tab-btn" onclick="openTab('tools')">🛠️ الأدوات</button>
             <button class="tab-btn" onclick="openTab('settings')">⚙️ الإعدادات</button>
+            <button class="tab-btn" onclick="openTab('feedbacks')">⭐ الآراء</button>
         </div>
         <div id="home" class="tab-content active">
             <div style="display:flex; gap:20px; justify-content:center; flex-wrap:wrap;">
@@ -763,12 +765,30 @@ def admin_panel():
         <div id="settings" class="tab-content">
             <div class="card" style="text-align:center; max-width:400px; margin:auto;"><h3>⚠️ وضع الصيانة</h3><p style="color:#888;">عند التفعيل، لن يظهر زر الشراء للأعضاء.</p><form method="post"><input type="hidden" name="action" value="toggle_m"><button class="btn-blue" style="background:orange; color:black;">تغيير الحالة (تشغيل/إيقاف)</button></form></div>
         </div>
+        <div id="feedbacks" class="tab-content">
+            <div class="card">
+                <h3>⭐ إدارة آراء العملاء</h3>
+                <table>
+                    <tr style="color:#888;"><th>العميل</th><th>الرأي</th><th>التاريخ</th><th>إجراء</th></tr>
+                    {% for f in feedbacks|reverse %}
+                    <tr>
+                        <td>{{ f.name }}</td>
+                        <td style="max-width:200px; word-wrap:break-word;">{{ f.comment }}</td>
+                        <td>{{ f.time }}</td>
+                        <td><a href="/del_feedback/{{ f._id }}" style="color:#e74c3c; font-weight:bold; text-decoration:none;">[حذف 🗑️]</a></td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4" style="color:#777;">لا توجد آراء مسجلة حتى الآن.</td></tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
         <script>
             function openTab(id) { document.querySelectorAll('.tab-content').forEach(d => d.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.getElementById(id).classList.add('active'); event.target.classList.add('active'); }
             setTimeout(() => { document.querySelectorAll('.toast').forEach(t => t.style.display='none') }, 5000);
         </script>
     </body></html>
-    ''', prods=PRODUCTS, orders=orders_list, coupons=coupons, stocks=stocks)
+    ''', prods=PRODUCTS, orders=orders_list, coupons=coupons, stocks=stocks, feedbacks=feedbacks_list)
 
 
 @app.route('/app/<id>')
@@ -799,6 +819,13 @@ def reject(id):
         if o:
             return_codes(o['prod_key'], o['reserved_codes'])
             db_orders.update_one({'_id': oid}, {'$set': {'status': 'rejected ❌'}})
+    return redirect('/admin_jo_secret')
+
+@app.route('/del_feedback/<id>')
+def del_feedback(id):
+    if session.get('logged_in'):
+        db_feedbacks.delete_one({'_id': ObjectId(id)})
+        flash("تم مسح الرأي بنجاح 🗑️", "success")
     return redirect('/admin_jo_secret')
 
 @app.route('/add_feedback', methods=['POST'])

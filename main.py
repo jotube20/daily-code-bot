@@ -129,16 +129,21 @@ HTML_STORE = '''
         body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; margin: 0; overflow-x: hidden; transition: 0.3s; }
 
         /* لوجو الموقع العلوي */
+/* لوجو الموقع العلوي (مخصص للكمبيوتر) */
         .top-logo {
+            position: fixed; /* التثبيت رجع للكمبيوتر */
+            top: 25px;
+            left: 50%;
+            transform: translateX(-50%);
             font-family: 'Bruno Ace', sans-serif;
-            font-size: 32px; /* الحجم الكبير الطبيعي */
+            font-size: 32px;
             color: white;
             text-shadow: 0px 0px 15px var(--main);
             letter-spacing: 3px;
             margin: 0;
             cursor: default;
             text-align: center;
-            /* تم إزالة خصائص التثبيت (fixed) عشان يكون عنصر عادي في الصفحة */
+            z-index: 1002;
         }
 
         /* تنسيق الأزرار العلوية (الأساسي للكمبيوتر) */
@@ -198,11 +203,15 @@ HTML_STORE = '''
            ------------------------------------------- */
         @media (max-width: 768px) {
             /* ضبط مكان اللوجو على الموبايل ليكون تحت الأزرار */
+            /* ضبط اللوجو للموبايل: إلغاء التثبيت وتنزيله تحت الزراير */
             .top-logo {
-                font-size: 32px !important; /* الحجم الكبير */
-                margin-top: 70px !important; /* مسافة من فوق عشان ينزل في المنطقة الفاضية */
-                margin-bottom: 20px !important; /* مسافة بينه وبين الكروت */
+                position: static !important;
+                transform: none !important;
+                font-size: 32px !important;
+                margin-top: 0 !important;
+                margin-bottom: 20px !important;
             }
+            #main-content { padding-top: 80px !important; } /* عشان يظبط المسافة فوق اللوجو */
 
             /* 1. إصلاح الأزرار العلوية (تصغير الحجم والمسافات) */
             .glass-nav, .right-nav {
@@ -243,7 +252,14 @@ HTML_STORE = '''
             #pm-desc { font-size: 12px !important; margin-bottom: 10px !important; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
             input, textarea { padding: 8px !important; margin: 5px 0 !important; font-size: 13px !important; height: 38px !important; }
             .btn-purchase { padding: 10px !important; font-size: 14px !important; margin-top: 10px !important; }
-            .tut-card { width: 90% !important; left: 5% !important; bottom: 20px !important; top: auto !important; }
+            /* إصلاح لافتة الشرح عشان متتقصش من تحت */
+            .tut-card { 
+                width: 90% !important; 
+                left: 5% !important; 
+                bottom: 20px !important; 
+                top: auto !important; 
+                position: fixed !important; 
+            }
             .close-modal-prod { top: 10px; right: 10px; width: 30px; height: 30px; font-size: 14px; background: rgba(0,0,0,0.8); }
         }
 
@@ -299,10 +315,15 @@ HTML_STORE = '''
     <div id="mySidebar" class="sidebar">
         <a href="/">🏠 الرئيسية</a>
         <a href="/my_orders_page" id="track-btn">📋 تتبع طلباتي</a>
-        <a href="https://discord.gg/db2sGRbrnJ" target="_blank" style="color:#5865F2;">💬 سيرفر المتجر</a>
-        <div id="feedback-area" style="padding:20px;">
-            <div style="color:var(--main); font-weight:bold; margin-bottom:10px;">رأيك يهمنا</div>
-            <form action="/add_feedback" method="post"><input name="user_name" placeholder="الاسم" required><textarea name="comment" placeholder="رأيك..." style="height:60px;"></textarea><button class="btn-purchase">إرسال</button></form>
+        <a href="/reviews_page" style="color:#f1c40f;">⭐ آراء العملاء</a> <a href="https://discord.gg/db2sGRbrnJ" target="_blank" style="color:#5865F2;">💬 سيرفر المتجر</a>
+        
+        <div id="feedback-area" style="padding:20px; margin-top:20px; border-top:1px solid #333;">
+            <div style="color:var(--main); font-weight:bold; margin-bottom:10px; font-size:14px;">شاركنا تجربتك ✨</div>
+            <form action="/add_feedback" method="post">
+                <input name="discord_id" type="number" placeholder="Discord ID" required style="font-family:monospace;">
+                <textarea name="comment" placeholder="اكتب رأيك هنا..." style="height:60px;"></textarea>
+                <button class="btn-purchase" style="padding:10px;">نشر الرأي</button>
+            </form>
         </div>
     </div>
     
@@ -782,8 +803,97 @@ def reject(id):
 
 @app.route('/add_feedback', methods=['POST'])
 def add_feedback():
-    db_feedbacks.insert_one({'name': request.form.get('user_name'), 'comment': request.form.get('comment')})
-    return redirect('/')
+    d_id = request.form.get('discord_id')
+    comment = request.form.get('comment')
+    
+    # بيانات افتراضية لو الـ ID غلط
+    user_name = "عميل مجهول"
+    user_avatar = "https://cdn.discordapp.com/embed/avatars/0.png"
+
+    if d_id:
+        try:
+            # دالة سحرية لجلب بيانات اليوزر من الديسكورد
+            future = asyncio.run_coroutine_threadsafe(client_discord.fetch_user(int(d_id)), client_discord.loop)
+            user = future.result()
+            user_name = user.name
+            if user.avatar:
+                user_avatar = str(user.avatar.url)
+        except:
+            pass # لو حصل خطأ هيكمل بالبيانات الافتراضية
+
+    # حفظ الرأي بالصورة والاسم في قاعدة البيانات
+    db_feedbacks.insert_one({
+        'discord_id': d_id,
+        'name': user_name,
+        'avatar': user_avatar,
+        'comment': comment,
+        'time': datetime.now(EGYPT_TZ).strftime("%d/%m/%Y")
+    })
+    return redirect('/reviews_page') # يوديه صفحة الآراء عشان يشوف رأيه نزل
+
+@app.route('/reviews_page')
+def reviews_page():
+    reviews = list(db_feedbacks.find())
+    return render_template_string('''
+    <!DOCTYPE html>
+    <html dir="rtl" lang="ar">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>آراء العملاء</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+        <style>
+            body { background: #0a0a0a; color: white; font-family: 'Cairo', sans-serif; padding: 20px; margin: 0; }
+            .container { max-width: 600px; margin: 0 auto; padding-bottom: 50px; }
+            h2 { text-align: center; color: #5865F2; margin-bottom: 30px; font-size: 28px; }
+            
+            /* تصميم الكارت السادة (Solid Style) */
+            .review-card {
+                background: #181818; /* لون رمادي غامق سادة */
+                border: 1px solid #333; /* برواز خفيف جداً */
+                border-radius: 15px;
+                padding: 15px;
+                margin-bottom: 15px;
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.3); /* ظل خفيف */
+            }
+            
+            .review-avatar {
+                width: 50px;
+                height: 50px;
+                border-radius: 50%; /* تدوير الصورة */
+                border: 2px solid #5865F2; /* برواز أزرق حول الصورة */
+                object-fit: cover;
+            }
+            
+            .review-content { text-align: right; }
+            .review-name { font-weight: bold; font-size: 16px; color: white; margin-bottom: 2px; }
+            .review-text { color: #ccc; font-size: 14px; line-height: 1.5; margin: 0; }
+            .back-btn { display: block; width: 100%; padding: 15px; background: #5865F2; color: white; text-align: center; text-decoration: none; border-radius: 12px; font-weight: bold; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); max-width: 580px; box-shadow: 0 0 15px rgba(88,101,242,0.4); }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h2>⭐ آراء عملائنا المميزين</h2>
+            {% for r in reviews|reverse %}
+            <div class="review-card">
+                <img src="{{ r.avatar }}" class="review-avatar" alt="img">
+                <div class="review-content">
+                    <div class="review-name">{{ r.name }}</div>
+                    <p class="review-text">{{ r.comment }}</p>
+                </div>
+            </div>
+            {% else %}
+                <div style="text-align:center; color:#777; margin-top:50px;">لا توجد آراء حتى الآن. كن أول من يقيمنا!</div>
+            {% endfor %}
+        </div>
+        <a href="/" class="back-btn">🏠 العودة للمتجر</a>
+    </body>
+    </html>
+    ''', reviews=reviews)
 
 def run_flask(): app.run(host='0.0.0.0', port=10000)
 @client_discord.event

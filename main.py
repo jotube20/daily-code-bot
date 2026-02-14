@@ -304,6 +304,17 @@ HTML_STORE = '''
         </div>
     </div>
     <div id="out-of-stock-modal"><div class="oos-content"><div class="oos-icon">❌</div><h3 style="color:#e74c3c; margin-top:0;">عفواً، نفذت الكمية</h3><p style="color:#ccc; line-height:1.6;">لا يوجد كمية من هذا المنتج حالياً.</p><button onclick="document.getElementById('out-of-stock-modal').style.display='none'" class="btn-purchase" style="background:#333; margin-top:10px;">حسناً</button></div></div>
+    <div id="feedback-success-modal" style="display: none; position: fixed; inset: 0; z-index: 12000; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; backdrop-filter: blur(8px);">
+        <div class="oos-content" style="border-color: #e74c3c;">
+            <div class="oos-icon">❤️</div>
+            <h3 style="color: white; margin-top: 0;">شكراً لرأيك</h3>
+            <p style="color: #ccc; line-height: 1.6;">يمكنك الذهاب الي الصفحة الرئيسيه او رؤية رايك من هنا.</p>
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button onclick="window.location.href='/reviews_page'" class="btn-purchase" style="background: #5865F2; margin: 0; padding: 12px;">رؤية رأيك</button>
+                <button onclick="window.location.href='/'" class="btn-purchase" style="background: #333; margin: 0; padding: 12px;">الرئيسية</button>
+            </div>
+        </div>
+    </div>
     <div id="news-modal"><div class="news-content"><button class="close-news" onclick="toggleNews()">✕</button><div class="news-header"><h2>What is new?</h2><div style="color:rgba(255,255,255,0.7); font-size:12px;">Latest Update - <span id="current-date"></span></div></div><div class="news-body"><div style="color:#f1c40f; font-weight:bold; font-size:18px; margin-bottom:10px;">✨ New Updates</div><ul style="list-style:none; padding:0; line-height:1.8; color:#ccc; text-align:right; direction:rtl;"><li>🌓 تم اضافة الوضع الليلي و النهاري ل راحة عينيك</li><li>📦 تحسينات في واجهة المتجر و واجهة لوحة الطلبات order</li><li>🌙 اضافة واجهة رمضانيه لتشعر بالاجواء الجميله</li><li>⛔️ اضافة نظام حمايه لمنع طلبك اذا لم تكن في السيرفر الخاص بالموقع</li><li>🎟 اضافة نظام خصومات للعلماء المميزين ( promocodes )</li><li>⏳️ الموقع اصبح يعمل 24/7</li><li>🛠 تحسين بعض الاخطاء</li></ul><button class="btn-purchase" onclick="toggleNews()" style="margin-top:15px;">فهمت، شكراً!</button></div></div></div>
     <div class="right-nav"><span class="beta-badge">Beta</span><div style="width:1px; height:20px; background:rgba(255,255,255,0.2); margin:0 10px;"></div><button class="nav-btn" onclick="toggleNews()">📢</button></div>
     <div class="glass-nav"><button class="nav-btn" id="menu-btn" onclick="toggleNav()">&#9776;</button><div style="width:1px; height:25px; background:#555; margin:0 10px;"></div><button class="nav-btn" onclick="toggleTheme()">🌓</button></div>
@@ -349,6 +360,11 @@ HTML_STORE = '''
         let isTutorialMode = false;
         function toggleNews() { let m = document.getElementById('news-modal'); m.style.display = (m.style.display === 'flex') ? 'none' : 'flex'; }
         if(new URLSearchParams(window.location.search).get('error') === 'not_in_server'){ document.getElementById('server-error-modal').style.display = 'flex'; }
+        if(new URLSearchParams(window.location.search).get('feedback') === 'success'){ 
+            document.getElementById('feedback-success-modal').style.display = 'flex'; 
+            // فتح القائمة الجانبية تلقائياً مقفول عشان اللافتة تبان في النص
+            document.getElementById("mySidebar").style.width = "0";
+        }
         function toggleTheme() { document.body.classList.toggle("light-mode"); localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark'); }
         if(localStorage.getItem('theme') === 'light') document.body.classList.add('light-mode');
         function toggleNav() { var s = document.getElementById("mySidebar"); s.style.width = s.style.width === "300px" ? "0" : "300px"; }
@@ -856,7 +872,7 @@ def add_feedback():
         'comment': comment,
         'time': datetime.now(EGYPT_TZ).strftime("%d/%m/%Y")
     })
-    return redirect('/reviews_page') # يوديه صفحة الآراء عشان يشوف رأيه نزل
+    return redirect('/?feedback=success')) # يوديه صفحة الآراء عشان يشوف رأيه نزل
 
 @app.route('/reviews_page')
 def reviews_page():

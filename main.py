@@ -120,43 +120,27 @@ HTML_STORE = '''
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jo Store</title>
-    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bruno+Ace&family=Bungee&family=Fjalla+One&display=swap" rel="stylesheet">
-    
     <style>
         :root { --main: #5865F2; --bg: #0a0a0a; --card: #111; --text: white; --accent: #43b581; }
         body.light-mode { --bg: #f4f4f4; --card: #fff; --text: #333; }
         body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; margin: 0; overflow-x: hidden; transition: 0.3s; }
-        
-        /* -------------------------------------------
-           🔥 لوجو الموقع العلوي الثابت 🔥
-           ------------------------------------------- */
+
+        /* لوجو الموقع العلوي */
         .top-logo {
-            position: fixed;
-            top: 25px;
-            left: 50%;
-            transform: translateX(-50%);
             font-family: 'Bruno Ace', sans-serif;
-            font-size: 32px;
+            font-size: 32px; /* الحجم الكبير الطبيعي */
             color: white;
             text-shadow: 0px 0px 15px var(--main);
-            z-index: 1002;
             letter-spacing: 3px;
             margin: 0;
             cursor: default;
+            text-align: center;
+            /* تم إزالة خصائص التثبيت (fixed) عشان يكون عنصر عادي في الصفحة */
         }
 
-        /* تصغير اللوجو على الموبايل (القوس اللي كان عامل المشكلة هنا) */
-        @media (max-width: 768px) {
-            .top-logo { 
-                font-size: 15px !important; 
-                top: 22px !important; 
-                letter-spacing: 1px !important; 
-            }
-        }
-        
         /* تنسيق الأزرار العلوية (الأساسي للكمبيوتر) */
         .glass-nav { position: fixed; top: 20px; left: 20px; z-index: 1001; display: flex; align-items: center; gap: 15px; background: rgba(128,128,128,0.15); backdrop-filter: blur(15px); padding: 10px 25px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1); }
         .nav-btn { background: none; border: none; color: var(--text); font-size: 24px; cursor: pointer; transition: 0.3s; }
@@ -166,7 +150,8 @@ HTML_STORE = '''
         .sidebar { height: 100%; width: 0; position: fixed; z-index: 1000; top: 0; left: 0; background: var(--card); overflow-y: auto; transition: 0.5s ease; padding-top: 80px; border-right: 1px solid #333; }
         .sidebar a { padding: 15px 25px; display: block; text-align: right; color: #888; text-decoration: none; font-size: 18px; border-bottom: 1px solid #222; }
         #main-content { padding: 100px 20px; text-align: center; }
-        .products-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 45px; margin-top: 60px; }
+        /* تم تعديل الهامش العلوي هنا عشان اللوجو الجديد */
+        .products-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 45px; margin-top: 30px; }
         
         /* تنسيق كارت المنتج (الأساسي للكمبيوتر) */
         .product-card { width: 320px; height: 480px; border-radius: 30px; position: relative; overflow: hidden; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); background: var(--card); transition: 0.3s; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
@@ -179,8 +164,6 @@ HTML_STORE = '''
         .card-info h2 { color: var(--accent); margin: 5px 0; }
         .card-info small { color: #888; }
         .badge { position: absolute; top: 20px; left: -35px; background: #f1c40f; color: black; padding: 5px 40px; transform: rotate(-45deg); font-weight: bold; font-size: 14px; z-index: 10; box-shadow: 0 5px 10px rgba(0,0,0,0.3); }
-        
-        /* إخفاء النوافذ المنبثقة بشكل افتراضي */
         #product-modal, #out-of-stock-modal { display: none; position: fixed; inset: 0; z-index: 11000; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; backdrop-filter: blur(8px); }
         .modal-content-prod { background: var(--card); width: 450px; max-width: 95%; max-height: 90vh; overflow-y: auto; border-radius: 35px; position: relative; box-shadow: 0 25px 50px rgba(0,0,0,0.5); animation: zoomIn 0.3s ease; border: 1px solid rgba(255,255,255,0.1); }
         @keyframes zoomIn { from{transform:scale(0.9);opacity:0} to{transform:scale(1);opacity:1} }
@@ -195,8 +178,6 @@ HTML_STORE = '''
         input:focus { border-color: var(--main); outline: none; }
         .btn-purchase { background: var(--main); color: white; border: none; padding: 15px; border-radius: 15px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 15px; font-size: 16px; transition: 0.3s; }
         .btn-purchase:hover { background: #4752c4; }
-        
-        /* إخفاء نوافذ الإشعارات والترحيب */
         .modal-box { display: none; position: fixed; inset: 0; z-index: 15000; background: rgba(0,0,0,0.95); align-items: center; justify-content: center; flex-direction: column; color: white; }
         .modal-content { background: #111; padding: 40px; border-radius: 30px; border: 2px solid var(--main); text-align: center; max-width: 90%; }
         #news-modal { display: none; position: fixed; inset: 0; z-index: 12000; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; backdrop-filter: blur(5px); }
@@ -216,6 +197,13 @@ HTML_STORE = '''
            🔥 تعديلات الموبايل (إصلاح الكروت والأزرار واللوجو) 🔥
            ------------------------------------------- */
         @media (max-width: 768px) {
+            /* ضبط مكان اللوجو على الموبايل ليكون تحت الأزرار */
+            .top-logo {
+                font-size: 32px !important; /* الحجم الكبير */
+                margin-top: 70px !important; /* مسافة من فوق عشان ينزل في المنطقة الفاضية */
+                margin-bottom: 20px !important; /* مسافة بينه وبين الكروت */
+            }
+
             /* 1. إصلاح الأزرار العلوية (تصغير الحجم والمسافات) */
             .glass-nav, .right-nav {
                 padding: 6px 15px !important;
@@ -226,7 +214,8 @@ HTML_STORE = '''
             .beta-badge { font-size: 10px !important; letter-spacing: 0; }
 
             /* 2. إصلاح كروت المنتجات (تصغيرها جداً) */
-            .products-container { gap: 20px !important; margin-top: 40px !important; }
+            /* تقليل الهامش العلوي هنا لأننا وضعنا هامش للوجو */
+            .products-container { gap: 20px !important; margin-top: 10px !important; }
             .product-card {
                 width: 90% !important;
                 max-width: 320px !important;
@@ -262,14 +251,12 @@ HTML_STORE = '''
         .ramadan-decor{position:fixed;top:0;left:0;width:100%;z-index:99999;display:flex;justify-content:space-around;pointer-events:none}
         .fanoos-box{position:relative;animation:swing 2s infinite ease-in-out alternate;transform-origin:top center}
         .rope{width:2px;background:#d4af37;margin:0 auto}
-        .fanoos{font-size:30px;margin-top:-5px;filter:drop-shadow(0 0 10px gold)}
+        .fanoos{font-size:30px;margin-top:-5px;filter:drop-shadow(0 0 0 gold)} /* تم إزالة التوهج الثقيل من الفوانيس لتخفيف الحمل */
         @keyframes swing{0%{transform:rotate(-8deg)}100%{transform:rotate(8deg)}}
     </style>
 </head>
 <body id="body">
     
-    <h1 class="top-logo">JOXIFY</h1>
-
     <div class="ramadan-decor">
         <div class="fanoos-box"><div class="rope" style="height:60px"></div><div class="fanoos">🏮</div></div>
         <div class="fanoos-box" style="animation-delay:1s"><div class="rope" style="height:40px"></div><div class="fanoos">🌙</div></div>
@@ -318,7 +305,10 @@ HTML_STORE = '''
             <form action="/add_feedback" method="post"><input name="user_name" placeholder="الاسم" required><textarea name="comment" placeholder="رأيك..." style="height:60px;"></textarea><button class="btn-purchase">إرسال</button></form>
         </div>
     </div>
+    
     <div id="main-content">
+        <h1 class="top-logo">JOXIFY</h1>
+
         <div class="products-container" id="prod-list">
             {% for key, info in prods.items() %}
             <div class="product-card" id="card-{{key}}" onclick="handleProductClick('{{key}}', '{{info.name}}', '{{info.price}}', '{{info.img}}', '{{info.desc}}', {{ stocks[key] }})">

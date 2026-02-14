@@ -120,10 +120,31 @@ HTML_STORE = '''
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jo Store</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bruno+Ace&family=Bungee&family=Fjalla+One&display=swap" rel="stylesheet">
     <style>
         :root { --main: #5865F2; --bg: #0a0a0a; --card: #111; --text: white; --accent: #43b581; }
         body.light-mode { --bg: #f4f4f4; --card: #fff; --text: #333; }
         body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; margin: 0; overflow-x: hidden; transition: 0.3s; }
+        /* لوجو الموقع العلوي الثابت */
+        .top-logo {
+            position: fixed;
+            top: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Bruno Ace', sans-serif;
+            font-size: 32px;
+            color: white;
+            text-shadow: 0px 0px 15px var(--main);
+            z-index: 1002;
+            letter-spacing: 3px;
+            margin: 0;
+            cursor: default;
+        }
+        @media (max-width: 768px) {
+            .top-logo { font-size: 20px; top: 28px; }
+        }
         
         /* تنسيق الأزرار العلوية (الأساسي للكمبيوتر) */
         .glass-nav { position: fixed; top: 20px; left: 20px; z-index: 1001; display: flex; align-items: center; gap: 15px; background: rgba(128,128,128,0.15); backdrop-filter: blur(15px); padding: 10px 25px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1); }
@@ -233,6 +254,7 @@ HTML_STORE = '''
     </style>
 </head>
 <body id="body">
+<h1 class="top-logo">JOXIFY</h1>
     <div class="ramadan-decor">
         <div class="fanoos-box"><div class="rope" style="height:60px"></div><div class="fanoos">🏮</div></div>
         <div class="fanoos-box" style="animation-delay:1s"><div class="rope" style="height:40px"></div><div class="fanoos">🌙</div></div>
@@ -282,7 +304,6 @@ HTML_STORE = '''
         </div>
     </div>
     <div id="main-content">
-        <h1>Jo Store 🔒</h1>
         <div class="products-container" id="prod-list">
             {% for key, info in prods.items() %}
             <div class="product-card" id="card-{{key}}" onclick="handleProductClick('{{key}}', '{{info.name}}', '{{info.price}}', '{{info.img}}', '{{info.desc}}', {{ stocks[key] }})">

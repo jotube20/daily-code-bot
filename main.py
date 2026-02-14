@@ -120,14 +120,19 @@ HTML_STORE = '''
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jo Store</title>
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bruno+Ace&family=Bungee&family=Fjalla+One&display=swap" rel="stylesheet">
+    
     <style>
         :root { --main: #5865F2; --bg: #0a0a0a; --card: #111; --text: white; --accent: #43b581; }
         body.light-mode { --bg: #f4f4f4; --card: #fff; --text: #333; }
         body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; margin: 0; overflow-x: hidden; transition: 0.3s; }
-        /* لوجو الموقع العلوي الثابت */
+        
+        /* -------------------------------------------
+           🔥 لوجو الموقع العلوي الثابت 🔥
+           ------------------------------------------- */
         .top-logo {
             position: fixed;
             top: 25px;
@@ -142,8 +147,9 @@ HTML_STORE = '''
             margin: 0;
             cursor: default;
         }
+
+        /* تصغير اللوجو على الموبايل (القوس اللي كان عامل المشكلة هنا) */
         @media (max-width: 768px) {
-            /* تصغير وتوسيط اللوجو على الموبايل */
             .top-logo { 
                 font-size: 15px !important; 
                 top: 22px !important; 
@@ -173,6 +179,8 @@ HTML_STORE = '''
         .card-info h2 { color: var(--accent); margin: 5px 0; }
         .card-info small { color: #888; }
         .badge { position: absolute; top: 20px; left: -35px; background: #f1c40f; color: black; padding: 5px 40px; transform: rotate(-45deg); font-weight: bold; font-size: 14px; z-index: 10; box-shadow: 0 5px 10px rgba(0,0,0,0.3); }
+        
+        /* إخفاء النوافذ المنبثقة بشكل افتراضي */
         #product-modal, #out-of-stock-modal { display: none; position: fixed; inset: 0; z-index: 11000; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; backdrop-filter: blur(8px); }
         .modal-content-prod { background: var(--card); width: 450px; max-width: 95%; max-height: 90vh; overflow-y: auto; border-radius: 35px; position: relative; box-shadow: 0 25px 50px rgba(0,0,0,0.5); animation: zoomIn 0.3s ease; border: 1px solid rgba(255,255,255,0.1); }
         @keyframes zoomIn { from{transform:scale(0.9);opacity:0} to{transform:scale(1);opacity:1} }
@@ -187,6 +195,8 @@ HTML_STORE = '''
         input:focus { border-color: var(--main); outline: none; }
         .btn-purchase { background: var(--main); color: white; border: none; padding: 15px; border-radius: 15px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 15px; font-size: 16px; transition: 0.3s; }
         .btn-purchase:hover { background: #4752c4; }
+        
+        /* إخفاء نوافذ الإشعارات والترحيب */
         .modal-box { display: none; position: fixed; inset: 0; z-index: 15000; background: rgba(0,0,0,0.95); align-items: center; justify-content: center; flex-direction: column; color: white; }
         .modal-content { background: #111; padding: 40px; border-radius: 30px; border: 2px solid var(--main); text-align: center; max-width: 90%; }
         #news-modal { display: none; position: fixed; inset: 0; z-index: 12000; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; backdrop-filter: blur(5px); }
@@ -203,30 +213,28 @@ HTML_STORE = '''
         .top-ok-btn { position: absolute; top: 10%; right: 50%; transform: translateX(50%); background: #e74c3c; padding: 10px 30px; border-radius: 20px; color: white; border: none; font-weight: bold; cursor: pointer; display: none; z-index: 20001; }
 
         /* -------------------------------------------
-           🔥 تعديلات الموبايل (إصلاح الكروت والأزرار) 🔥
+           🔥 تعديلات الموبايل (إصلاح الكروت والأزرار واللوجو) 🔥
            ------------------------------------------- */
         @media (max-width: 768px) {
             /* 1. إصلاح الأزرار العلوية (تصغير الحجم والمسافات) */
             .glass-nav, .right-nav {
-                padding: 6px 15px !important; /* تقليل الحواف الداخلية */
-                gap: 8px !important; /* تقريب الأزرار من بعض */
-                top: 15px !important; /* رفع القائمة قليلاً */
+                padding: 6px 15px !important;
+                gap: 8px !important;
+                top: 15px !important;
             }
-            .nav-btn { font-size: 18px !important; } /* تصغير الأيقونات */
+            .nav-btn { font-size: 18px !important; }
             .beta-badge { font-size: 10px !important; letter-spacing: 0; }
 
             /* 2. إصلاح كروت المنتجات (تصغيرها جداً) */
             .products-container { gap: 20px !important; margin-top: 40px !important; }
             .product-card {
-                width: 90% !important; /* العرض ياخد 90% من الشاشة */
+                width: 90% !important;
                 max-width: 320px !important;
-                height: auto !important; /* الارتفاع على قد المحتوى (مش طويل) */
+                height: auto !important;
                 min-height: 350px !important;
                 border-radius: 20px !important;
             }
-            .card-image {
-                height: 180px !important; /* تصغير الصورة داخل الكارت */
-            }
+            .card-image { height: 180px !important; }
             .card-info { padding: 15px !important; }
             .card-info h3 { font-size: 18px !important; }
             .card-info h2 { font-size: 22px !important; margin: 5px 0 !important; }
@@ -259,7 +267,9 @@ HTML_STORE = '''
     </style>
 </head>
 <body id="body">
-<h1 class="top-logo">JOXIFY</h1>
+    
+    <h1 class="top-logo">JOXIFY</h1>
+
     <div class="ramadan-decor">
         <div class="fanoos-box"><div class="rope" style="height:60px"></div><div class="fanoos">🏮</div></div>
         <div class="fanoos-box" style="animation-delay:1s"><div class="rope" style="height:40px"></div><div class="fanoos">🌙</div></div>

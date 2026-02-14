@@ -149,6 +149,7 @@ HTML_STORE = '''
                 top: 22px !important; 
                 letter-spacing: 1px !important; 
             }
+        }
         
         /* تنسيق الأزرار العلوية (الأساسي للكمبيوتر) */
         .glass-nav { position: fixed; top: 20px; left: 20px; z-index: 1001; display: flex; align-items: center; gap: 15px; background: rgba(128,128,128,0.15); backdrop-filter: blur(15px); padding: 10px 25px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1); }

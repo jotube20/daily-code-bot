@@ -872,7 +872,7 @@ def add_feedback():
         'comment': comment,
         'time': datetime.now(EGYPT_TZ).strftime("%d/%m/%Y")
     })
-    return redirect('/?feedback=success')) # يوديه صفحة الآراء عشان يشوف رأيه نزل
+    return redirect('/?feedback=success') # يوديه صفحة الآراء عشان يشوف رأيه نزل
 
 @app.route('/reviews_page')
 def reviews_page():
